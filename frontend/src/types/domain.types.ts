@@ -37,6 +37,9 @@ export interface Issue {
   reporter?: User
   estimate?: number
   labels: string[]
+  epicId?: number
+  epic?: Issue
+  epicIssues?: Issue[]
   createdAt: Date
   updatedAt: Date
 }
@@ -67,6 +70,7 @@ export interface CreateIssueRequest {
   assigneeId?: number
   estimate?: number
   labels?: string[]
+  epicId?: number
 }
 
 export interface UpdateIssueRequest {
@@ -77,4 +81,5 @@ export interface UpdateIssueRequest {
   assigneeId?: number
   estimate?: number
   labels?: string[]
+  epicId?: number
 }

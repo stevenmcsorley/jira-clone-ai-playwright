@@ -6,6 +6,7 @@ import { CreateProject } from './pages/CreateProject'
 import { CreateIssue } from './pages/CreateIssue'
 import { IssueDetail } from './pages/IssueDetail'
 import { IssueEdit } from './pages/IssueEdit'
+import { IssuesList } from './pages/IssuesList'
 import { SearchResults } from './pages/SearchResults'
 import { ProjectSettings } from './pages/ProjectSettings'
 import { useProjects } from './hooks/useProjects'
@@ -48,6 +49,14 @@ export const App = () => {
           element={
             <Layout>
               <ProjectBoard />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/issues"
+          element={
+            <Layout>
+              <IssuesList />
             </Layout>
           }
         />

@@ -11,4 +11,5 @@ export declare class CreateIssueDto {
     reporterId: number;
     estimate?: number;
     labels?: string[];
+    epicId?: number;
 }

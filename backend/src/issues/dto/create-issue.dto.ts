@@ -39,4 +39,8 @@ export class CreateIssueDto {
   @IsArray()
   @IsString({ each: true })
   labels?: string[]
+
+  @IsOptional()
+  @IsNumber()
+  epicId?: number
 }

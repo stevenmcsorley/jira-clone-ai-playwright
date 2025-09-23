@@ -18,14 +18,14 @@ export class IssuesService {
 
   async findAll(): Promise<Issue[]> {
     return this.issuesRepository.find({
-      relations: ['project', 'assignee', 'reporter'],
+      relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues'],
     })
   }
 
   async findByProject(projectId: number): Promise<Issue[]> {
     return this.issuesRepository.find({
       where: { projectId },
-      relations: ['project', 'assignee', 'reporter'],
+      relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues'],
       order: { position: 'ASC', createdAt: 'DESC' },
     })
   }
@@ -33,7 +33,7 @@ export class IssuesService {
   async findOne(id: number): Promise<Issue> {
     return this.issuesRepository.findOne({
       where: { id },
-      relations: ['project', 'assignee', 'reporter'],
+      relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues', 'epicIssues.assignee'],
     })
   }
 

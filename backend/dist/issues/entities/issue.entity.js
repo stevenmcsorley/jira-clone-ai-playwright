@@ -17,6 +17,7 @@ const comment_entity_1 = require("./comment.entity");
 const attachment_entity_1 = require("./attachment.entity");
 const subtask_entity_1 = require("./subtask.entity");
 const time_log_entity_1 = require("./time-log.entity");
+const issue_link_entity_1 = require("./issue-link.entity");
 const issue_status_enum_1 = require("../enums/issue-status.enum");
 var IssuePriority;
 (function (IssuePriority) {
@@ -111,6 +112,19 @@ __decorate([
     __metadata("design:type", Number)
 ], Issue.prototype, "position", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Issue.prototype, "epicId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => Issue, epic => epic.epicIssues, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'epicId' }),
+    __metadata("design:type", Issue)
+], Issue.prototype, "epic", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => Issue, issue => issue.epic),
+    __metadata("design:type", Array)
+], Issue.prototype, "epicIssues", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Issue.prototype, "createdAt", void 0);
@@ -130,6 +144,14 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => time_log_entity_1.TimeLog, timeLog => timeLog.issue),
     __metadata("design:type", Array)
 ], Issue.prototype, "timeLogs", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => issue_link_entity_1.IssueLink, link => link.sourceIssue),
+    __metadata("design:type", Array)
+], Issue.prototype, "sourceLinks", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => issue_link_entity_1.IssueLink, link => link.targetIssue),
+    __metadata("design:type", Array)
+], Issue.prototype, "targetLinks", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)

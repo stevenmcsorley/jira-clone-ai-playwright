@@ -5,6 +5,7 @@ import { Comment } from './comment.entity'
 import { Attachment } from './attachment.entity'
 import { Subtask } from './subtask.entity'
 import { TimeLog } from './time-log.entity'
+import { IssueLink } from './issue-link.entity'
 import { IssueStatus } from '../enums/issue-status.enum'
 
 export enum IssuePriority {
@@ -83,6 +84,16 @@ export class Issue {
   @Column({ type: 'integer', default: 0 })
   position: number
 
+  @Column({ nullable: true })
+  epicId: number
+
+  @ManyToOne(() => Issue, epic => epic.epicIssues, { nullable: true })
+  @JoinColumn({ name: 'epicId' })
+  epic: Issue
+
+  @OneToMany(() => Issue, issue => issue.epic)
+  epicIssues: Issue[]
+
   @CreateDateColumn()
   createdAt: Date
 
@@ -97,6 +108,12 @@ export class Issue {
 
   @OneToMany(() => TimeLog, timeLog => timeLog.issue)
   timeLogs: TimeLog[]
+
+  @OneToMany(() => IssueLink, link => link.sourceIssue)
+  sourceLinks: IssueLink[]
+
+  @OneToMany(() => IssueLink, link => link.targetIssue)
+  targetLinks: IssueLink[]
 
   @UpdateDateColumn()
   updatedAt: Date

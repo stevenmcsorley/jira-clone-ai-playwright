@@ -5,6 +5,8 @@ import { Comments } from '../../components/Comments/Comments'
 import { Attachments } from '../../components/Attachments/Attachments'
 import { Subtasks } from '../../components/Subtasks/Subtasks'
 import { TimeTracking } from '../../components/TimeTracking/TimeTracking'
+import { EpicIssues } from '../../components/EpicIssues/EpicIssues'
+import { IssueLinks } from '../../components/IssueLinks/IssueLinks'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
@@ -146,7 +148,7 @@ export const IssueDetail = () => {
 
       {/* Content */}
       <div className="flex-1 overflow-auto px-6 py-8">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-full mx-auto">
         <div className="grid grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="col-span-2 space-y-6">
@@ -187,6 +189,20 @@ export const IssueDetail = () => {
 
             {/* Subtasks */}
             <Subtasks issueId={issue.id} />
+
+            {/* Issue Links */}
+            <IssueLinks
+              issue={issue}
+              projectId={projectId!}
+              onLinkCreate={async (targetIssueId, linkType) => {
+                // TODO: Implement when backend API is ready
+                console.log('Create link:', targetIssueId, linkType)
+              }}
+              onLinkDelete={async (linkId) => {
+                // TODO: Implement when backend API is ready
+                console.log('Delete link:', linkId)
+              }}
+            />
 
             {/* Attachments */}
             <Attachments issueId={issue.id} />
@@ -291,6 +307,26 @@ export const IssueDetail = () => {
           </div>
         </div>
         </div>
+
+        {/* Epic Issues - Full Width Section for Epic type issues */}
+        {issue.type === 'epic' && (
+          <div className="mt-8">
+            <EpicIssues
+              epic={issue}
+              projectId={projectId!}
+              onIssueUpdate={async (issueId, updates) => {
+                try {
+                  await IssuesService.update(issueId, updates)
+                  // Refresh the epic to get updated linked issues
+                  const updatedIssue = await IssuesService.getById(issue.id)
+                  setIssue(updatedIssue)
+                } catch (error) {
+                  console.error('Failed to update issue:', error)
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   )

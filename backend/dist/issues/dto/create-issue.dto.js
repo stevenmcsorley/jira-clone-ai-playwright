@@ -63,4 +63,9 @@ __decorate([
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
 ], CreateIssueDto.prototype, "labels", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateIssueDto.prototype, "epicId", void 0);
 //# sourceMappingURL=create-issue.dto.js.map

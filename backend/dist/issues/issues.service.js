@@ -27,20 +27,20 @@ let IssuesService = class IssuesService {
     }
     async findAll() {
         return this.issuesRepository.find({
-            relations: ['project', 'assignee', 'reporter'],
+            relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues'],
         });
     }
     async findByProject(projectId) {
         return this.issuesRepository.find({
             where: { projectId },
-            relations: ['project', 'assignee', 'reporter'],
+            relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues'],
             order: { position: 'ASC', createdAt: 'DESC' },
         });
     }
     async findOne(id) {
         return this.issuesRepository.findOne({
             where: { id },
-            relations: ['project', 'assignee', 'reporter'],
+            relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues', 'epicIssues.assignee'],
         });
     }
     async update(id, updateData) {
