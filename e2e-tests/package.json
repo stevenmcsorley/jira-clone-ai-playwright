@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
+    "test:bdd": "cucumber-js --config cucumber.config.js",
+    "test:bdd:headed": "HEADLESS=false cucumber-js --config cucumber.config.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "report": "playwright show-report",
@@ -12,9 +14,12 @@
   },
   "dependencies": {
     "@playwright/test": "^1.44.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "@cucumber/cucumber": "^10.3.1",
+    "playwright-cucumber": "^2.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "@cucumber/typescript": "^1.0.0"
   }
 }

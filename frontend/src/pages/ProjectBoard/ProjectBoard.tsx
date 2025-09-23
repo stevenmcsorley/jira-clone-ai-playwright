@@ -31,7 +31,7 @@ export const ProjectBoard = () => {
   }
 
   const handleIssueCreate = () => {
-    // Navigate to create issue page
+    navigate(`/projects/${projectId}/issues/create`)
   }
 
   const handleIssueEdit = (issue: Issue) => {

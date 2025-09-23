@@ -29,6 +29,10 @@ export const App = () => {
       <Routes>
         <Route
           path="/"
+          element={<Navigate to="/projects" replace />}
+        />
+        <Route
+          path="/projects"
           element={
             <Layout>
               <ProjectsList />
@@ -49,15 +53,27 @@ export const App = () => {
         />
         <Route
           path="/projects/:projectId/issues/:issueId"
-          element={<IssueDetail />}
+          element={
+            <Layout>
+              <IssueDetail />
+            </Layout>
+          }
         />
         <Route
           path="/projects/:projectId/issues/:issueId/edit"
-          element={<IssueEdit />}
+          element={
+            <Layout>
+              <IssueEdit />
+            </Layout>
+          }
         />
         <Route
           path="/projects/:projectId/issues/create"
-          element={<CreateIssue />}
+          element={
+            <Layout>
+              <CreateIssue />
+            </Layout>
+          }
         />
         <Route
           path="/projects/:projectId/search"
@@ -72,7 +88,7 @@ export const App = () => {
           element={<ProjectSettings />}
         />
         {/* Redirect to projects list for any unmatched routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/projects" replace />} />
       </Routes>
     </Router>
   )

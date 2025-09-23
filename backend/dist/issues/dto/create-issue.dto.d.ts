@@ -1,4 +1,5 @@
-import { IssueType, IssuePriority, IssueStatus } from '../entities/issue.entity';
+import { IssueType, IssuePriority } from '../entities/issue.entity';
+import { IssueStatus } from '../enums/issue-status.enum';
 export declare class CreateIssueDto {
     title: string;
     description?: string;

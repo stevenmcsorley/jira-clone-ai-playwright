@@ -35,47 +35,77 @@ export const ProjectsList = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Link
-              key={project.id}
-              to={`/projects/${project.id}`}
-              className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
-              data-testid={`project-card-${project.id}`}
-            >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="bg-blue-100 text-blue-800 text-sm font-medium px-2 py-1 rounded">
-                    {project.key}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {project.issues?.length || 0} issues
-                  </div>
-                </div>
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Recent projects</h2>
+          </div>
 
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {project.name}
-                </h3>
-
-                {project.description && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {project.description}
-                  </p>
-                )}
-
-                <div className="flex items-center text-sm text-gray-500">
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
-                      <span className="text-xs font-medium text-blue-700">
-                        {project.lead?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          <div className="divide-y divide-gray-200">
+            {projects.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                className="block px-6 py-4 hover:bg-gray-50 transition-colors duration-150"
+                data-testid={`project-card-${project.id}`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-medium">
+                        {project.key}
                       </span>
                     </div>
-                    <span>Lead: {project.lead?.name}</span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-3">
+                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                          {project.name}
+                        </h3>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          {project.key}
+                        </span>
+                      </div>
+
+                      {project.description && (
+                        <p className="mt-1 text-sm text-gray-500 truncate">
+                          {project.description}
+                        </p>
+                      )}
+
+                      <div className="mt-1 flex items-center space-x-4 text-xs text-gray-500">
+                        <span>Software project</span>
+                        <span>•</span>
+                        <div className="flex items-center">
+                          <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center mr-1">
+                            <span className="text-xs font-medium text-blue-700">
+                              {project.lead?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </span>
+                          </div>
+                          <span>{project.lead?.name}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-6 text-sm text-gray-500">
+                    <div className="text-right">
+                      <div className="font-medium">{project.issues?.length || 0}</div>
+                      <div className="text-xs">issues</div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-xs">Last updated</div>
+                      <div className="font-medium">{new Date(project.updatedAt).toLocaleDateString()}</div>
+                    </div>
+
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {projects.length === 0 && (

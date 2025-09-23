@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateIssueDto = void 0;
 const class_validator_1 = require("class-validator");
 const issue_entity_1 = require("../entities/issue.entity");
+const issue_status_enum_1 = require("../enums/issue-status.enum");
 class CreateIssueDto {
 }
 exports.CreateIssueDto = CreateIssueDto;
@@ -26,7 +27,7 @@ __decorate([
 ], CreateIssueDto.prototype, "description", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(issue_entity_1.IssueStatus),
+    (0, class_validator_1.IsEnum)(issue_status_enum_1.IssueStatus),
     __metadata("design:type", String)
 ], CreateIssueDto.prototype, "status", void 0);
 __decorate([

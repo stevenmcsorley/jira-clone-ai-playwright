@@ -144,21 +144,13 @@ export const IssueEdit = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="flex-1 flex flex-col bg-gray-50">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              to={`/projects/${projectId}/issues/${issueId}`}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              ← Back to Issue
-            </Link>
-            <span className="text-sm font-medium text-gray-500">
-              Edit {currentProject?.key || 'TIS'}-{issue.id}
-            </span>
-          </div>
+          <span className="text-xl font-bold text-gray-900">
+            Edit Issue {currentProject?.key || 'TIS'}-{issue.id}
+          </span>
           <div className="flex items-center gap-3">
             <Button
               type="button"
@@ -180,7 +172,8 @@ export const IssueEdit = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto">
         <form id="issue-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -345,6 +338,7 @@ export const IssueEdit = () => {
             />
           </div>
         </form>
+        </div>
       </div>
     </div>
   )

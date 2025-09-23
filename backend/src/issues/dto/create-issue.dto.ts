@@ -1,5 +1,6 @@
 import { IsString, IsEnum, IsNumber, IsOptional, IsArray } from 'class-validator'
-import { IssueType, IssuePriority, IssueStatus } from '../entities/issue.entity'
+import { IssueType, IssuePriority } from '../entities/issue.entity'
+import { IssueStatus } from '../enums/issue-status.enum'
 
 export class CreateIssueDto {
   @IsString()

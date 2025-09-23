@@ -1,12 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
 import { Project } from '../../projects/entities/project.entity'
-
-export enum IssueStatus {
-  TODO = 'todo',
-  IN_PROGRESS = 'in_progress',
-  DONE = 'done',
-}
+import { Comment } from './comment.entity'
+import { Attachment } from './attachment.entity'
+import { Subtask } from './subtask.entity'
+import { TimeLog } from './time-log.entity'
+import { IssueStatus } from '../enums/issue-status.enum'
 
 export enum IssuePriority {
   LOW = 'low',
@@ -86,6 +85,18 @@ export class Issue {
 
   @CreateDateColumn()
   createdAt: Date
+
+  @OneToMany(() => Comment, comment => comment.issue)
+  comments: Comment[]
+
+  @OneToMany(() => Attachment, attachment => attachment.issue)
+  attachments: Attachment[]
+
+  @OneToMany(() => Subtask, subtask => subtask.issue)
+  subtasks: Subtask[]
+
+  @OneToMany(() => TimeLog, timeLog => timeLog.issue)
+  timeLogs: TimeLog[]
 
   @UpdateDateColumn()
   updatedAt: Date

@@ -38,10 +38,10 @@ export const Layout = ({ children }: LayoutProps) => {
         {/* Navigation */}
         <nav className="flex-1 px-2 py-4">
           <div className="space-y-1">
-            <Link
-              to="/"
+                        <Link
+              to="/projects"
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === '/' || !isProjectBoard
+                location.pathname === '/projects'
                   ? 'bg-gray-100 text-gray-900'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
@@ -49,7 +49,7 @@ export const Layout = ({ children }: LayoutProps) => {
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
               </svg>
-              Backlog
+              Projects
             </Link>
 
             <Link
@@ -146,12 +146,12 @@ export const Layout = ({ children }: LayoutProps) => {
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/" className="text-xl font-bold text-blue-600">
+              <Link to="/projects" className="text-xl font-bold text-blue-600">
                 Jira Clone
               </Link>
             </div>
             <div className="flex items-center gap-3">
-              {location.pathname === '/' && (
+              {location.pathname === '/projects' && (
                 <Link to="/projects/create">
                   <Button
                     variant="secondary"

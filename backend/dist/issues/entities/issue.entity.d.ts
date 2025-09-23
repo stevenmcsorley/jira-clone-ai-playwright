@@ -1,10 +1,10 @@
 import { User } from '../../users/entities/user.entity';
 import { Project } from '../../projects/entities/project.entity';
-export declare enum IssueStatus {
-    TODO = "todo",
-    IN_PROGRESS = "in_progress",
-    DONE = "done"
-}
+import { Comment } from './comment.entity';
+import { Attachment } from './attachment.entity';
+import { Subtask } from './subtask.entity';
+import { TimeLog } from './time-log.entity';
+import { IssueStatus } from '../enums/issue-status.enum';
 export declare enum IssuePriority {
     LOW = "low",
     MEDIUM = "medium",
@@ -34,5 +34,9 @@ export declare class Issue {
     labels: string[];
     position: number;
     createdAt: Date;
+    comments: Comment[];
+    attachments: Attachment[];
+    subtasks: Subtask[];
+    timeLogs: TimeLog[];
     updatedAt: Date;
 }

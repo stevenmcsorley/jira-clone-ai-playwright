@@ -10,6 +10,11 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jira_clone -d jira_clone"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -19,6 +24,11 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio:latest
@@ -47,14 +57,16 @@ services:
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       PORT: 4000
     depends_on:
-      - postgres
-      - redis
-      - minio
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
     ports:
       - "4000:4000"
     volumes:
       - ./backend:/usr/src/app
-      - /usr/src/app/node_modules
     restart: unless-stopped
 
   frontend:

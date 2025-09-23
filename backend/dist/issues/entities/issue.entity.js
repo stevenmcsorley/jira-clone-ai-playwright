@@ -9,16 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Issue = exports.IssueType = exports.IssuePriority = exports.IssueStatus = void 0;
+exports.Issue = exports.IssueType = exports.IssuePriority = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const project_entity_1 = require("../../projects/entities/project.entity");
-var IssueStatus;
-(function (IssueStatus) {
-    IssueStatus["TODO"] = "todo";
-    IssueStatus["IN_PROGRESS"] = "in_progress";
-    IssueStatus["DONE"] = "done";
-})(IssueStatus || (exports.IssueStatus = IssueStatus = {}));
+const comment_entity_1 = require("./comment.entity");
+const attachment_entity_1 = require("./attachment.entity");
+const subtask_entity_1 = require("./subtask.entity");
+const time_log_entity_1 = require("./time-log.entity");
+const issue_status_enum_1 = require("../enums/issue-status.enum");
 var IssuePriority;
 (function (IssuePriority) {
     IssuePriority["LOW"] = "low";
@@ -51,8 +50,8 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
-        enum: IssueStatus,
-        default: IssueStatus.TODO,
+        enum: issue_status_enum_1.IssueStatus,
+        default: issue_status_enum_1.IssueStatus.TODO,
     }),
     __metadata("design:type", String)
 ], Issue.prototype, "status", void 0);
@@ -115,6 +114,22 @@ __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Issue.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => comment_entity_1.Comment, comment => comment.issue),
+    __metadata("design:type", Array)
+], Issue.prototype, "comments", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => attachment_entity_1.Attachment, attachment => attachment.issue),
+    __metadata("design:type", Array)
+], Issue.prototype, "attachments", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => subtask_entity_1.Subtask, subtask => subtask.issue),
+    __metadata("design:type", Array)
+], Issue.prototype, "subtasks", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => time_log_entity_1.TimeLog, timeLog => timeLog.issue),
+    __metadata("design:type", Array)
+], Issue.prototype, "timeLogs", void 0);
 __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)

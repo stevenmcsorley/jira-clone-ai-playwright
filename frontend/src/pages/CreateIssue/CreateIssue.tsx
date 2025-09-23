@@ -107,21 +107,13 @@ export const CreateIssue = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="flex-1 flex flex-col bg-gray-50">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              to={`/projects/${projectId}`}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              ← Back to Board
-            </Link>
-            <h1 className="text-xl font-bold text-gray-900">
-              Create Issue in {currentProject.name}
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Create Issue
+          </h1>
           <div className="flex items-center gap-3">
             <Button
               type="button"
@@ -143,7 +135,8 @@ export const CreateIssue = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto">
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <p className="text-red-600">{error}</p>
@@ -315,6 +308,7 @@ export const CreateIssue = () => {
             />
           </div>
         </form>
+        </div>
       </div>
     </div>
   )

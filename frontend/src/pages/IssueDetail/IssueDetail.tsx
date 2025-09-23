@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
+import { Comments } from '../../components/Comments/Comments'
+import { Attachments } from '../../components/Attachments/Attachments'
+import { Subtasks } from '../../components/Subtasks/Subtasks'
+import { TimeTracking } from '../../components/TimeTracking/TimeTracking'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
@@ -110,26 +114,18 @@ export const IssueDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="flex-1 flex flex-col bg-gray-50">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              to={`/projects/${projectId}`}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              ← Back to Board
-            </Link>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-500">
-                {currentProject?.key || 'TIS'}-{issue.id}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-500">
+              {currentProject?.key || 'TIS'}-{issue.id}
+            </span>
+            <div className={`w-6 h-6 flex items-center justify-center rounded ${priorityIcons[issue.priority].bg}`}>
+              <span className={`text-sm font-bold ${priorityIcons[issue.priority].color}`}>
+                {priorityIcons[issue.priority].icon}
               </span>
-              <div className={`w-6 h-6 flex items-center justify-center rounded ${priorityIcons[issue.priority].bg}`}>
-                <span className={`text-sm font-bold ${priorityIcons[issue.priority].color}`}>
-                  {priorityIcons[issue.priority].icon}
-                </span>
-              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -149,7 +145,8 @@ export const IssueDetail = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-6 py-8">
+        <div className="max-w-5xl mx-auto">
         <div className="grid grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="col-span-2 space-y-6">
@@ -184,6 +181,18 @@ export const IssueDetail = () => {
                 </div>
               </div>
             )}
+
+            {/* Time Tracking */}
+            <TimeTracking issueId={issue.id} originalEstimate={issue.estimate} />
+
+            {/* Subtasks */}
+            <Subtasks issueId={issue.id} />
+
+            {/* Attachments */}
+            <Attachments issueId={issue.id} />
+
+            {/* Comments & Activity */}
+            <Comments issueId={issue.id} />
           </div>
 
           {/* Sidebar */}
@@ -280,6 +289,7 @@ export const IssueDetail = () => {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
