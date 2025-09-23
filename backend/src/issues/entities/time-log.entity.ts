@@ -7,7 +7,14 @@ export class TimeLog {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('decimal')
+  @Column('decimal', {
+    precision: 5,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => parseFloat(value)
+    }
+  })
   hours: number;
 
   @Column()

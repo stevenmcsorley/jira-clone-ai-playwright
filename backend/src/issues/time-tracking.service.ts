@@ -52,13 +52,49 @@ export class TimeTrackingService {
   }
 
   async getTimeTrackingSummary(issueId: number): Promise<TimeTrackingSummaryDto> {
-    // Temporarily simplified for debugging
+    const timeLogs = await this.timeLogsRepository.find({
+      where: { issueId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' }
+    })
+
+    const totalTimeSpent = timeLogs.reduce((sum, log) => sum + log.hours, 0)
+
+    const timeSpentByUser = timeLogs.reduce((acc, log) => {
+      const existing = acc.find(item => item.userId === log.userId)
+      if (existing) {
+        existing.hours += log.hours
+      } else {
+        acc.push({
+          userId: log.userId,
+          userName: log.user.name,
+          hours: log.hours
+        })
+      }
+      return acc
+    }, [] as Array<{ userId: number; userName: string; hours: number }>)
+
+    const recentTimeLogs = timeLogs.slice(0, 5).map(log => ({
+      id: log.id,
+      hours: log.hours,
+      description: log.description,
+      date: log.date,
+      issueId: log.issueId,
+      userId: log.userId,
+      createdAt: log.createdAt,
+      user: {
+        id: log.user.id,
+        name: log.user.name,
+        email: log.user.email
+      }
+    }))
+
     return {
-      totalTimeSpent: 0,
-      originalEstimate: 0,
-      remainingEstimate: 0,
-      timeSpentByUser: [],
-      recentTimeLogs: []
+      totalTimeSpent,
+      originalEstimate: 0, // TODO: Get from issue estimate
+      remainingEstimate: 0, // TODO: Calculate based on estimate - timeSpent
+      timeSpentByUser,
+      recentTimeLogs
     }
   }
 

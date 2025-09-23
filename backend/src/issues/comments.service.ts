@@ -58,7 +58,7 @@ export class CommentsService {
   async findByIssue(issueId: number): Promise<Comment[]> {
     return this.commentsRepository.find({
       where: { issueId },
-      relations: ['author', 'replies', 'replies.author'],
+      relations: ['author', 'children', 'children.author'],
       order: { createdAt: 'ASC' }
     })
   }
@@ -66,7 +66,7 @@ export class CommentsService {
   async findOne(id: number): Promise<Comment> {
     const comment = await this.commentsRepository.findOne({
       where: { id },
-      relations: ['author', 'issue', 'parent', 'replies']
+      relations: ['author', 'issue', 'parent', 'children']
     })
 
     if (!comment) {

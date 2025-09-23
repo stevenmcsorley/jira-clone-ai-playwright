@@ -2,9 +2,9 @@ import { BaseApiService } from './base.service'
 
 export interface TimeLog {
   id: number
-  timeSpent: number
+  hours: number // Changed from timeSpent to match backend
   description?: string
-  workDate: string
+  date: string // Changed from workDate to match backend
   issueId: number
   userId: number
   createdAt: string
@@ -16,16 +16,16 @@ export interface TimeLog {
 }
 
 export interface CreateTimeLogRequest {
-  timeSpent: number
+  hours: number // Changed from timeSpent to match backend
   description?: string
-  workDate: string
+  date: string // Changed from workDate to match backend
   issueId: number
 }
 
 export interface UpdateTimeLogRequest {
-  timeSpent?: number
+  hours?: number // Changed from timeSpent to match backend
   description?: string
-  workDate?: string
+  date?: string // Changed from workDate to match backend
 }
 
 export interface TimeTrackingSummary {
@@ -35,7 +35,7 @@ export interface TimeTrackingSummary {
   timeSpentByUser: Array<{
     userId: number
     userName: string
-    timeSpent: number
+    hours: number // Changed from timeSpent to match backend
   }>
   recentTimeLogs: TimeLog[]
 }

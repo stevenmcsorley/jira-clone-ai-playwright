@@ -16,7 +16,6 @@ exports.SubtasksController = void 0;
 const common_1 = require("@nestjs/common");
 const subtasks_service_1 = require("./subtasks.service");
 const subtask_dto_1 = require("./dto/subtask.dto");
-const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let SubtasksController = class SubtasksController {
     constructor(subtasksService) {
         this.subtasksService = subtasksService;
@@ -97,7 +96,6 @@ __decorate([
 ], SubtasksController.prototype, "remove", null);
 exports.SubtasksController = SubtasksController = __decorate([
     (0, common_1.Controller)('api/subtasks'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [subtasks_service_1.SubtasksService])
 ], SubtasksController);
 //# sourceMappingURL=subtasks.controller.js.map

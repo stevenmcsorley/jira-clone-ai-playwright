@@ -58,9 +58,9 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
       const timeSpent = TimeTrackingService.parseTimeInput_client(newTimeLog.timeStr)
 
       const timeLogData: CreateTimeLogRequest = {
-        timeSpent,
+        hours: timeSpent,
         description: newTimeLog.description || undefined,
-        workDate: newTimeLog.workDate,
+        date: newTimeLog.workDate,
         issueId,
       }
 
@@ -204,7 +204,7 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
                 {summary.timeSpentByUser.map((userTime) => (
                   <div key={userTime.userId} className="flex items-center justify-between text-sm">
                     <span className="text-gray-700">{userTime.userName}</span>
-                    <span className="font-medium">{TimeTrackingService.formatTime(userTime.timeSpent)}</span>
+                    <span className="font-medium">{TimeTrackingService.formatTime(userTime.hours)}</span>
                   </div>
                 ))}
               </div>
@@ -310,13 +310,13 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
                     <span className="font-medium text-blue-600">
-                      {TimeTrackingService.formatTime(timeLog.timeSpent)}
+                      {TimeTrackingService.formatTime(timeLog.hours)}
                     </span>
                     <span className="text-sm text-gray-500">
                       by {timeLog.user.name}
                     </span>
                     <span className="text-sm text-gray-500">
-                      on {formatDate(timeLog.workDate)}
+                      on {formatDate(timeLog.date)}
                     </span>
                   </div>
                   {timeLog.description && (

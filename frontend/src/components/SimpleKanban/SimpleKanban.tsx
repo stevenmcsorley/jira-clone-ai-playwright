@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import type { Issue, IssueStatus } from '../../types/domain.types'
+import { useIssueMetrics } from '../../hooks/useIssueMetrics'
+import { TimeTrackingService } from '../../services/api/time-tracking.service'
 
 interface SimpleKanbanProps {
   issues: Issue[]
@@ -19,6 +21,7 @@ const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }:
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [editTitle, setEditTitle] = useState(issue.title)
   const [editDescription, setEditDescription] = useState(issue.description || '')
+  const metrics = useIssueMetrics(issue.id)
 
   // Update local state when issue props change
   React.useEffect(() => {
@@ -65,6 +68,20 @@ const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }:
     }
   }
 
+  const formatRelativeTime = (dateString: Date) => {
+    const now = new Date()
+    const date = new Date(dateString)
+    const diffMs = now.getTime() - date.getTime()
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+
+    if (diffDays > 0) return `${diffDays}d ago`
+    if (diffHours > 0) return `${diffHours}h ago`
+    if (diffMins > 0) return `${diffMins}m ago`
+    return 'Just now'
+  }
+
   return (
     <div
       draggable
@@ -107,6 +124,52 @@ const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }:
               {label}
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Metrics Row */}
+      {!metrics.loading && (
+        <div className="flex items-center gap-3 mb-3 text-xs text-gray-500">
+          {/* Subtask Progress */}
+          {metrics.subtaskProgress && metrics.subtaskProgress.total > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-200 rounded-sm relative overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 transition-all duration-300"
+                  style={{ width: `${metrics.subtaskProgress.percentage}%` }}
+                />
+              </div>
+              <span>{metrics.subtaskProgress.completed}/{metrics.subtaskProgress.total}</span>
+            </div>
+          )}
+
+          {/* Time Logged */}
+          {metrics.timeSpent > 0 && (
+            <div className="flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              <span>{TimeTrackingService.formatTime(metrics.timeSpent)}</span>
+            </div>
+          )}
+
+          {/* Comment Count */}
+          {metrics.commentCount > 0 && (
+            <div className="flex items-center gap-1">
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+              </svg>
+              <span>{metrics.commentCount}</span>
+            </div>
+          )}
+
+          {/* Last Updated */}
+          <div className="flex items-center gap-1 ml-auto">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            <span>{formatRelativeTime(issue.updatedAt)}</span>
+          </div>
         </div>
       )}
 

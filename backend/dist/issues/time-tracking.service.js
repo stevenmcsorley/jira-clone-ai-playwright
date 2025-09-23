@@ -55,12 +55,46 @@ let TimeTrackingService = class TimeTrackingService {
         });
     }
     async getTimeTrackingSummary(issueId) {
+        const timeLogs = await this.timeLogsRepository.find({
+            where: { issueId },
+            relations: ['user'],
+            order: { createdAt: 'DESC' }
+        });
+        const totalTimeSpent = timeLogs.reduce((sum, log) => sum + log.hours, 0);
+        const timeSpentByUser = timeLogs.reduce((acc, log) => {
+            const existing = acc.find(item => item.userId === log.userId);
+            if (existing) {
+                existing.hours += log.hours;
+            }
+            else {
+                acc.push({
+                    userId: log.userId,
+                    userName: log.user.name,
+                    hours: log.hours
+                });
+            }
+            return acc;
+        }, []);
+        const recentTimeLogs = timeLogs.slice(0, 5).map(log => ({
+            id: log.id,
+            hours: log.hours,
+            description: log.description,
+            date: log.date,
+            issueId: log.issueId,
+            userId: log.userId,
+            createdAt: log.createdAt,
+            user: {
+                id: log.user.id,
+                name: log.user.name,
+                email: log.user.email
+            }
+        }));
         return {
-            totalTimeSpent: 0,
+            totalTimeSpent,
             originalEstimate: 0,
             remainingEstimate: 0,
-            timeSpentByUser: [],
-            recentTimeLogs: []
+            timeSpentByUser,
+            recentTimeLogs
         };
     }
     async findOne(id) {

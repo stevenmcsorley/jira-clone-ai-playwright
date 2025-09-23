@@ -22,6 +22,9 @@ export const ProjectBoard = () => {
     createIssue
   } = useIssues(currentProject?.id)
 
+  // Don't render issues until we have the correct project
+  const shouldShowIssues = currentProject && !projectsLoading
+
   const handleIssueUpdate = async (issueId: number, updates: UpdateIssueRequest) => {
     try {
       await updateIssue(issueId, updates)
@@ -128,15 +131,25 @@ export const ProjectBoard = () => {
 
       {/* Board Content */}
       <main className="flex-1 px-6 py-6">
-        <KanbanBoard
-          project={currentProject}
-          issues={issues}
-          loading={issuesLoading}
-          onIssueUpdate={handleIssueUpdate}
-          onIssueCreate={handleIssueCreate}
-          onIssueEdit={handleIssueEdit}
-          onIssueDelete={handleIssueDelete}
-        />
+        {shouldShowIssues ? (
+          <KanbanBoard
+            key={currentProject.id} // Force re-mount when project changes
+            project={currentProject}
+            issues={issues}
+            loading={issuesLoading}
+            onIssueUpdate={handleIssueUpdate}
+            onIssueCreate={handleIssueCreate}
+            onIssueEdit={handleIssueEdit}
+            onIssueDelete={handleIssueDelete}
+          />
+        ) : (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading board...</p>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

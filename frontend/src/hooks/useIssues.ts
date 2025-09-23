@@ -11,6 +11,9 @@ export const useIssues = (projectId?: number) => {
     try {
       setLoading(true)
       setError(null)
+      // Clear issues immediately when switching projects
+      setIssues([])
+
       const data = projectId
         ? await IssuesService.getByProject(projectId)
         : await IssuesService.getAll()
@@ -49,7 +52,16 @@ export const useIssues = (projectId?: number) => {
   }
 
   useEffect(() => {
-    fetchIssues()
+    // Clear previous issues immediately when projectId changes
+    setIssues([])
+    setLoading(true)
+
+    // Only fetch if we have a projectId, or if we want all issues
+    if (projectId !== undefined) {
+      fetchIssues()
+    } else {
+      setLoading(false)
+    }
   }, [projectId])
 
   return {

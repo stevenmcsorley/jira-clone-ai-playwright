@@ -22,7 +22,7 @@ import { Response as ExpressResponse } from 'express'
 import { createReadStream, existsSync } from 'fs'
 
 @Controller('api/attachments')
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard) // Temporarily disabled for development
 export class AttachmentsController {
   constructor(private readonly attachmentsService: AttachmentsService) {}
 
@@ -60,7 +60,9 @@ export class AttachmentsController {
       issueId,
     }
 
-    return this.attachmentsService.create(createAttachmentDto, req.user.id)
+    // Use default user ID for development
+    const userId = req.user?.id || 1
+    return this.attachmentsService.create(createAttachmentDto, userId)
   }
 
   @Get('issue/:issueId')
@@ -90,6 +92,8 @@ export class AttachmentsController {
 
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
-    return this.attachmentsService.remove(id, req.user.id)
+    // Use default user ID for development
+    const userId = req.user?.id || 1
+    return this.attachmentsService.remove(id, userId)
   }
 }

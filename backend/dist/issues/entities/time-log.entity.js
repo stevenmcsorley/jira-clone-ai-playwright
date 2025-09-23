@@ -21,7 +21,14 @@ __decorate([
     __metadata("design:type", Number)
 ], TimeLog.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)('decimal'),
+    (0, typeorm_1.Column)('decimal', {
+        precision: 5,
+        scale: 2,
+        transformer: {
+            to: (value) => value,
+            from: (value) => parseFloat(value)
+        }
+    }),
     __metadata("design:type", Number)
 ], TimeLog.prototype, "hours", void 0);
 __decorate([

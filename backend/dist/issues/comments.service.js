@@ -61,14 +61,14 @@ let CommentsService = class CommentsService {
     async findByIssue(issueId) {
         return this.commentsRepository.find({
             where: { issueId },
-            relations: ['author', 'replies', 'replies.author'],
+            relations: ['author', 'children', 'children.author'],
             order: { createdAt: 'ASC' }
         });
     }
     async findOne(id) {
         const comment = await this.commentsRepository.findOne({
             where: { id },
-            relations: ['author', 'issue', 'parent', 'replies']
+            relations: ['author', 'issue', 'parent', 'children']
         });
         if (!comment) {
             throw new common_1.NotFoundException('Comment not found');

@@ -115,7 +115,7 @@ interface Issue {
   id: number
   title: string
   description?: string
-  status: 'todo' | 'in_progress' | 'done'
+  status: 'todo' | 'in_progress' | 'code_review' | 'done'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   type: 'task' | 'story' | 'bug' | 'epic'
   projectId: number
@@ -129,6 +129,70 @@ interface Issue {
   position: number
   createdAt: Date
   updatedAt: Date
+}
+```
+
+### Subtask
+```typescript
+interface Subtask {
+  id: number
+  title: string
+  description?: string
+  status: 'todo' | 'in_progress' | 'code_review' | 'done'
+  parentIssueId: number
+  assigneeId?: number
+  assignee?: User
+  estimate?: number
+  position: number
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### Comment
+```typescript
+interface Comment {
+  id: number
+  content: string
+  issueId: number
+  authorId: number
+  author: User
+  parentId?: number
+  isEdited: boolean
+  editedAt?: Date
+  createdAt: Date
+  updatedAt: Date
+  replies?: Comment[]
+}
+```
+
+### TimeLog
+```typescript
+interface TimeLog {
+  id: number
+  hours: number
+  description?: string
+  date: Date
+  issueId: number
+  userId: number
+  user: User
+  createdAt: Date
+}
+```
+
+### Attachment
+```typescript
+interface Attachment {
+  id: number
+  filename: string
+  originalName: string
+  mimeType: string
+  size: number
+  path: string
+  issueId: number
+  uploadedById: number
+  uploadedBy: User
+  createdAt: Date
 }
 ```
 
@@ -274,7 +338,7 @@ POST /api/issues
 {
   "title": "string",
   "description": "string", // optional
-  "status": "todo" | "in_progress" | "done",
+  "status": "todo" | "in_progress" | "code_review" | "done",
   "priority": "low" | "medium" | "high" | "urgent",
   "type": "task" | "story" | "bug" | "epic",
   "projectId": "number",
@@ -306,7 +370,7 @@ POST /api/issues/reorder
   {
     "id": "number",
     "position": "number",
-    "status": "todo" | "in_progress" | "done"
+    "status": "todo" | "in_progress" | "code_review" | "done"
   }
 ]
 ```
@@ -318,6 +382,295 @@ DELETE /api/issues/:id
 ```
 **Parameters:**
 - `id` (number): Issue ID
+
+**Response:** No content (204)
+
+### Subtasks
+
+#### Create Subtask
+```http
+POST /api/subtasks
+```
+**Body:**
+```json
+{
+  "title": "string",
+  "description": "string", // optional
+  "parentIssueId": "number",
+  "assigneeId": "number", // optional
+  "estimate": "number" // optional
+}
+```
+**Response:** Created Subtask object
+
+#### Get Subtasks by Issue
+```http
+GET /api/subtasks/issue/:issueId
+```
+**Parameters:**
+- `issueId` (number): Parent issue ID
+
+**Response:** Array of Subtask objects
+
+#### Get Subtask Progress
+```http
+GET /api/subtasks/issue/:issueId/progress
+```
+**Parameters:**
+- `issueId` (number): Parent issue ID
+
+**Response:**
+```json
+{
+  "completed": "number",
+  "total": "number",
+  "percentage": "number"
+}
+```
+
+#### Get Subtask by ID
+```http
+GET /api/subtasks/:id
+```
+**Parameters:**
+- `id` (number): Subtask ID
+
+**Response:** Subtask object
+
+#### Update Subtask
+```http
+PATCH /api/subtasks/:id
+```
+**Parameters:**
+- `id` (number): Subtask ID
+
+**Body:** Partial Subtask object
+**Response:** Updated Subtask object
+
+#### Reorder Subtasks
+```http
+POST /api/subtasks/issue/:issueId/reorder
+```
+**Parameters:**
+- `issueId` (number): Parent issue ID
+
+**Body:**
+```json
+{
+  "subtaskIds": ["number"] // Array of subtask IDs in desired order
+}
+```
+**Response:** No content (204)
+
+#### Delete Subtask
+```http
+DELETE /api/subtasks/:id
+```
+**Parameters:**
+- `id` (number): Subtask ID
+
+**Response:** No content (204)
+
+### Comments
+
+#### Create Comment
+```http
+POST /api/comments
+```
+**Body:**
+```json
+{
+  "content": "string",
+  "issueId": "number",
+  "parentId": "number" // optional for replies
+}
+```
+**Response:** Created Comment object
+
+#### Get Comments by Issue
+```http
+GET /api/comments/issue/:issueId
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Response:** Array of Comment objects with nested replies
+
+#### Get Comment by ID
+```http
+GET /api/comments/:id
+```
+**Parameters:**
+- `id` (number): Comment ID
+
+**Response:** Comment object
+
+#### Update Comment
+```http
+PATCH /api/comments/:id
+```
+**Parameters:**
+- `id` (number): Comment ID
+
+**Body:**
+```json
+{
+  "content": "string"
+}
+```
+**Response:** Updated Comment object
+
+#### Delete Comment
+```http
+DELETE /api/comments/:id
+```
+**Parameters:**
+- `id` (number): Comment ID
+
+**Response:** No content (204)
+
+### Time Tracking
+
+#### Log Time
+```http
+POST /api/time-tracking/log
+```
+**Body:**
+```json
+{
+  "hours": "number", // e.g., 2.5 for 2 hours 30 minutes
+  "description": "string", // optional
+  "date": "string", // ISO date string, e.g., "2024-01-15"
+  "issueId": "number"
+}
+```
+**Response:** Created TimeLog object
+
+#### Get Time Logs by Issue
+```http
+GET /api/time-tracking/issue/:issueId
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Response:** Array of TimeLog objects
+
+#### Get Time Tracking Summary
+```http
+GET /api/time-tracking/issue/:issueId/summary
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Response:**
+```json
+{
+  "totalTimeSpent": "number",
+  "originalEstimate": "number",
+  "remainingEstimate": "number",
+  "timeSpentByUser": [
+    {
+      "userId": "number",
+      "userName": "string",
+      "hours": "number"
+    }
+  ],
+  "recentTimeLogs": [TimeLog]
+}
+```
+
+#### Get Time Log by ID
+```http
+GET /api/time-tracking/log/:id
+```
+**Parameters:**
+- `id` (number): Time log ID
+
+**Response:** TimeLog object
+
+#### Update Time Log
+```http
+PATCH /api/time-tracking/log/:id
+```
+**Parameters:**
+- `id` (number): Time log ID
+
+**Body:** Partial TimeLog object
+**Response:** Updated TimeLog object
+
+#### Delete Time Log
+```http
+DELETE /api/time-tracking/log/:id
+```
+**Parameters:**
+- `id` (number): Time log ID
+
+**Response:** No content (204)
+
+#### Parse Time Input
+```http
+POST /api/time-tracking/parse-time
+```
+**Body:**
+```json
+{
+  "timeStr": "string" // e.g., "2h 30m", "1.5h", "90m"
+}
+```
+**Response:**
+```json
+{
+  "hours": "number",
+  "formatted": "string",
+  "error": "string" // if parsing failed
+}
+```
+
+### Attachments
+
+#### Upload File
+```http
+POST /api/attachments/upload/:issueId
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Body:** Multipart form data with `file` field
+**Response:** Created Attachment object
+
+#### Get Attachments by Issue
+```http
+GET /api/attachments/issue/:issueId
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Response:** Array of Attachment objects
+
+#### Get Attachment by ID
+```http
+GET /api/attachments/:id
+```
+**Parameters:**
+- `id` (number): Attachment ID
+
+**Response:** Attachment object
+
+#### Download File
+```http
+GET /api/attachments/download/:id
+```
+**Parameters:**
+- `id` (number): Attachment ID
+
+**Response:** File download with appropriate headers
+
+#### Delete Attachment
+```http
+DELETE /api/attachments/:id
+```
+**Parameters:**
+- `id` (number): Attachment ID
 
 **Response:** No content (204)
 
@@ -373,7 +726,135 @@ const board = {
 }
 ```
 
-### 4. Bulk Operations
+### 4. Creating a Complete Issue with Subtasks and Time Tracking
+```javascript
+// Step 1: Create main issue
+const mainIssue = await fetch('http://localhost:4000/api/issues', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'Implement user authentication',
+    description: 'Add JWT-based authentication to the application',
+    status: 'todo',
+    priority: 'high',
+    type: 'story',
+    projectId: 1,
+    reporterId: 1,
+    estimate: 8,
+    labels: ['authentication', 'security']
+  })
+}).then(r => r.json())
+
+// Step 2: Create subtasks
+const subtasks = [
+  'Design authentication flow',
+  'Implement JWT token generation',
+  'Add login/logout endpoints',
+  'Create user registration'
+]
+
+for (const subtaskTitle of subtasks) {
+  await fetch('http://localhost:4000/api/subtasks', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: subtaskTitle,
+      parentIssueId: mainIssue.id,
+      estimate: 2
+    })
+  })
+}
+
+// Step 3: Add initial comment
+await fetch('http://localhost:4000/api/comments', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    content: 'Starting work on authentication implementation',
+    issueId: mainIssue.id
+  })
+})
+```
+
+### 5. Time Tracking Workflow
+```javascript
+// Log time worked
+await fetch('http://localhost:4000/api/time-tracking/log', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    hours: 2.5, // 2 hours 30 minutes
+    description: 'Implemented JWT token generation logic',
+    date: '2024-01-15',
+    issueId: issueId
+  })
+})
+
+// Get time tracking summary
+const summary = await fetch(`http://localhost:4000/api/time-tracking/issue/${issueId}/summary`)
+  .then(r => r.json())
+
+console.log(`Total time spent: ${summary.totalTimeSpent} hours`)
+console.log(`Contributors: ${summary.timeSpentByUser.length}`)
+```
+
+### 6. Managing Subtask Progress
+```javascript
+// Get subtask progress
+const progress = await fetch(`http://localhost:4000/api/subtasks/issue/${issueId}/progress`)
+  .then(r => r.json())
+
+console.log(`Progress: ${progress.completed}/${progress.total} (${progress.percentage}%)`)
+
+// Complete a subtask
+await fetch(`http://localhost:4000/api/subtasks/${subtaskId}`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ status: 'done' })
+})
+```
+
+### 7. File Attachments
+```javascript
+// Upload a file (requires FormData)
+const formData = new FormData()
+formData.append('file', fileBlob, 'screenshot.png')
+
+const attachment = await fetch(`http://localhost:4000/api/attachments/upload/${issueId}`, {
+  method: 'POST',
+  body: formData
+}).then(r => r.json())
+
+// Get all attachments for an issue
+const attachments = await fetch(`http://localhost:4000/api/attachments/issue/${issueId}`)
+  .then(r => r.json())
+```
+
+### 8. Comment Threads
+```javascript
+// Add a main comment
+const mainComment = await fetch('http://localhost:4000/api/comments', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    content: 'This looks good, but we should add error handling',
+    issueId: issueId
+  })
+}).then(r => r.json())
+
+// Reply to the comment
+await fetch('http://localhost:4000/api/comments', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    content: 'Agreed, I will add try-catch blocks',
+    issueId: issueId,
+    parentId: mainComment.id
+  })
+})
+```
+
+### 9. Bulk Operations
 ```javascript
 // Get all high priority bugs
 const highPriorityBugs = await fetch('http://localhost:4000/api/issues')

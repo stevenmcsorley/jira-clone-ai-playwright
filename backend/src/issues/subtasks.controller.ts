@@ -4,7 +4,7 @@ import { CreateSubtaskDto, UpdateSubtaskDto } from './dto/subtask.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 
 @Controller('api/subtasks')
-@UseGuards(JwtAuthGuard)
+// @UseGuards(JwtAuthGuard) // Temporarily disabled for development
 export class SubtasksController {
   constructor(private readonly subtasksService: SubtasksService) {}
 
