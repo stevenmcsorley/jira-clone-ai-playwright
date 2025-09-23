@@ -1,0 +1,16 @@
+import { IssuesService } from './issues.service';
+import { CreateIssueDto } from './dto/create-issue.dto';
+export declare class IssuesController {
+    private readonly issuesService;
+    constructor(issuesService: IssuesService);
+    create(createIssueDto: CreateIssueDto): Promise<import("./entities/issue.entity").Issue>;
+    findAll(projectId?: string): Promise<import("./entities/issue.entity").Issue[]>;
+    findOne(id: string): Promise<import("./entities/issue.entity").Issue>;
+    update(id: string, updateData: Partial<CreateIssueDto>): Promise<import("./entities/issue.entity").Issue>;
+    updatePositions(updates: {
+        id: number;
+        position: number;
+        status: string;
+    }[]): Promise<void>;
+    remove(id: string): Promise<void>;
+}

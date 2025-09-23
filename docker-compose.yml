@@ -1,0 +1,89 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: jira_clone
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: jira_clone
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgres://jira_clone:secret@postgres:5432/jira_clone
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      NODE_ENV: development
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      PORT: 4000
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      VITE_API_URL: http://localhost:4000/api
+      VITE_WS_URL: ws://localhost:4000
+    ports:
+      - "5173:5173"
+    volumes:
+      # Only mount source files for development hot reload
+      - ./frontend/src:/usr/src/app/src
+      - ./frontend/public:/usr/src/app/public
+      - ./frontend/index.html:/usr/src/app/index.html
+      - ./frontend/vite.config.ts:/usr/src/app/vite.config.ts
+      - ./frontend/tsconfig.json:/usr/src/app/tsconfig.json
+      - ./frontend/tsconfig.node.json:/usr/src/app/tsconfig.node.json
+      - ./frontend/tailwind.config.js:/usr/src/app/tailwind.config.js
+      
+      # Use named volume for node_modules to avoid conflicts
+      - frontend_node_modules:/usr/src/app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  frontend_node_modules:

@@ -1,0 +1,18 @@
+import { Repository } from 'typeorm';
+import { Issue } from './entities/issue.entity';
+import { CreateIssueDto } from './dto/create-issue.dto';
+export declare class IssuesService {
+    private issuesRepository;
+    constructor(issuesRepository: Repository<Issue>);
+    create(createIssueDto: CreateIssueDto): Promise<Issue>;
+    findAll(): Promise<Issue[]>;
+    findByProject(projectId: number): Promise<Issue[]>;
+    findOne(id: number): Promise<Issue>;
+    update(id: number, updateData: Partial<Issue>): Promise<Issue>;
+    updatePositions(updates: {
+        id: number;
+        position: number;
+        status: string;
+    }[]): Promise<void>;
+    remove(id: number): Promise<void>;
+}
