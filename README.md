@@ -2,6 +2,8 @@
 
 A modern project management tool built with React, TypeScript, NestJS, and PostgreSQL.
 
+![Sprint](/sprint.png "Sprint")
+
 ## 🚀 Features
 
 - **Kanban Board**: Drag-and-drop interface for managing issues
