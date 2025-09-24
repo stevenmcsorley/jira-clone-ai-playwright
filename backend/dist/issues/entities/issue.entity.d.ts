@@ -5,6 +5,7 @@ import { Attachment } from './attachment.entity';
 import { Subtask } from './subtask.entity';
 import { TimeLog } from './time-log.entity';
 import { IssueLink } from './issue-link.entity';
+import { Sprint } from '../../sprints/entities/sprint.entity';
 import { IssueStatus } from '../enums/issue-status.enum';
 export declare enum IssuePriority {
     LOW = "low",
@@ -37,6 +38,8 @@ export declare class Issue {
     epicId: number;
     epic: Issue;
     epicIssues: Issue[];
+    sprintId: number;
+    sprint: Sprint;
     createdAt: Date;
     comments: Comment[];
     attachments: Attachment[];

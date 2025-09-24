@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm'
 import { User } from '../../users/entities/user.entity'
 import { Issue } from '../../issues/entities/issue.entity'
+import { Sprint } from '../../sprints/entities/sprint.entity'
 
 @Entity('projects')
 export class Project {
@@ -25,6 +26,9 @@ export class Project {
 
   @OneToMany(() => Issue, issue => issue.project)
   issues: Issue[]
+
+  @OneToMany(() => Sprint, sprint => sprint.project)
+  sprints: Sprint[]
 
   @CreateDateColumn()
   createdAt: Date

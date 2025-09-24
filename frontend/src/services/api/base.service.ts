@@ -21,7 +21,12 @@ export class BaseApiService {
       throw new Error(`API Error: ${response.status} ${response.statusText}`)
     }
 
-    return response.json()
+    const text = await response.text()
+    if (!text) {
+      return {} as T
+    }
+
+    return JSON.parse(text)
   }
 
   protected static async get<T>(endpoint: string): Promise<T> {

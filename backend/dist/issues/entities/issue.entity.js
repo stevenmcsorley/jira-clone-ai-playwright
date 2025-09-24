@@ -18,6 +18,7 @@ const attachment_entity_1 = require("./attachment.entity");
 const subtask_entity_1 = require("./subtask.entity");
 const time_log_entity_1 = require("./time-log.entity");
 const issue_link_entity_1 = require("./issue-link.entity");
+const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
 const issue_status_enum_1 = require("../enums/issue-status.enum");
 var IssuePriority;
 (function (IssuePriority) {
@@ -124,6 +125,15 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => Issue, issue => issue.epic),
     __metadata("design:type", Array)
 ], Issue.prototype, "epicIssues", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Issue.prototype, "sprintId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => sprint_entity_1.Sprint, sprint => sprint.issues, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'sprintId' }),
+    __metadata("design:type", sprint_entity_1.Sprint)
+], Issue.prototype, "sprint", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

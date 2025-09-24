@@ -13,6 +13,7 @@ exports.Project = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const issue_entity_1 = require("../../issues/entities/issue.entity");
+const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
 let Project = class Project {
 };
 exports.Project = Project;
@@ -45,6 +46,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => issue_entity_1.Issue, issue => issue.project),
     __metadata("design:type", Array)
 ], Project.prototype, "issues", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => sprint_entity_1.Sprint, sprint => sprint.project),
+    __metadata("design:type", Array)
+], Project.prototype, "sprints", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

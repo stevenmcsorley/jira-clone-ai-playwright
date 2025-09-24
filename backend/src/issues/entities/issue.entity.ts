@@ -6,6 +6,7 @@ import { Attachment } from './attachment.entity'
 import { Subtask } from './subtask.entity'
 import { TimeLog } from './time-log.entity'
 import { IssueLink } from './issue-link.entity'
+import { Sprint } from '../../sprints/entities/sprint.entity'
 import { IssueStatus } from '../enums/issue-status.enum'
 
 export enum IssuePriority {
@@ -93,6 +94,13 @@ export class Issue {
 
   @OneToMany(() => Issue, issue => issue.epic)
   epicIssues: Issue[]
+
+  @Column({ nullable: true })
+  sprintId: number
+
+  @ManyToOne(() => Sprint, sprint => sprint.issues, { nullable: true })
+  @JoinColumn({ name: 'sprintId' })
+  sprint: Sprint
 
   @CreateDateColumn()
   createdAt: Date

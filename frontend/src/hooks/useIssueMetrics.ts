@@ -2,11 +2,31 @@ import { useState, useEffect } from 'react'
 import { SubtasksService, type SubtaskProgress } from '../services/api/subtasks.service'
 import { CommentsService } from '../services/api/comments.service'
 import { TimeTrackingService, type TimeTrackingSummary } from '../services/api/time-tracking.service'
+import { AttachmentsService } from '../services/api/attachments.service'
+import { IssuesService } from '../services/api/issues.service'
+
+interface TimeTrackingWarning {
+  type: 'over_estimate' | 'under_estimate' | 'no_estimate' | 'on_track'
+  severity: 'low' | 'medium' | 'high'
+  message: string
+  percentage?: number
+}
+
+interface EpicProgress {
+  epicTitle: string
+  completed: number
+  total: number
+  percentage: number
+}
 
 interface IssueMetrics {
   subtaskProgress?: SubtaskProgress
   commentCount: number
+  attachmentCount: number
   timeSpent: number
+  originalEstimate: number
+  timeTrackingWarning?: TimeTrackingWarning
+  epicProgress?: EpicProgress
   loading: boolean
 }
 

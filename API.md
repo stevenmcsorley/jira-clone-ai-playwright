@@ -127,6 +127,11 @@ interface Issue {
   estimate?: number
   labels: string[]
   position: number
+  epicId?: number
+  epic?: Issue // Parent epic (if this is not an epic)
+  epicIssues?: Issue[] // Child issues (if this is an epic)
+  sprintId?: number
+  sprint?: Sprint
   createdAt: Date
   updatedAt: Date
 }
@@ -193,6 +198,24 @@ interface Attachment {
   uploadedById: number
   uploadedBy: User
   createdAt: Date
+}
+```
+
+### Sprint
+```typescript
+interface Sprint {
+  id: number
+  name: string
+  goal?: string
+  status: 'future' | 'active' | 'completed'
+  projectId: number
+  startDate?: Date
+  endDate?: Date
+  position: number
+  issues: Issue[]
+  createdById: number
+  createdAt: Date
+  updatedAt: Date
 }
 ```
 
@@ -674,6 +697,122 @@ DELETE /api/attachments/:id
 
 **Response:** No content (204)
 
+### Sprints
+
+#### Create Sprint
+```http
+POST /api/sprints
+```
+**Body:**
+```json
+{
+  "name": "string",
+  "goal": "string", // optional
+  "projectId": "number",
+  "createdById": "number"
+}
+```
+**Response:** Created Sprint object
+
+#### Get Sprints by Project
+```http
+GET /api/sprints?projectId=:projectId
+```
+**Query Parameters:**
+- `projectId` (number): Project ID
+
+**Response:** Array of Sprint objects with related issues, ordered by position
+
+#### Get Sprint by ID
+```http
+GET /api/sprints/:id
+```
+**Parameters:**
+- `id` (number): Sprint ID
+
+**Response:** Sprint object with related issues and project
+
+#### Update Sprint
+```http
+PATCH /api/sprints/:id
+```
+**Parameters:**
+- `id` (number): Sprint ID
+
+**Body:** Partial Sprint object
+**Response:** Updated Sprint object
+
+#### Start Sprint
+```http
+POST /api/sprints/:id/start
+```
+**Parameters:**
+- `id` (number): Sprint ID
+
+**Body:**
+```json
+{
+  "startDate": "string", // ISO date string
+  "endDate": "string"    // ISO date string
+}
+```
+
+**Common Duration Templates:**
+- 1 Day: `endDate = new Date(startDate.getTime() + 1 * 24 * 60 * 60 * 1000)`
+- 1 Week: `endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)`
+- 2 Weeks (Recommended): `endDate = new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000)`
+- Custom: Calculate based on desired number of days
+
+**Response:** Updated Sprint object with status 'active'
+
+#### Complete Sprint
+```http
+POST /api/sprints/:id/complete
+```
+**Parameters:**
+- `id` (number): Sprint ID
+
+**Response:** Updated Sprint object with status 'completed'
+
+#### Add Issue to Sprint
+```http
+POST /api/sprints/:id/add-issue/:issueId
+```
+**Parameters:**
+- `id` (number): Sprint ID
+- `issueId` (number): Issue ID
+
+**Response:** No content (204)
+
+#### Remove Issue from Sprint
+```http
+POST /api/sprints/remove-issue/:issueId
+```
+**Parameters:**
+- `issueId` (number): Issue ID
+
+**Response:** No content (204)
+
+#### Get Backlog Issues
+```http
+GET /api/sprints/backlog?projectId=:projectId
+```
+**Query Parameters:**
+- `projectId` (number): Project ID
+
+**Response:** Array of Issue objects not assigned to any sprint
+
+#### Delete Sprint
+```http
+DELETE /api/sprints/:id
+```
+**Parameters:**
+- `id` (number): Sprint ID
+
+**Note:** All issues in the sprint are moved back to the backlog
+
+**Response:** No content (204)
+
 ## Common Usage Patterns for AI Agents
 
 ### 1. Creating a Bug Report from Test Failures
@@ -854,7 +993,167 @@ await fetch('http://localhost:4000/api/comments', {
 })
 ```
 
-### 9. Bulk Operations
+### 9. Sprint Management Workflow
+```javascript
+// Step 1: Create a new sprint
+const sprint = await fetch('http://localhost:4000/api/sprints', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: 'Sprint 1',
+    goal: 'Complete user authentication features',
+    projectId: projectId,
+    createdById: 1
+  })
+}).then(r => r.json())
+
+// Step 2: Get backlog issues
+const backlogIssues = await fetch(`http://localhost:4000/api/sprints/backlog?projectId=${projectId}`)
+  .then(r => r.json())
+
+// Step 3: Add selected issues to sprint
+const selectedIssues = backlogIssues.slice(0, 5) // Take first 5 issues
+for (const issue of selectedIssues) {
+  await fetch(`http://localhost:4000/api/sprints/${sprint.id}/add-issue/${issue.id}`, {
+    method: 'POST'
+  })
+}
+
+// Step 4: Start the sprint with duration template
+const startDate = new Date()
+let endDate
+
+// Choose sprint duration template
+const sprintDuration = '2-weeks' // Options: '1-day', '1-week', '2-weeks', or custom number of days
+
+switch (sprintDuration) {
+  case '1-day':
+    endDate = new Date(startDate.getTime() + 1 * 24 * 60 * 60 * 1000)
+    break
+  case '1-week':
+    endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)
+    break
+  case '2-weeks':
+    endDate = new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000)
+    break
+  default:
+    // For custom duration, use number of days
+    const customDays = 21 // Example: 3 weeks
+    endDate = new Date(startDate.getTime() + customDays * 24 * 60 * 60 * 1000)
+}
+
+const startedSprint = await fetch(`http://localhost:4000/api/sprints/${sprint.id}/start`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString()
+  })
+}).then(r => r.json())
+
+console.log(`Sprint "${startedSprint.name}" is now active`)
+
+// Step 5: Later, complete the sprint
+await fetch(`http://localhost:4000/api/sprints/${sprint.id}/complete`, {
+  method: 'POST'
+})
+```
+
+### 10. Epic and Issue Linking
+```javascript
+// Step 1: Create an epic
+const epic = await fetch('http://localhost:4000/api/issues', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    title: 'User Management System',
+    description: 'Complete user management functionality including auth, profiles, and permissions',
+    status: 'todo',
+    priority: 'high',
+    type: 'epic',
+    projectId: projectId,
+    reporterId: 1,
+    estimate: 40,
+    labels: ['epic', 'user-management']
+  })
+}).then(r => r.json())
+
+// Step 2: Create stories and link them to the epic
+const stories = [
+  'User Registration',
+  'User Login',
+  'Profile Management',
+  'Password Reset'
+]
+
+for (const storyTitle of stories) {
+  await fetch('http://localhost:4000/api/issues', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: storyTitle,
+      status: 'todo',
+      priority: 'medium',
+      type: 'story',
+      projectId: projectId,
+      reporterId: 1,
+      epicId: epic.id, // Link to epic
+      estimate: 8
+    })
+  })
+}
+```
+
+### 11. Sprint Reporting and Analytics
+```javascript
+// Get all sprints for reporting
+const sprints = await fetch(`http://localhost:4000/api/sprints?projectId=${projectId}`)
+  .then(r => r.json())
+
+// Filter completed sprints for historical analysis
+const completedSprints = sprints.filter(sprint => sprint.status === 'completed')
+
+// Calculate sprint metrics for each completed sprint
+const sprintReports = completedSprints.map(sprint => {
+  const totalIssues = sprint.issues.length
+  const completedIssues = sprint.issues.filter(issue => issue.status === 'done').length
+  const completionRate = totalIssues > 0 ? (completedIssues / totalIssues) * 100 : 0
+
+  const totalEstimate = sprint.issues.reduce((sum, issue) => sum + (issue.estimate || 0), 0)
+  const completedEstimate = sprint.issues
+    .filter(issue => issue.status === 'done')
+    .reduce((sum, issue) => sum + (issue.estimate || 0), 0)
+
+  const sprintDuration = sprint.startDate && sprint.endDate
+    ? Math.ceil((new Date(sprint.endDate) - new Date(sprint.startDate)) / (1000 * 60 * 60 * 24))
+    : null
+
+  return {
+    id: sprint.id,
+    name: sprint.name,
+    status: sprint.status,
+    startDate: sprint.startDate,
+    endDate: sprint.endDate,
+    duration: sprintDuration,
+    totalIssues,
+    completedIssues,
+    completionRate: Math.round(completionRate),
+    totalEstimate,
+    completedEstimate,
+    velocity: completedEstimate, // Story points completed
+    goal: sprint.goal
+  }
+})
+
+console.log('Sprint Reports:', sprintReports)
+
+// Calculate team velocity trend (last 5 sprints)
+const recentSprints = sprintReports.slice(-5)
+const averageVelocity = recentSprints.reduce((sum, sprint) => sum + sprint.velocity, 0) / recentSprints.length
+console.log(`Team average velocity: ${Math.round(averageVelocity)} points per sprint`)
+```
+
+### 12. Bulk Operations
 ```javascript
 // Get all high priority bugs
 const highPriorityBugs = await fetch('http://localhost:4000/api/issues')

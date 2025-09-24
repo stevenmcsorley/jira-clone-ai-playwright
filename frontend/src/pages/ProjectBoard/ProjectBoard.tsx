@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import { Button } from '../../components/ui/Button'
 import { useProjects } from '../../hooks/useProjects'
-import { useIssues } from '../../hooks/useIssues'
+import { SprintsService, type Sprint } from '../../services/api/sprints.service'
+import { IssuesService } from '../../services/api/issues.service'
 import type { UpdateIssueRequest, Issue } from '../../types/domain.types'
 
 export const ProjectBoard = () => {
@@ -11,23 +12,51 @@ export const ProjectBoard = () => {
   const navigate = useNavigate()
   const { projects, loading: projectsLoading } = useProjects()
   const [searchQuery, setSearchQuery] = useState('')
+  const [sprints, setSprints] = useState<Sprint[]>([])
+  const [issues, setIssues] = useState<Issue[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeSprint, setActiveSprint] = useState<Sprint | null>(null)
 
   // Find the current project
   const currentProject = projects.find(p => p.id === Number(projectId))
 
-  const {
-    issues,
-    loading: issuesLoading,
-    updateIssue,
-    createIssue
-  } = useIssues(currentProject?.id)
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!projectId) return
+
+      try {
+        setLoading(true)
+        const sprintsData = await SprintsService.getByProject(parseInt(projectId))
+        setSprints(sprintsData)
+
+        // Find active sprint and get its issues
+        const activeSprintData = sprintsData.find(sprint => sprint.status === 'active')
+        setActiveSprint(activeSprintData || null)
+
+        if (activeSprintData) {
+          setIssues(activeSprintData.issues)
+        } else {
+          setIssues([])
+        }
+      } catch (error) {
+        console.error('Error fetching board data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [projectId])
 
   // Don't render issues until we have the correct project
   const shouldShowIssues = currentProject && !projectsLoading
 
   const handleIssueUpdate = async (issueId: number, updates: UpdateIssueRequest) => {
     try {
-      await updateIssue(issueId, updates)
+      const updatedIssue = await IssuesService.update(issueId, updates)
+      setIssues(prev => prev.map(issue =>
+        issue.id === issueId ? updatedIssue : issue
+      ))
     } catch (error) {
       console.error('Failed to update issue:', error)
     }
@@ -58,7 +87,19 @@ export const ProjectBoard = () => {
     }
   }
 
-  if (projectsLoading || !currentProject) {
+  const handleCompleteSprint = async () => {
+    if (!activeSprint) return
+
+    try {
+      await SprintsService.completeSprint(activeSprint.id)
+      // Refresh the page data to show no active sprint
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to complete sprint:', error)
+    }
+  }
+
+  if (projectsLoading || loading || !currentProject) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -74,21 +115,57 @@ export const ProjectBoard = () => {
       {/* Board Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Board</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {activeSprint ? `${activeSprint.name} Board` : 'Project Board'}
+            </h1>
+            {activeSprint ? (
+              <>
+                <p className="text-sm text-gray-600 mt-1">
+                  {activeSprint.goal && `Goal: ${activeSprint.goal}`}
+                  {activeSprint.issues.length === 0
+                    ? ' • No issues in this sprint'
+                    : ` • ${activeSprint.issues.length} issues`
+                  }
+                </p>
+                {(activeSprint.startDate || activeSprint.endDate) && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {activeSprint.startDate && (
+                      <span>Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
+                    )}
+                    {activeSprint.startDate && activeSprint.endDate && <span> • </span>}
+                    {activeSprint.endDate && (
+                      <span>Ends: {new Date(activeSprint.endDate).toLocaleDateString()}</span>
+                    )}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-600 mt-1">
+                No active sprint. <Link to={`/projects/${projectId}/backlog`} className="text-blue-600 hover:text-blue-700">Go to Backlog</Link> to start a sprint.
+              </p>
+            )}
+          </div>
           <div className="flex items-center gap-3">
-            <Link to={`/projects/${projectId}/issues/create`}>
+            {!activeSprint ? (
+              <Link to={`/projects/${projectId}/backlog`}>
+                <Button variant="secondary">
+                  Start Sprint
+                </Button>
+              </Link>
+            ) : (
               <Button
-                data-testid="create-issue-button"
+                variant="secondary"
+                onClick={handleCompleteSprint}
               >
+                Complete Sprint
+              </Button>
+            )}
+            <Link to={`/projects/${projectId}/issues/create`}>
+              <Button data-testid="create-issue-button">
                 Create Issue
               </Button>
             </Link>
-            <Button
-              variant="secondary"
-              data-testid="release-button"
-            >
-              Release
-            </Button>
             <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
               <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -136,7 +213,7 @@ export const ProjectBoard = () => {
             key={currentProject.id} // Force re-mount when project changes
             project={currentProject}
             issues={issues}
-            loading={issuesLoading}
+            loading={loading}
             onIssueUpdate={handleIssueUpdate}
             onIssueCreate={handleIssueCreate}
             onIssueEdit={handleIssueEdit}

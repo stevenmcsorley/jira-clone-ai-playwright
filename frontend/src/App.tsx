@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Layout } from './components/Layout'
 import { ProjectsList } from './pages/ProjectsList'
 import { ProjectBoard } from './pages/ProjectBoard'
+import { Backlog } from './pages/Backlog'
 import { CreateProject } from './pages/CreateProject'
 import { CreateIssue } from './pages/CreateIssue'
 import { IssueDetail } from './pages/IssueDetail'
@@ -9,6 +10,7 @@ import { IssueEdit } from './pages/IssueEdit'
 import { IssuesList } from './pages/IssuesList'
 import { SearchResults } from './pages/SearchResults'
 import { ProjectSettings } from './pages/ProjectSettings'
+import { Reports } from './pages/Reports'
 import { useProjects } from './hooks/useProjects'
 
 export const App = () => {
@@ -53,6 +55,14 @@ export const App = () => {
           }
         />
         <Route
+          path="/projects/:projectId/backlog"
+          element={
+            <Layout>
+              <Backlog />
+            </Layout>
+          }
+        />
+        <Route
           path="/projects/:projectId/issues"
           element={
             <Layout>
@@ -89,6 +99,14 @@ export const App = () => {
           element={
             <Layout>
               <SearchResults />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports"
+          element={
+            <Layout>
+              <Reports />
             </Layout>
           }
         />
