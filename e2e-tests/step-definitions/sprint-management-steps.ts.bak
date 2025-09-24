@@ -1,0 +1,222 @@
+import { Given, When, Then } from '@cucumber/cucumber';
+import { expect } from '@playwright/test';
+import { PlaywrightWorld } from '../support/world';
+
+// Sprint creation and management steps
+Then('I should see the new sprint {string} in the sprint list', async function (this: PlaywrightWorld, sprintName: string) {
+  await expect(this.page.locator(`[data-testid*="sprint"]:has-text("${sprintName}"), .sprint-item:has-text("${sprintName}")`)).toBeVisible();
+});
+
+Then('the sprint should be in {string} status', async function (this: PlaywrightWorld, status: string) {
+  await expect(this.page.locator(`[data-testid*="sprint-status"]:has-text("${status}"), .sprint-status:has-text("${status}")`)).toBeVisible();
+});
+
+Then('the sprint should have a duration of {string}', async function (this: PlaywrightWorld, duration: string) {
+  await expect(this.page.locator(`[data-testid*="sprint-duration"]:has-text("${duration}"), .sprint-duration:has-text("${duration}")`)).toBeVisible();
+});
+
+// Sprint backlog management
+Given('there is an active sprint', async function (this: PlaywrightWorld) {
+  // Check if there's an active sprint, if not create one for testing
+  const activeSprintExists = await this.page.locator('[data-testid*="active-sprint"], .active-sprint').count() > 0;
+
+  if (!activeSprintExists) {
+    // Create a test sprint
+    await this.page.click('button:has-text("Create Sprint")');
+    await this.page.fill('input[name="name"]', 'Test Active Sprint');
+    await this.page.fill('textarea[name="description"]', 'Test sprint for automation');
+    await this.page.click('button[type="submit"]');
+    await this.page.click('button:has-text("Start Sprint")');
+  }
+});
+
+Given('there are issues in the backlog', async function (this: PlaywrightWorld) {
+  // Check if backlog has issues, create some if needed
+  const backlogIssues = await this.page.locator('[data-testid*="backlog-issue"], .backlog .issue').count();
+
+  if (backlogIssues === 0) {
+    // Create a test issue
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', 'Test Backlog Issue');
+    await this.page.fill('textarea[placeholder*="description"]', 'Test issue for sprint management');
+    await this.page.click('button:has-text("Create Issue")');
+  }
+});
+
+When('I drag an issue from the backlog to the active sprint', async function (this: PlaywrightWorld) {
+  const backlogIssue = this.page.locator('[data-testid*="backlog-issue"], .backlog .issue').first();
+  const sprintBacklog = this.page.locator('[data-testid*="sprint-backlog"], .sprint-backlog').first();
+
+  await backlogIssue.dragTo(sprintBacklog);
+});
+
+Then('the issue should appear in the sprint backlog', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-backlog"] .issue, .sprint-backlog .issue')).toBeVisible();
+});
+
+Then('the issue should be associated with the current sprint', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="issue-sprint"], .issue-sprint')).toBeVisible();
+});
+
+Then('the sprint should show updated issue count', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-count"], .sprint-count')).toBeVisible();
+});
+
+// Sprint lifecycle management
+Given('there is a sprint in {string} status with issues', async function (this: PlaywrightWorld, status: string) {
+  // Create a sprint with the specified status for testing
+  const sprintSelector = `[data-testid*="sprint"][data-status="${status.toLowerCase()}"], .sprint[data-status="${status.toLowerCase()}"]`;
+  const sprintExists = await this.page.locator(sprintSelector).count() > 0;
+
+  if (!sprintExists) {
+    // Create and set up a sprint with the required status
+    await this.page.click('button:has-text("Create Sprint")');
+    await this.page.fill('input[name="name"]', `Test ${status} Sprint`);
+    await this.page.fill('textarea[name="description"]', `Test sprint in ${status} status`);
+    await this.page.click('button[type="submit"]');
+
+    // Add some issues to the sprint
+    await this.page.click('button:has-text("Add Issues")');
+    await this.page.click('.issue-item:first-child');
+    await this.page.click('button:has-text("Add Selected")');
+  }
+});
+
+Then('the sprint status should change to {string}', async function (this: PlaywrightWorld, newStatus: string) {
+  await expect(this.page.locator(`[data-testid*="sprint-status"]:has-text("${newStatus}")`)).toBeVisible();
+});
+
+Then('the sprint start date should be set to today', async function (this: PlaywrightWorld) {
+  const today = new Date().toLocaleDateString();
+  await expect(this.page.locator(`[data-testid*="sprint-start-date"], .sprint-start-date`)).toContainText(today.split('/')[1]); // Check month at minimum
+});
+
+Then('the sprint end date should be set to today', async function (this: PlaywrightWorld) {
+  const today = new Date().toLocaleDateString();
+  await expect(this.page.locator(`[data-testid*="sprint-end-date"], .sprint-end-date`)).toContainText(today.split('/')[1]); // Check month at minimum
+});
+
+Then('all issues in the sprint should be available on the kanban board', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid="kanban-board"] .issue, .kanban-board .issue')).toHaveCountGreaterThan(0);
+});
+
+Then('I should see the sprint progress tracking', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-progress"], .sprint-progress')).toBeVisible();
+});
+
+// Sprint completion
+When('I review the sprint completion summary', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-summary"], .sprint-completion-summary')).toBeVisible();
+});
+
+When('I handle any incomplete issues \\(move to backlog or next sprint)', async function (this: PlaywrightWorld) {
+  const incompleteIssues = await this.page.locator('[data-testid*="incomplete-issue"], .incomplete-issue').count();
+
+  if (incompleteIssues > 0) {
+    await this.page.click('button:has-text("Move to Backlog")');
+  }
+});
+
+When('I confirm sprint completion', async function (this: PlaywrightWorld) {
+  await this.page.click('button:has-text("Complete Sprint")');
+});
+
+Then('completed issues should be archived', async function (this: PlaywrightWorld) {
+  // Issues should not be visible in active board anymore
+  await expect(this.page.locator('[data-testid*="archived-issues"], .archived-issues')).toBeVisible();
+});
+
+Then('I should see the sprint report', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-report"], .sprint-report')).toBeVisible();
+});
+
+// Sprint progress and analytics
+When('I navigate to the sprint progress view', async function (this: PlaywrightWorld) {
+  await this.page.click('a[href*="progress"], button:has-text("Progress"), [data-testid*="sprint-progress"]');
+});
+
+Then('I should see the sprint burndown chart', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="burndown-chart"], .burndown-chart, canvas')).toBeVisible();
+});
+
+Then('I should see completed vs remaining story points', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="story-points-summary"], .story-points-summary')).toBeVisible();
+});
+
+Then('I should see days remaining in the sprint', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="days-remaining"], .days-remaining')).toBeVisible();
+});
+
+Then('I should see velocity metrics', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="velocity"], .velocity-metrics')).toBeVisible();
+});
+
+// Sprint settings and editing
+When('I click on the sprint settings', async function (this: PlaywrightWorld) {
+  await this.page.click('[data-testid*="sprint-settings"], .sprint-settings, button:has-text("Settings")');
+});
+
+When('I update the sprint name to {string}', async function (this: PlaywrightWorld, newName: string) {
+  await this.page.fill('input[name="name"]', newName);
+});
+
+When('I update the sprint description', async function (this: PlaywrightWorld) {
+  await this.page.fill('textarea[name="description"]', 'Updated sprint description for testing');
+});
+
+Then('the sprint should display the updated name and description', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-name"], .sprint-name')).toContainText('Updated Sprint Name');
+  await expect(this.page.locator('[data-testid*="sprint-description"], .sprint-description')).toContainText('Updated sprint description');
+});
+
+Then('the changes should be persisted', async function (this: PlaywrightWorld) {
+  await this.page.reload();
+  await expect(this.page.locator('[data-testid*="sprint-name"], .sprint-name')).toContainText('Updated Sprint Name');
+});
+
+// Sprint deletion
+Given('there is a sprint in {string} status with no issues', async function (this: PlaywrightWorld, status: string) {
+  // Create an empty sprint for deletion testing
+  await this.page.click('button:has-text("Create Sprint")');
+  await this.page.fill('input[name="name"]', `Empty ${status} Sprint`);
+  await this.page.click('button[type="submit"]');
+});
+
+When('I click the {string} button', async function (this: PlaywrightWorld, buttonText: string) {
+  await this.page.click(`button:has-text("${buttonText}")`);
+});
+
+Then('the sprint should be removed from the sprint list', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator(':text("Empty Planning Sprint")')).not.toBeVisible();
+});
+
+Then('I should not see the sprint anywhere in the interface', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator(':text("Empty Planning Sprint")')).toHaveCount(0);
+});
+
+// Sprint analytics
+Given('there are multiple completed sprints', async function (this: PlaywrightWorld) {
+  // This would typically be set up with test data or previous sprint completion
+  // For testing purposes, we'll check if analytics section is available
+  await expect(this.page.locator('[data-testid*="analytics"], .analytics')).toBeVisible();
+});
+
+When('I view the sprint analytics', async function (this: PlaywrightWorld) {
+  await this.page.click('a[href*="analytics"], button:has-text("Analytics")');
+});
+
+Then('I should see the team\\'s average velocity', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="average-velocity"], .average-velocity')).toBeVisible();
+});
+
+Then('I should see velocity trends over time', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="velocity-trend"], .velocity-trend')).toBeVisible();
+});
+
+Then('I should see story points completed per sprint', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-points"], .sprint-points')).toBeVisible();
+});
+
+Then('I should be able to use this data for sprint planning', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="planning-data"], .planning-recommendations')).toBeVisible();
+});

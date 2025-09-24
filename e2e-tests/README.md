@@ -1,312 +1,181 @@
-# Jira Clone E2E Testing with Automatic Bug Reporting
+# Jira Clone BDD E2E Testing Framework
 
-This directory contains end-to-end tests for the Jira Clone application with automatic bug ticket creation when tests fail.
+A comprehensive, reusable Behavior-Driven Development (BDD) end-to-end testing framework for Jira clone applications. This framework is designed to work across different projects and environments with minimal configuration changes.
 
-## Features
+## 🚀 Features
 
-- **Comprehensive E2E Testing**: Tests cover all major functionality including kanban board, issue management, and user interactions
-- **Automatic Bug Reporting**: Failed tests automatically create bug tickets in the Jira Clone system
-- **Cross-Browser Testing**: Tests run on Chromium, Firefox, Safari, and mobile browsers
-- **Smart Failure Grouping**: Similar failures are grouped together to avoid duplicate tickets
-- **Rich Error Context**: Bug tickets include screenshots, videos, stack traces, and reproduction steps
-- **CI/CD Integration**: Designed to work seamlessly in continuous integration environments
+- **Environment Agnostic**: Works with any Jira clone deployment (local, staging, production)
+- **Project Flexible**: Can test against existing projects or create test projects dynamically
+- **Data Management**: Automatic test data setup, management, and cleanup
+- **BDD Approach**: Human-readable test scenarios using Gherkin syntax
+- **Page Object Pattern**: Maintainable and reusable page objects
+- **API Integration**: Direct API calls for efficient test data setup
+- **Comprehensive Reporting**: Detailed test reports with screenshots on failure
+- **CI/CD Ready**: Designed for continuous integration environments
 
-## Setup
+## 📋 Prerequisites
 
-### 1. Install Dependencies
+- Node.js 18+
+- Docker and Docker Compose (for local development)
+- Running Jira clone application
 
-```bash
-cd e2e-tests
-npm install
-npx playwright install
-```
+## 🛠 Installation
 
-### 2. Configure Environment
+1. **Clone/Copy the e2e-tests directory** to your project
+2. **Install dependencies**:
+   ```bash
+   cd e2e-tests
+   npm install
+   ```
+3. **Install Playwright browsers**:
+   ```bash
+   npm run install-browsers
+   ```
 
-Copy the example environment file and configure it:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
-
-```env
-BASE_URL=http://localhost:5173
-JIRA_API_URL=http://localhost:4000/api
-JIRA_PROJECT_ID=1
-JIRA_REPORTER_ID=1
-```
-
-### 3. Start the Application
-
-Make sure the Jira Clone application is running:
-
-```bash
-# From the project root
-docker compose up
-```
-
-## Running Tests
-
-### Run All Tests
-```bash
-npm test
-```
-
-### Run Tests in Headed Mode (with browser UI)
-```bash
-npm run test:headed
-```
-
-### Debug Tests
-```bash
-npm run test:debug
-```
-
-### Run Specific Test File
-```bash
-npx playwright test kanban-board.spec.ts
-```
-
-### Run Tests for Specific Browser
-```bash
-npx playwright test --project=chromium
-npx playwright test --project=firefox
-npx playwright test --project=webkit
-```
-
-## Test Structure
-
-### Test Files
-
-- **`kanban-board.spec.ts`**: Tests for the main kanban board functionality
-  - Column display and layout
-  - Drag and drop operations
-  - Issue creation via modal
-  - Inline editing
-  - Mobile responsiveness
-
-- **`issue-management.spec.ts`**: Tests for issue CRUD operations
-  - Creating issues with all fields
-  - Form validation
-  - Inline editing of descriptions
-  - Priority and status management
-  - API error handling
-
-### Test Organization
-
-Tests are organized using Playwright's `test.describe()` blocks:
-
-```typescript
-test.describe('Kanban Board', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForSelector('[data-testid="kanban-board"]');
-  });
-
-  test('should display the kanban board with columns', async ({ page }) => {
-    // Test implementation
-  });
-});
-```
-
-## Automatic Bug Reporting
-
-### How It Works
-
-1. **Test Execution**: Tests run and Playwright captures results
-2. **Failure Detection**: The custom `JiraReporter` detects failed tests
-3. **Grouping**: Similar failures are grouped to avoid duplicates
-4. **Ticket Creation**: Bug tickets are automatically created via the Jira API
-5. **Artifact Saving**: Screenshots, videos, and error details are saved
-
-### Bug Ticket Contents
-
-Each automatically created bug ticket includes:
-
-- **Detailed Description**: Error messages, stack traces, reproduction steps
-- **Test Context**: File names, line numbers, test names
-- **Environment Info**: Browser, URL, CI status
-- **Priority Assignment**: Smart priority based on error type and test importance
-- **Labels**: Automatic tagging for easy filtering
-- **Artifacts**: Links to screenshots and videos
-
-### Priority Assignment
-
-The system automatically assigns priorities based on:
-
-- **Urgent**: Security, authentication, or critical functionality failures
-- **High**: Core features like create, save, delete operations
-- **Medium**: UI/UX issues, timeouts, element not found errors
-- **Low**: Minor cosmetic or edge case issues
-
-### Example Bug Ticket
-
-```
-Title: Test Failure: should allow creating new issues in kanban-board.spec.ts
-
-Description:
-# Test Failure Report
-
-**Generated by:** Playwright Automated Testing
-**Timestamp:** 2024-01-15T10:30:00Z
-**Error Type:** Element not found
-**Failed Test Count:** 1
-
-## Test Details
-
-**File:** `/tests/kanban-board.spec.ts`
-**Test:** should allow creating new issues
-**Line:** 25
-
-## Error Information
-
-```
-Error: Locator 'button:has-text("Create Issue")' not found
-```
-
-## Reproduction Steps
-
-1. Run the test: `npx playwright test kanban-board.spec.ts`
-2. Check the test output and screenshots in `test-results/`
-3. Review the application state at the time of failure
-
-Labels: automated-test, playwright, error-element-not-found, kanban-board
-Priority: Medium
-```
-
-## Configuration
+## ⚙️ Configuration
 
 ### Environment Variables
 
-- `BASE_URL`: Application URL (default: http://localhost:5173)
-- `JIRA_API_URL`: Jira API endpoint (default: http://localhost:4000/api)
-- `JIRA_PROJECT_ID`: Project ID for bug tickets (default: 1)
-- `JIRA_REPORTER_ID`: User ID for the test reporter (default: 1)
-- `CI`: Set to true in CI environments
-- `HEADLESS`: Run tests in headless mode (default: true)
+Create a `.env` file in the `e2e-tests` directory or set these environment variables:
 
-### Playwright Configuration
-
-Key configuration options in `playwright.config.ts`:
-
-```typescript
-export default defineConfig({
-  testDir: './tests',
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 0,
-  reporter: [
-    ['html'],
-    ['json', { outputFile: 'test-results/results.json' }],
-    ['./reporters/jira-reporter.ts'] // Custom bug reporter
-  ],
-  use: {
-    baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-  }
-});
+#### Application URLs
+```bash
+BASE_URL=http://localhost:5173          # Frontend URL
+API_URL=http://localhost:4000/api       # Backend API URL
 ```
 
-## CI/CD Integration
+#### Test Project Configuration
+```bash
+# Use existing project (recommended for stable testing)
+USE_EXISTING_PROJECT=true
+TEST_PROJECT_ID=1
 
-### GitHub Actions Example
-
-```yaml
-name: E2E Tests with Bug Reporting
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Start application
-        run: docker compose up -d
-
-      - name: Install dependencies
-        run: |
-          cd e2e-tests
-          npm install
-          npx playwright install
-
-      - name: Run tests
-        env:
-          JIRA_API_URL: ${{ secrets.JIRA_API_URL }}
-          JIRA_PROJECT_ID: ${{ secrets.JIRA_PROJECT_ID }}
-          CI: true
-        run: |
-          cd e2e-tests
-          npm test
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: playwright-report
-          path: e2e-tests/playwright-report/
+# Or create new project (for isolated testing)
+USE_EXISTING_PROJECT=false
+TEST_PROJECT_NAME="E2E Test Project"
+TEST_PROJECT_KEY="E2E"
+TEST_PROJECT_DESC="Automated testing project"
 ```
 
-## Best Practices
+#### Test User Configuration
+```bash
+TEST_USER_ID=1                         # Use existing user ID
+TEST_USER_EMAIL=test@example.com
+TEST_USER_NAME="Test User"
+```
 
-### Writing Tests
+#### Test Execution Settings
+```bash
+HEADLESS=true                          # Run headless (false for debugging)
+SLOW_MO=50                            # Slow down actions (ms)
+TEST_TIMEOUT=30000                    # Test timeout (ms)
+TEST_RETRIES=1                        # Number of retries on failure
+VIEWPORT_WIDTH=1280                   # Browser viewport width
+VIEWPORT_HEIGHT=720                   # Browser viewport height
+```
 
-1. **Use data-testid attributes**: Add `data-testid` to important elements
-2. **Wait for dynamic content**: Use `waitForSelector()` for loaded content
-3. **Group related tests**: Use `test.describe()` for logical grouping
-4. **Test error conditions**: Include tests for API failures and edge cases
-5. **Mobile testing**: Include mobile viewport tests for responsive design
+#### Data Management
+```bash
+CLEANUP_AFTER_TESTS=true             # Clean up test data after tests
+PRESERVE_TEST_PROJECT=false          # Keep test project after cleanup
+```
 
-### Test Maintenance
+## 🏃 Running Tests
 
-1. **Regular updates**: Keep tests updated with UI changes
-2. **Artifact cleanup**: Regularly clean old test artifacts
-3. **Review bug tickets**: Manually review auto-created tickets for accuracy
-4. **Monitor patterns**: Look for recurring test failures indicating systemic issues
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Tests timing out**: Increase timeout or add explicit waits
-2. **Elements not found**: Verify selectors and wait for dynamic content
-3. **Network errors**: Ensure application is running and accessible
-4. **Bug tickets not created**: Check API configuration and network connectivity
-
-### Debug Mode
-
-Run tests in debug mode to step through failures:
+### Basic Commands
 
 ```bash
-npm run test:debug
+# Run all BDD tests
+npm run test:bdd
+
+# Run tests with browser visible (debugging)
+npm run test:bdd:headed
+
+# Run specific tagged tests
+npm run test:bdd -- --tags "@smoke"
+
+# Run tests with additional cucumber options
+npm run test:bdd -- --tags "@issue" --fail-fast
 ```
 
-This opens the Playwright inspector for interactive debugging.
+## 📁 Framework Structure
 
-### Viewing Results
+```
+e2e-tests/
+├── config/
+│   └── test.config.ts              # Central configuration management
+├── services/
+│   ├── api.service.ts              # API integration service
+│   └── test-data.service.ts        # Test data management
+├── pages/
+│   ├── BasePage.ts                 # Base page object class
+│   ├── ProjectBoardPage.ts         # Project board page object
+│   └── CreateIssuePage.ts          # Create issue page object
+├── features/
+│   ├── basic-functionality.feature # Basic smoke tests
+│   ├── issue-management.feature    # Issue management scenarios
+│   ├── sprint-management.feature   # Sprint management scenarios
+│   └── time-tracking.feature       # Time tracking scenarios
+├── step-definitions/
+│   └── basic-steps.ts              # Step implementations
+├── support/
+│   └── world.ts                    # Test world setup and hooks
+└── reporters/
+    └── jira-reporter.ts            # Custom reporter for bug creation
+```
 
-After test execution, view the HTML report:
+## 🧪 Usage Example
+
+To test against your Jira clone project, simply:
+
+1. **Configure your environment**:
+   ```bash
+   # .env file
+   BASE_URL=http://your-jira-clone.com
+   API_URL=http://your-jira-clone.com/api
+   USE_EXISTING_PROJECT=true
+   TEST_PROJECT_ID=42  # Your project ID
+   TEST_USER_ID=123    # Your test user ID
+   ```
+
+2. **Run the tests**:
+   ```bash
+   npm run test:bdd -- --tags "@smoke"
+   ```
+
+3. **View results**: The framework will automatically manage test data and provide detailed reporting.
+
+## 🔧 Framework Components
+
+- **Configuration Management**: Environment-based configuration
+- **API Service**: Complete CRUD operations for all entities
+- **Test Data Service**: Smart test data lifecycle management
+- **Page Objects**: Clean UI interaction abstractions
+- **BDD Features**: Human-readable scenarios covering all functionality
+
+## 🐛 Debugging
 
 ```bash
-npm run report
+# Run with browser visible for debugging
+HEADLESS=false npm run test:bdd
+
+# Run with slow motion
+SLOW_MO=1000 npm run test:bdd
+
+# Run specific test
+npm run test:bdd -- --name "View the project board"
 ```
 
-This provides detailed test results, screenshots, and videos for failed tests.
+## 🤝 Contributing
 
-## Integration with Development Workflow
+This framework is designed to be:
+- **Reusable** across different Jira clone projects
+- **Maintainable** with clear separation of concerns
+- **Extensible** for additional functionality
+- **Environment-agnostic** for various deployment scenarios
 
-The E2E testing system integrates seamlessly with development workflows:
+Follow the existing patterns when adding new tests or functionality.
 
-1. **Pull Request Testing**: Run tests on every PR to catch regressions
-2. **Deployment Validation**: Run tests after deployments to verify functionality
-3. **Issue Tracking**: Failed tests create actionable bug tickets automatically
-4. **Performance Monitoring**: Track test execution times to identify performance regressions
+---
 
-This comprehensive testing system ensures high-quality releases while automatically capturing and tracking any issues that arise during testing.
+**Ready to test any Jira clone project with comprehensive BDD scenarios!** 🚀

@@ -1,0 +1,262 @@
+{
+  "issueId": 59,
+  "timestamp": "2025-09-24T12:34:01.152Z",
+  "failures": [
+    {
+      "test": "should create issue with all fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should validate required fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should edit issue description inline",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 6,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should filter issues by status",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle priority changes",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should maintain issue order after page refresh",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle API failures gracefully",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should show assignee information",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should create issue with all fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should validate required fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 13,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should edit issue description inline",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should filter issues by status",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle priority changes",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should maintain issue order after page refresh",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should show assignee information",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 9,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle API failures gracefully",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/firefox-1490/firefox/firefox\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should create issue with all fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 8,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should validate required fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 9,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should edit issue description inline",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should filter issues by status",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 9,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle priority changes",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should maintain issue order after page refresh",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should show assignee information",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 18,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle API failures gracefully",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/webkit-2203/pw_run.sh\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 25,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should create issue with all fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should validate required fields",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 6,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should edit issue description inline",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 6,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should filter issues by status",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle priority changes",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 6,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should maintain issue order after page refresh",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 9,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should show assignee information",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    },
+    {
+      "test": "should handle API failures gracefully",
+      "file": "/home/dev/projects/jira-clone/e2e-tests/tests/issue-management.spec.ts",
+      "error": "Error: browserType.launch: Executable doesn't exist at /home/dev/.cache/ms-playwright/chromium-1193/chrome-linux/chrome\n╔═════════════════════════════════════════════════════════════════════════╗\n║ Looks like Playwright Test or Playwright was just installed or updated. ║\n║ Please run the following command to download new browsers:              ║\n║                                                                         ║\n║     npx playwright install                                              ║\n║                                                                         ║\n║ <3 Playwright Team                                                      ║\n╚═════════════════════════════════════════════════════════════════════════╝",
+      "duration": 7,
+      "retry": 0,
+      "attachments": []
+    }
+  ]
+}

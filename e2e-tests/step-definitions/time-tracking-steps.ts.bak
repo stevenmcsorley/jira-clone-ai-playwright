@@ -1,0 +1,403 @@
+import { Given, When, Then } from '@cucumber/cucumber';
+import { expect } from '@playwright/test';
+import { PlaywrightWorld } from '../support/world';
+
+// Time logging basic functionality
+Given('there is an existing issue', async function (this: PlaywrightWorld) {
+  // Check if there's an existing issue, create one if needed
+  const existingIssue = await this.page.locator('.issue, .kanban-card').count();
+
+  if (existingIssue === 0) {
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', 'Time Tracking Test Issue');
+    await this.page.fill('textarea[placeholder*="description"]', 'Issue for testing time tracking functionality');
+    await this.page.click('button:has-text("Create Issue")');
+  }
+});
+
+When('I click the {string} button', async function (this: PlaywrightWorld, buttonText: string) {
+  await this.page.click(`button:has-text("${buttonText}")`);
+});
+
+Then('I should see the logged time in the issue\\'s time tracking section', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-tracking-section"], .time-tracking')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="logged-time"]:has-text("2h 30m"), .logged-time:has-text("2h 30m")')).toBeVisible();
+});
+
+Then('the total time logged should be updated', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="total-time"], .total-time-logged')).toContainText('2h 30m');
+});
+
+Then('the work log should show the description and timestamp', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="work-log-entry"], .work-log-entry')).toContainText('Implemented user authentication logic');
+  await expect(this.page.locator('[data-testid*="log-timestamp"], .log-timestamp')).toBeVisible();
+});
+
+// Time tracking summary viewing
+Given('there is an issue with logged time entries', async function (this: PlaywrightWorld) {
+  // Ensure there's an issue with existing time logs
+  const issueWithTime = await this.page.locator('.issue:has([data-testid*="time-logged"]), .kanban-card:has(.time-logged)').count();
+
+  if (issueWithTime === 0) {
+    // Create issue and add time log
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', 'Issue with Time Logs');
+    await this.page.click('button:has-text("Create Issue")');
+
+    // Add time log
+    await this.page.click('.issue:first-child');
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', '1h 30m');
+    await this.page.fill('textarea[name="workDescription"]', 'Initial development work');
+    await this.page.click('button:has-text("Log Time")');
+  }
+});
+
+When('I click on the issue to view its details', async function (this: PlaywrightWorld) {
+  await this.page.click('.issue:first-child, .kanban-card:first-child');
+  await this.page.waitForSelector('[data-testid*="issue-details"], .issue-details', { timeout: 5000 });
+});
+
+Then('I should see the {string} section', async function (this: PlaywrightWorld, sectionName: string) {
+  await expect(this.page.locator(`[data-testid*="${sectionName.toLowerCase().replace(/\s+/g, '-')}"], .${sectionName.toLowerCase().replace(/\s+/g, '-')}`)).toBeVisible();
+});
+
+Then('I should see the total time logged', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="total-time"], .total-time-logged')).toBeVisible();
+});
+
+Then('I should see a list of all time entries with dates and descriptions', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-entries"], .time-entries-list')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"], .time-entry')).toBeVisible();
+});
+
+Then('I should see who logged each time entry', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="entry-author"], .time-entry-author')).toBeVisible();
+});
+
+// Editing time log entries
+Given('there is an issue with existing time log entries', async function (this: PlaywrightWorld) {
+  // Same as previous step - ensure issue with time logs exists
+  await this.page.goto('/');
+  const issueWithTime = await this.page.locator('.issue:has([data-testid*="time-logged"])').count();
+
+  if (issueWithTime === 0) {
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', 'Issue for Edit Testing');
+    await this.page.click('button:has-text("Create Issue")');
+
+    await this.page.click('.issue:first-child');
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', '2h');
+    await this.page.fill('textarea[name="workDescription"]', 'Original work description');
+    await this.page.click('button:has-text("Log Time")');
+  }
+});
+
+When('I click on the issue details', async function (this: PlaywrightWorld) {
+  await this.page.click('.issue:first-child');
+});
+
+When('I click on a time log entry to edit it', async function (this: PlaywrightWorld) {
+  await this.page.click('[data-testid*="edit-time-entry"], .edit-time-entry, [data-testid*="time-entry"]:first-child');
+});
+
+When('I update the time from {string} to {string}', async function (this: PlaywrightWorld, oldTime: string, newTime: string) {
+  await this.page.fill('input[name="timeSpent"]', newTime);
+});
+
+When('I update the work description', async function (this: PlaywrightWorld) {
+  await this.page.fill('textarea[name="workDescription"]', 'Updated work description');
+});
+
+Then('the time log entry should show the updated values', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("2h 15m")')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("Updated work description")')).toBeVisible();
+});
+
+Then('the total time logged should be recalculated', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="total-time"]:has-text("2h 15m"), .total-time:has-text("2h 15m")')).toBeVisible();
+});
+
+// Deleting time log entries
+When('I click the delete button on a time log entry', async function (this: PlaywrightWorld) {
+  await this.page.click('[data-testid*="delete-time-entry"], .delete-time-entry, button[title="Delete"]');
+});
+
+When('I confirm the deletion', async function (this: PlaywrightWorld) {
+  await this.page.click('button:has-text("Delete"), button:has-text("Confirm")');
+});
+
+Then('the time log entry should be removed', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("Original work description")')).not.toBeVisible();
+});
+
+Then('the entry should no longer appear in the list', async function (this: PlaywrightWorld) {
+  const entryCount = await this.page.locator('[data-testid*="time-entry"], .time-entry').count();
+  expect(entryCount).toBe(0);
+});
+
+// Time format validation - using data table
+When('I log time using different formats:', async function (this: PlaywrightWorld, dataTable) {
+  const rows = dataTable.hashes();
+
+  for (const row of rows) {
+    // Open time logging form
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', row.Input);
+    await this.page.fill('textarea[name="workDescription"]', `Test for ${row.Format} format`);
+    await this.page.click('button:has-text("Log Time")');
+
+    // Verify the expected format is displayed
+    await expect(this.page.locator(`[data-testid*="time-entry"]:has-text("${row.Expected}")`)).toBeVisible();
+  }
+});
+
+Then('all time entries should be parsed and displayed correctly', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("2h 0m")')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("0h 45m")')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("1h 30m")')).toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("2h 30m")')).toBeVisible();
+});
+
+Then('the total time should be calculated accurately', async function (this: PlaywrightWorld) {
+  // Total should be sum of all entries: 2h + 45m + 1h30m + 2h30m = 6h 45m
+  await expect(this.page.locator('[data-testid*="total-time"]:has-text("6h 45m"), .total-time:has-text("6h 45m")')).toBeVisible();
+});
+
+// Sprint time tracking summary
+Given('there is an active sprint with issues that have logged time', async function (this: PlaywrightWorld) {
+  // Ensure active sprint with time-logged issues
+  await this.page.goto('/');
+  const activeSprintExists = await this.page.locator('[data-testid*="active-sprint"]').count() > 0;
+
+  if (!activeSprintExists) {
+    // Create sprint and add time-logged issues
+    await this.page.click('button:has-text("Create Sprint")');
+    await this.page.fill('input[name="name"]', 'Time Tracking Sprint');
+    await this.page.click('button[type="submit"]');
+    await this.page.click('button:has-text("Start Sprint")');
+
+    // Add issues with time logs to the sprint
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', 'Sprint Issue with Time');
+    await this.page.click('button:has-text("Create Issue")');
+
+    await this.page.click('.issue:first-child');
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', '4h');
+    await this.page.fill('textarea[name="workDescription"]', 'Sprint development work');
+    await this.page.click('button:has-text("Log Time")');
+  }
+});
+
+Then('I should see total time logged for the sprint', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="sprint-total-time"], .sprint-total-time')).toBeVisible();
+});
+
+Then('I should see time logged per team member', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="member-time"], .member-time-breakdown')).toBeVisible();
+});
+
+Then('I should see average time per story point', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-per-point"], .time-per-story-point')).toBeVisible();
+});
+
+Then('I should see daily time logging trends', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="daily-time-trend"], .daily-time-chart')).toBeVisible();
+});
+
+// Individual time tracking report
+Given('I have logged time on multiple issues', async function (this: PlaywrightWorld) {
+  // Create multiple issues and log time on each
+  const issues = ['Feature Development', 'Bug Fix', 'Code Review'];
+
+  for (const issueTitle of issues) {
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', issueTitle);
+    await this.page.click('button:has-text("Create Issue")');
+
+    await this.page.click(`.issue:has-text("${issueTitle}")`);
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', '2h');
+    await this.page.fill('textarea[name="workDescription"]', `Work on ${issueTitle}`);
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.click('button:has-text("Close"), [data-testid*="close"]');
+  }
+});
+
+When('I navigate to my time tracking report', async function (this: PlaywrightWorld) {
+  await this.page.click('a[href*="time-report"], button:has-text("Time Report"), [data-testid*="time-report"]');
+});
+
+Then('I should see all my time entries for the current period', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="my-time-entries"], .my-time-entries')).toBeVisible();
+});
+
+Then('I should be able to filter by date range', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="date-range-filter"], .date-range-picker')).toBeVisible();
+});
+
+Then('I should see total time logged per day', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="daily-totals"], .daily-time-totals')).toBeVisible();
+});
+
+Then('I should see time distribution across different issues', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="issue-time-breakdown"], .issue-time-distribution')).toBeVisible();
+});
+
+// Team time tracking analytics
+Given('team members have logged time on various issues', async function (this: PlaywrightWorld) {
+  // For testing purposes, assume team data exists
+  // In real implementation, this would involve multiple user sessions
+});
+
+When('I navigate to the team time tracking analytics', async function (this: PlaywrightWorld) {
+  await this.page.click('a[href*="team-analytics"], button:has-text("Team Analytics"), [data-testid*="team-analytics"]');
+});
+
+Then('I should see time logged per team member', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="team-member-time"], .team-time-breakdown')).toBeVisible();
+});
+
+Then('I should see most time-consuming issues', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="top-time-issues"], .time-consuming-issues')).toBeVisible();
+});
+
+Then('I should see time logging patterns and trends', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-patterns"], .time-logging-trends')).toBeVisible();
+});
+
+Then('I should be able to export time tracking data', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('button:has-text("Export"), [data-testid*="export-time-data"]')).toBeVisible();
+});
+
+// Time estimates vs actual tracking
+Given('there are issues with original time estimates', async function (this: PlaywrightWorld) {
+  // Create issues with time estimates
+  await this.page.click('button:has-text("Create Issue")');
+  await this.page.fill('input[placeholder*="title"]', 'Estimated vs Actual Issue');
+  await this.page.fill('input[name="originalEstimate"], [data-testid*="time-estimate"]', '8h');
+  await this.page.click('button:has-text("Create Issue")');
+});
+
+When('team members log actual time spent', async function (this: PlaywrightWorld) {
+  await this.page.click('.issue:has-text("Estimated vs Actual Issue")');
+  await this.page.click('button:has-text("Log Time")');
+  await this.page.fill('input[name="timeSpent"]', '10h');
+  await this.page.fill('textarea[name="workDescription"]', 'Actual implementation took longer than estimated');
+  await this.page.click('button:has-text("Log Time")');
+});
+
+Then('I should be able to compare estimated vs actual time', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="estimate-vs-actual"], .time-comparison')).toBeVisible();
+});
+
+Then('I should see variance indicators \\(over\\/under estimated)', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="time-variance"], .variance-indicator')).toBeVisible();
+});
+
+Then('I should see this data in sprint and project reports', async function (this: PlaywrightWorld) {
+  await this.page.click('a[href*="reports"], button:has-text("Reports")');
+  await expect(this.page.locator('[data-testid*="estimation-accuracy"], .estimation-report')).toBeVisible();
+});
+
+Then('I should be able to improve future estimates based on historical data', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="estimation-insights"], .estimation-recommendations')).toBeVisible();
+});
+
+// Time tracking validation
+When('I try to log invalid time entries:', async function (this: PlaywrightWorld, dataTable) {
+  const rows = dataTable.hashes();
+
+  for (const row of rows) {
+    await this.page.click('button:has-text("Log Time")');
+    await this.page.fill('input[name="timeSpent"]', row['Invalid Input']);
+    await this.page.click('button:has-text("Log Time")');
+
+    // Verify expected behavior
+    switch (row['Expected Behavior']) {
+      case 'Show error message':
+        await expect(this.page.locator('.error, [data-testid*="error"]')).toBeVisible();
+        break;
+      case 'Show warning for long hours':
+        await expect(this.page.locator('.warning, [data-testid*="warning"]')).toBeVisible();
+        break;
+      case 'Show format error':
+        await expect(this.page.locator('.format-error, [data-testid*="format-error"]')).toBeVisible();
+        break;
+      case 'Show minimum time error':
+        await expect(this.page.locator('.min-time-error, [data-testid*="min-time-error"]')).toBeVisible();
+        break;
+    }
+
+    // Close modal for next iteration
+    await this.page.click('button:has-text("Cancel"), [data-testid*="cancel"]');
+  }
+});
+
+Then('appropriate validation messages should be displayed', async function (this: PlaywrightWorld) {
+  // This is verified in the previous step
+});
+
+Then('invalid entries should not be saved', async function (this: PlaywrightWorld) {
+  // Verify no invalid entries appear in the time log
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("-2h")')).not.toBeVisible();
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("25h")')).not.toBeVisible();
+});
+
+// Bulk time logging
+Given('I have worked on multiple issues in a day', async function (this: PlaywrightWorld) {
+  // Create multiple issues for bulk time logging
+  const issues = ['User Registration', 'Database Migration', 'Bug Fix #123'];
+
+  for (const issue of issues) {
+    await this.page.click('button:has-text("Create Issue")');
+    await this.page.fill('input[placeholder*="title"]', issue);
+    await this.page.click('button:has-text("Create Issue")');
+  }
+});
+
+When('I access the bulk time logging interface', async function (this: PlaywrightWorld) {
+  await this.page.click('button:has-text("Bulk Log Time"), [data-testid*="bulk-time-log"]');
+});
+
+When('I enter time for multiple issues:', async function (this: PlaywrightWorld, dataTable) {
+  const rows = dataTable.hashes();
+
+  for (const row of rows) {
+    // Find the issue row and fill in time and description
+    const issueRow = this.page.locator(`tr:has-text("${row.Issue}")`);
+    await issueRow.locator('input[name="time"]').fill(row.Time);
+    await issueRow.locator('input[name="description"]').fill(row.Description);
+  }
+});
+
+When('I submit the bulk time log', async function (this: PlaywrightWorld) {
+  await this.page.click('button:has-text("Log All Time"), button[type="submit"]');
+});
+
+Then('time should be logged for all specified issues', async function (this: PlaywrightWorld) {
+  // Verify time appears on each issue
+  await expect(this.page.locator('.issue:has-text("User Registration") [data-testid*="time-logged"]')).toBeVisible();
+  await expect(this.page.locator('.issue:has-text("Database Migration") [data-testid*="time-logged"]')).toBeVisible();
+  await expect(this.page.locator('.issue:has-text("Bug Fix #123") [data-testid*="time-logged"]')).toBeVisible();
+});
+
+Then('I should see confirmation of successful logging', async function (this: PlaywrightWorld) {
+  await expect(this.page.locator('[data-testid*="bulk-success"], .success-message')).toBeVisible();
+});
+
+Then('the time should appear in each issue\\'s time tracking section', async function (this: PlaywrightWorld) {
+  // Click on each issue and verify time logs
+  await this.page.click('.issue:has-text("User Registration")');
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("2h")')).toBeVisible();
+  await this.page.click('button:has-text("Close")');
+
+  await this.page.click('.issue:has-text("Database Migration")');
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("1h")')).toBeVisible();
+  await this.page.click('button:has-text("Close")');
+
+  await this.page.click('.issue:has-text("Bug Fix #123")');
+  await expect(this.page.locator('[data-testid*="time-entry"]:has-text("30m")')).toBeVisible();
+});

@@ -111,17 +111,17 @@ export const ProjectBoard = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
+    <div className="flex-1 flex flex-col bg-gray-50" data-testid="project-board">
       {/* Board Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-6 py-4" data-testid="board-header">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900" data-testid="project-title">
               {activeSprint ? `${activeSprint.name} Board` : 'Project Board'}
             </h1>
             {activeSprint ? (
-              <>
-                <p className="text-sm text-gray-600 mt-1">
+              <div data-testid="active-sprint-info">
+                <p className="text-sm text-gray-600 mt-1" data-testid="sprint-details">
                   {activeSprint.goal && `Goal: ${activeSprint.goal}`}
                   {activeSprint.issues.length === 0
                     ? ' • No issues in this sprint'
@@ -129,27 +129,27 @@ export const ProjectBoard = () => {
                   }
                 </p>
                 {(activeSprint.startDate || activeSprint.endDate) && (
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 mt-1" data-testid="sprint-dates">
                     {activeSprint.startDate && (
-                      <span>Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
+                      <span data-testid="sprint-start-date">Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
                     )}
                     {activeSprint.startDate && activeSprint.endDate && <span> • </span>}
                     {activeSprint.endDate && (
-                      <span>Ends: {new Date(activeSprint.endDate).toLocaleDateString()}</span>
+                      <span data-testid="sprint-end-date">Ends: {new Date(activeSprint.endDate).toLocaleDateString()}</span>
                     )}
                   </p>
                 )}
-              </>
+              </div>
             ) : (
               <p className="text-sm text-gray-600 mt-1">
                 No active sprint. <Link to={`/projects/${projectId}/backlog`} className="text-blue-600 hover:text-blue-700">Go to Backlog</Link> to start a sprint.
               </p>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" data-testid="board-actions">
             {!activeSprint ? (
               <Link to={`/projects/${projectId}/backlog`}>
-                <Button variant="secondary">
+                <Button variant="secondary" data-testid="start-sprint-button">
                   Start Sprint
                 </Button>
               </Link>
@@ -157,6 +157,7 @@ export const ProjectBoard = () => {
               <Button
                 variant="secondary"
                 onClick={handleCompleteSprint}
+                data-testid="complete-sprint-button"
               >
                 Complete Sprint
               </Button>
@@ -175,9 +176,9 @@ export const ProjectBoard = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex items-center gap-4">
-          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md min-w-0 flex-1 max-w-md">
-            <button type="submit" className="text-gray-400 hover:text-gray-600">
+        <div className="flex items-center gap-4" data-testid="board-controls">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md min-w-0 flex-1 max-w-md" data-testid="search-form">
+            <button type="submit" className="text-gray-400 hover:text-gray-600" data-testid="search-button">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
@@ -189,6 +190,7 @@ export const ProjectBoard = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               className="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 flex-1 min-w-0"
+              data-testid="search-input"
             />
           </form>
 
@@ -207,20 +209,22 @@ export const ProjectBoard = () => {
       </div>
 
       {/* Board Content */}
-      <main className="flex-1 px-6 py-6">
+      <main className="flex-1 px-6 py-6" data-testid="board-content">
         {shouldShowIssues ? (
-          <KanbanBoard
-            key={currentProject.id} // Force re-mount when project changes
-            project={currentProject}
-            issues={issues}
-            loading={loading}
-            onIssueUpdate={handleIssueUpdate}
-            onIssueCreate={handleIssueCreate}
-            onIssueEdit={handleIssueEdit}
-            onIssueDelete={handleIssueDelete}
-          />
+          <div data-testid="kanban-board">
+            <KanbanBoard
+              key={currentProject.id} // Force re-mount when project changes
+              project={currentProject}
+              issues={issues}
+              loading={loading}
+              onIssueUpdate={handleIssueUpdate}
+              onIssueCreate={handleIssueCreate}
+              onIssueEdit={handleIssueEdit}
+              onIssueDelete={handleIssueDelete}
+            />
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-8" data-testid="board-loading">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
               <p className="text-gray-600">Loading board...</p>

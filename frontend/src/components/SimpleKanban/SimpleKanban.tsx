@@ -93,6 +93,7 @@ const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }:
       }}
       onDragEnd={onDragEnd}
       className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow select-none"
+      data-testid={`issue-card-${issue.id}`}
     >
       {/* Title */}
       {isEditingTitle ? (
@@ -104,10 +105,11 @@ const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }:
           onKeyDown={handleTitleKeyDown}
           className="font-medium text-gray-900 mb-3 w-full bg-white border border-blue-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
           autoFocus
+          data-testid={`issue-title-edit-${issue.id}`}
         />
       ) : (
         <Link to={`/projects/${projectId}/issues/${issue.id}`}>
-          <h3 className="font-medium text-gray-900 mb-3 hover:text-blue-600 text-sm cursor-pointer">
+          <h3 className="font-medium text-gray-900 mb-3 hover:text-blue-600 text-sm cursor-pointer" data-testid={`issue-title-${issue.id}`}>
             {issue.title}
           </h3>
         </Link>
@@ -462,18 +464,34 @@ export const SimpleKanban = ({ issues, onIssueUpdate, project }: SimpleKanbanPro
   }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">{project.name}</h1>
-        <p className="text-gray-600">{project.description}</p>
+    <div data-testid="simple-kanban">
+      <div className="mb-6" data-testid="project-header">
+        <h1 className="text-2xl font-bold mb-2" data-testid="project-name">{project.name}</h1>
+        <p className="text-gray-600" data-testid="project-description">{project.description}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
-        <SimpleColumn
-          title="To Do"
-          status="todo"
-          issues={issuesByStatus.todo}
-          draggedIssue={draggedIssue}
+      <div className="grid grid-cols-4 gap-6" data-testid="kanban-columns">
+        <div data-testid="column-todo">
+          <SimpleColumn
+            title="To Do"
+            status="todo"
+            issues={issuesByStatus.todo}
+            draggedIssue={draggedIssue}
+            onDrop={handleDrop}
+            onDropAtIndex={handleDropAtIndex}
+            onDragOver={(e) => e.preventDefault()}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onIssueUpdate={onIssueUpdate}
+            projectId={projectId || ''}
+          />
+        </div>
+        <div data-testid="column-in-progress">
+          <SimpleColumn
+            title="In Progress"
+            status="in_progress"
+            issues={issuesByStatus.in_progress}
+            draggedIssue={draggedIssue}
           onDrop={handleDrop}
           onDropAtIndex={handleDropAtIndex}
           onDragOver={(e) => e.preventDefault()}
@@ -481,46 +499,38 @@ export const SimpleKanban = ({ issues, onIssueUpdate, project }: SimpleKanbanPro
           onDragEnd={handleDragEnd}
           onIssueUpdate={onIssueUpdate}
           projectId={projectId || ''}
-        />
-        <SimpleColumn
-          title="In Progress"
-          status="in_progress"
-          issues={issuesByStatus.in_progress}
-          draggedIssue={draggedIssue}
-          onDrop={handleDrop}
-          onDropAtIndex={handleDropAtIndex}
-          onDragOver={(e) => e.preventDefault()}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onIssueUpdate={onIssueUpdate}
+          />
+        </div>
+        <div data-testid="column-code-review">
+          <SimpleColumn
+            title="Code Review"
+            status="code_review"
+            issues={issuesByStatus.code_review}
+            draggedIssue={draggedIssue}
+            onDrop={handleDrop}
+            onDropAtIndex={handleDropAtIndex}
+            onDragOver={(e) => e.preventDefault()}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onIssueUpdate={onIssueUpdate}
+            projectId={projectId || ''}
+          />
+        </div>
+        <div data-testid="column-done">
+          <SimpleColumn
+            title="Done"
+            status="done"
+            issues={issuesByStatus.done}
+            draggedIssue={draggedIssue}
+            onDrop={handleDrop}
+            onDropAtIndex={handleDropAtIndex}
+            onDragOver={(e) => e.preventDefault()}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onIssueUpdate={onIssueUpdate}
           projectId={projectId || ''}
-        />
-        <SimpleColumn
-          title="Code Review"
-          status="code_review"
-          issues={issuesByStatus.code_review}
-          draggedIssue={draggedIssue}
-          onDrop={handleDrop}
-          onDropAtIndex={handleDropAtIndex}
-          onDragOver={(e) => e.preventDefault()}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onIssueUpdate={onIssueUpdate}
-          projectId={projectId || ''}
-        />
-        <SimpleColumn
-          title="Done"
-          status="done"
-          issues={issuesByStatus.done}
-          draggedIssue={draggedIssue}
-          onDrop={handleDrop}
-          onDropAtIndex={handleDropAtIndex}
-          onDragOver={(e) => e.preventDefault()}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          onIssueUpdate={onIssueUpdate}
-          projectId={projectId || ''}
-        />
+          />
+        </div>
       </div>
     </div>
   )

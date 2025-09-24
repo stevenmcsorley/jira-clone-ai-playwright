@@ -17,6 +17,8 @@
   "include": [
     "tests/**/*",
     "reporters/**/*",
+    "step-definitions/**/*",
+    "support/**/*",
     "*.ts"
   ],
   "exclude": [
