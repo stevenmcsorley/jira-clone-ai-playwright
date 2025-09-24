@@ -5,6 +5,7 @@ import { Comment } from './entities/comment.entity'
 import { Attachment } from './entities/attachment.entity'
 import { Subtask } from './entities/subtask.entity'
 import { TimeLog } from './entities/time-log.entity'
+import { IssueLink } from './entities/issue-link.entity'
 import { User } from '../users/entities/user.entity'
 import { IssuesService } from './issues.service'
 import { IssuesController } from './issues.controller'
@@ -16,19 +17,22 @@ import { SubtasksService } from './subtasks.service'
 import { SubtasksController } from './subtasks.controller'
 import { TimeTrackingService } from './time-tracking.service'
 import { TimeTrackingController } from './time-tracking.controller'
+import { IssueLinksService } from './issue-links.service'
+import { IssueLinksController } from './issue-links.controller'
 import { PublicSubtasksController } from './controllers/public-subtasks.controller' // New import
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, User])],
-  providers: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService],
+  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, IssueLink, User])],
+  providers: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService, IssueLinksService],
   controllers: [
     IssuesController,
     CommentsController,
     AttachmentsController,
     SubtasksController,
     TimeTrackingController,
+    IssueLinksController,
     PublicSubtasksController, // New controller added here
   ],
-  exports: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService],
+  exports: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService, IssueLinksService],
 })
 export class IssuesModule {}

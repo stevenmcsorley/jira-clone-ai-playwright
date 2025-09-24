@@ -1,46 +1,26 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
+import { IssueLinksService, type IssueLink, type IssueLinkType } from '../../services/api/issue-links.service'
 import type { Issue } from '../../types/domain.types'
 
-export type IssueLinkType =
-  | 'blocks' | 'blocked_by'
-  | 'duplicates' | 'duplicated_by'
-  | 'relates_to'
-  | 'causes' | 'caused_by'
-  | 'clones' | 'cloned_by'
-  | 'child_of' | 'parent_of'
-
-export interface IssueLink {
-  id: number
-  sourceIssueId: number
-  targetIssueId: number
-  linkType: IssueLinkType
-  sourceIssue?: Issue
-  targetIssue?: Issue
-  createdAt: Date
-  createdBy: {
-    id: number
-    name: string
-  }
-}
 
 interface IssueLinksProps {
   issue: Issue
   projectId: string
-  onLinkCreate?: (targetIssueId: number, linkType: IssueLinkType) => Promise<void>
-  onLinkDelete?: (linkId: number) => Promise<void>
 }
 
-export const IssueLinks = ({ issue, projectId, onLinkCreate, onLinkDelete }: IssueLinksProps) => {
+export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
   const [showLinkForm, setShowLinkForm] = useState(false)
   const [linkType, setLinkType] = useState<IssueLinkType>('relates_to')
   const [targetIssueId, setTargetIssueId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  // Mock issue links for now - these would come from the API
-  const issueLinks: IssueLink[] = []
+  const [issueLinks, setIssueLinks] = useState<IssueLink[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchResults, setSearchResults] = useState<Issue[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   const linkTypeLabels = {
     blocks: 'blocks',
@@ -70,15 +50,83 @@ export const IssueLinks = ({ issue, projectId, onLinkCreate, onLinkDelete }: Iss
     parent_of: 'text-indigo-600 bg-indigo-50',
   }
 
+  // Load issue links on component mount
+  useEffect(() => {
+    const fetchIssueLinks = async () => {
+      try {
+        setLoading(true)
+        const links = await IssueLinksService.getByIssueId(issue.id)
+        setIssueLinks(links)
+      } catch (error) {
+        console.error('Failed to load issue links:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchIssueLinks()
+  }, [issue.id])
+
+  // Handle search for issues
+  useEffect(() => {
+    const searchIssues = async () => {
+      // Allow shorter queries for numeric searches (issue IDs)
+      const isNumericQuery = /^\d+$/.test(searchQuery.trim()) || /^jc-?\d+$/i.test(searchQuery.trim())
+      const minLength = isNumericQuery ? 1 : 3
+
+      if (searchQuery.length >= minLength) {
+        try {
+          const results = await IssueLinksService.searchIssues(searchQuery, parseInt(projectId))
+          // Filter out the current issue and already linked issues
+          const linkedIssueIds = new Set([
+            issue.id,
+            ...issueLinks.map(link =>
+              link.sourceIssueId === issue.id ? link.targetIssueId : link.sourceIssueId
+            )
+          ])
+          const filteredResults = results.filter(result => !linkedIssueIds.has(result.id))
+          setSearchResults(filteredResults)
+          setShowSearchResults(true)
+        } catch (error) {
+          console.error('Failed to search issues:', error)
+          setSearchResults([])
+        }
+      } else {
+        setSearchResults([])
+        setShowSearchResults(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchIssues, 300) // Debounce search
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, issue.id, issueLinks, projectId])
+
   const handleCreateLink = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!targetIssueId.trim() || !onLinkCreate || submitting) return
+    if (!selectedIssue || submitting) return
 
     try {
       setSubmitting(true)
-      await onLinkCreate(parseInt(targetIssueId), linkType)
+      const newLink = await IssueLinksService.create({
+        sourceIssueId: issue.id,
+        targetIssueId: selectedIssue.id,
+        linkType,
+        createdById: 1, // TODO: Get current user ID
+      })
+
+      // Add the new link to the state
+      setIssueLinks(prev => [...prev, {
+        ...newLink,
+        sourceIssue: issue,
+        targetIssue: selectedIssue,
+        createdBy: { id: 1, name: 'Current User' } // TODO: Get current user
+      }])
+
+      // Reset form
       setTargetIssueId('')
       setSearchQuery('')
+      setSelectedIssue(null)
+      setShowSearchResults(false)
       setShowLinkForm(false)
     } catch (error) {
       console.error('Failed to create issue link:', error)
@@ -88,13 +136,21 @@ export const IssueLinks = ({ issue, projectId, onLinkCreate, onLinkDelete }: Iss
   }
 
   const handleDeleteLink = async (linkId: number) => {
-    if (!onLinkDelete || !confirm('Are you sure you want to remove this link?')) return
+    if (!confirm('Are you sure you want to remove this link?')) return
 
     try {
-      await onLinkDelete(linkId)
+      await IssueLinksService.delete(linkId)
+      setIssueLinks(prev => prev.filter(link => link.id !== linkId))
     } catch (error) {
       console.error('Failed to delete issue link:', error)
     }
+  }
+
+  const handleSelectIssue = (selectedIssue: Issue) => {
+    setSelectedIssue(selectedIssue)
+    setTargetIssueId(selectedIssue.id.toString())
+    setSearchQuery(selectedIssue.title)
+    setShowSearchResults(false)
   }
 
   const getLinkedIssue = (link: IssueLink) => {
@@ -165,24 +221,78 @@ export const IssueLinks = ({ issue, projectId, onLinkCreate, onLinkDelete }: Iss
                 <option value="child_of">is child of</option>
               </select>
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Target Issue ID (e.g., JC-123)
+                Search and Select Issue
               </label>
               <input
                 type="text"
-                value={targetIssueId}
-                onChange={(e) => setTargetIssueId(e.target.value)}
-                placeholder="Enter issue ID..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setSelectedIssue(null)
+                  setTargetIssueId('')
+                }}
+                placeholder="Type to search for issues..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+
+              {/* Search Results Dropdown */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {searchResults.map((searchIssue) => (
+                    <button
+                      key={searchIssue.id}
+                      type="button"
+                      onClick={() => handleSelectIssue(searchIssue)}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {searchIssue.title}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          JC-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
+                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          searchIssue.type === 'bug' ? 'bg-red-100 text-red-800' :
+                          searchIssue.type === 'story' ? 'bg-green-100 text-green-800' :
+                          searchIssue.type === 'epic' ? 'bg-purple-100 text-purple-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {searchIssue.type}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {searchQuery.length > 0 && searchQuery.length < 3 && !/^\d+$/.test(searchQuery.trim()) && !/^jc-?\d+$/i.test(searchQuery.trim()) && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Type at least 3 characters to search (or use issue ID/key)
+                </div>
+              )}
+
+              {selectedIssue && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="text-sm font-medium text-blue-900">
+                    Selected: {selectedIssue.title}
+                  </div>
+                  <div className="text-xs text-blue-700">
+                    JC-{selectedIssue.id} • {selectedIssue.type}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 mt-4">
             <Button
               type="submit"
-              disabled={submitting || !targetIssueId.trim()}
+              disabled={submitting || !selectedIssue}
               size="sm"
             >
               {submitting ? 'Creating...' : 'Create Link'}
@@ -193,6 +303,8 @@ export const IssueLinks = ({ issue, projectId, onLinkCreate, onLinkDelete }: Iss
                 setShowLinkForm(false)
                 setTargetIssueId('')
                 setSearchQuery('')
+                setSelectedIssue(null)
+                setShowSearchResults(false)
               }}
               variant="secondary"
               size="sm"

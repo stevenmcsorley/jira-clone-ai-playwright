@@ -30,7 +30,11 @@ export const CreateIssue = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!currentProject) return
+    console.log('Form submitted!')
+    if (!currentProject) {
+      console.log('No current project found')
+      return
+    }
 
     const issueData = {
       title: title.trim(),
@@ -45,10 +49,14 @@ export const CreateIssue = () => {
       reporterId: 1, // TODO: Get current user ID
     }
 
+    console.log('Issue data to create:', issueData)
+
     try {
       setSaving(true)
       setError(null)
+      console.log('Calling createIssue...')
       const newIssue = await createIssue(issueData)
+      console.log('Issue created successfully:', newIssue)
       navigate(`/projects/${projectId}/issues/${newIssue.id}`)
     } catch (err) {
       console.error('Error creating issue:', err)
@@ -127,6 +135,7 @@ export const CreateIssue = () => {
               type="submit"
               form="create-issue-form"
               disabled={saving || !title.trim()}
+              onClick={() => console.log('Create button clicked!')}
             >
               {saving ? 'Creating...' : 'Create Issue'}
             </Button>

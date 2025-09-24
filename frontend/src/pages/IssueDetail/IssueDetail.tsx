@@ -194,14 +194,6 @@ export const IssueDetail = () => {
             <IssueLinks
               issue={issue}
               projectId={projectId!}
-              onLinkCreate={async (targetIssueId, linkType) => {
-                // TODO: Implement when backend API is ready
-                console.log('Create link:', targetIssueId, linkType)
-              }}
-              onLinkDelete={async (linkId) => {
-                // TODO: Implement when backend API is ready
-                console.log('Delete link:', linkId)
-              }}
             />
 
             {/* Attachments */}

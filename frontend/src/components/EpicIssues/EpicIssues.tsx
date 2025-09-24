@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
+import { IssueLinksService } from '../../services/api/issue-links.service'
+import { IssuesService } from '../../services/api/issues.service'
 import type { Issue, IssueStatus } from '../../types/domain.types'
 
 interface EpicIssuesProps {
@@ -12,6 +14,11 @@ interface EpicIssuesProps {
 export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) => {
   const epicIssues = epic.epicIssues || []
   const [showAddIssue, setShowAddIssue] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Issue[]>([])
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
+  const [adding, setAdding] = useState(false)
 
   const statusConfig = {
     todo: { color: 'bg-gray-100 text-gray-800', label: 'To Do' },
@@ -70,6 +77,65 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
     })
   }
 
+  // Handle search for issues to add to epic
+  useEffect(() => {
+    const searchIssues = async () => {
+      // Allow shorter queries for numeric searches (issue IDs)
+      const isNumericQuery = /^\d+$/.test(searchQuery.trim()) || /^jc-?\d+$/i.test(searchQuery.trim())
+      const minLength = isNumericQuery ? 1 : 3
+
+      if (searchQuery.length >= minLength) {
+        try {
+          const results = await IssueLinksService.searchIssues(searchQuery, parseInt(projectId))
+          // Filter out the current epic and already linked issues
+          const linkedIssueIds = new Set([
+            epic.id,
+            ...epicIssues.map(issue => issue.id)
+          ])
+          const filteredResults = results.filter(result =>
+            !linkedIssueIds.has(result.id) && result.type !== 'epic'
+          )
+          setSearchResults(filteredResults)
+          setShowSearchResults(true)
+        } catch (error) {
+          console.error('Failed to search issues:', error)
+          setSearchResults([])
+        }
+      } else {
+        setSearchResults([])
+        setShowSearchResults(false)
+      }
+    }
+
+    const timeoutId = setTimeout(searchIssues, 300) // Debounce search
+    return () => clearTimeout(timeoutId)
+  }, [searchQuery, epic.id, epicIssues, projectId])
+
+  const handleSelectIssue = (selectedIssue: Issue) => {
+    setSelectedIssue(selectedIssue)
+    setSearchQuery(selectedIssue.title)
+    setShowSearchResults(false)
+  }
+
+  const handleAddIssueToEpic = async () => {
+    if (!selectedIssue || !onIssueUpdate || adding) return
+
+    try {
+      setAdding(true)
+      await onIssueUpdate(selectedIssue.id, { epicId: epic.id })
+
+      // Reset form
+      setSearchQuery('')
+      setSelectedIssue(null)
+      setShowSearchResults(false)
+      setShowAddIssue(false)
+    } catch (error) {
+      console.error('Failed to add issue to epic:', error)
+    } finally {
+      setAdding(false)
+    }
+  }
+
   const progress = getProgress()
 
   if (epic.type !== 'epic') {
@@ -119,17 +185,92 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
       {/* Add Issue Controls */}
       {showAddIssue && (
         <div className="mb-6 mx-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600 mb-2">Add existing issues to this epic:</p>
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Search issues to add..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <Button size="sm">Search</Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowAddIssue(false)}>
-              Cancel
-            </Button>
+          <p className="text-sm text-gray-600 mb-3">Add existing issues to this epic:</p>
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setSelectedIssue(null)
+                }}
+                placeholder="Type to search for issues..."
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              {/* Search Results Dropdown */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {searchResults.map((searchIssue) => (
+                    <button
+                      key={searchIssue.id}
+                      type="button"
+                      onClick={() => handleSelectIssue(searchIssue)}
+                      className="w-full px-3 py-2 text-left hover:bg-gray-100 flex items-center justify-between"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {searchIssue.title}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          JC-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
+                        </div>
+                      </div>
+                      <div className="ml-2 flex-shrink-0">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          searchIssue.type === 'bug' ? 'bg-red-100 text-red-800' :
+                          searchIssue.type === 'story' ? 'bg-green-100 text-green-800' :
+                          searchIssue.type === 'epic' ? 'bg-purple-100 text-purple-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {searchIssue.type}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {searchQuery.length > 0 && searchQuery.length < 3 && !/^\d+$/.test(searchQuery.trim()) && !/^jc-?\d+$/i.test(searchQuery.trim()) && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Type at least 3 characters to search (or use issue ID/key)
+                </div>
+              )}
+
+              {selectedIssue && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="text-sm font-medium text-blue-900">
+                    Selected: {selectedIssue.title}
+                  </div>
+                  <div className="text-xs text-blue-700">
+                    JC-{selectedIssue.id} • {selectedIssue.type}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={handleAddIssueToEpic}
+                size="sm"
+                disabled={!selectedIssue || adding}
+              >
+                {adding ? 'Adding...' : 'Add to Epic'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowAddIssue(false)
+                  setSearchQuery('')
+                  setSelectedIssue(null)
+                  setShowSearchResults(false)
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
       )}
