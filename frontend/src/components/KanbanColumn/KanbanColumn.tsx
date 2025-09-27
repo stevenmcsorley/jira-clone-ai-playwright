@@ -5,6 +5,7 @@ import type { KanbanColumnProps } from './KanbanColumn.types'
 const statusColors = {
   todo: 'border-gray-300 bg-gray-50',
   in_progress: 'border-blue-300 bg-blue-50',
+  code_review: 'border-purple-300 bg-purple-50',
   done: 'border-green-300 bg-green-50',
 }
 
@@ -12,7 +13,7 @@ export const KanbanColumn = ({
   title,
   issues,
   status,
-  onIssueMove,
+  onIssueMove: _onIssueMove,
   onIssueCreate,
   className,
 }: KanbanColumnProps) => {

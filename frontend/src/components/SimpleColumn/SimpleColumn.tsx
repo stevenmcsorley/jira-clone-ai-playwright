@@ -24,6 +24,11 @@ const statusConfig = {
     headerColor: 'text-blue-700',
     icon: '🚧',
   },
+  code_review: {
+    color: 'bg-purple-50 border-purple-200',
+    headerColor: 'text-purple-700',
+    icon: '👀',
+  },
   done: {
     color: 'bg-green-50 border-green-200',
     headerColor: 'text-green-700',

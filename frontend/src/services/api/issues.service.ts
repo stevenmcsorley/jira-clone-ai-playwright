@@ -10,6 +10,10 @@ export class IssuesService extends BaseApiService {
     return this.get<Issue[]>(`/issues?projectId=${projectId}`)
   }
 
+  static async getForBoard(projectId: number): Promise<Issue[]> {
+    return this.get<Issue[]>(`/issues?projectId=${projectId}&boardView=true`)
+  }
+
   static async getById(id: number): Promise<Issue> {
     return this.get<Issue>(`/issues/${id}`)
   }

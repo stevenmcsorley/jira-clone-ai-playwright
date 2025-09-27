@@ -36,6 +36,7 @@ export const ProjectBoard = () => {
         if (activeSprintData) {
           setIssues(activeSprintData.issues)
         } else {
+          // No active sprint = empty board (like real Jira)
           setIssues([])
         }
       } catch (error) {

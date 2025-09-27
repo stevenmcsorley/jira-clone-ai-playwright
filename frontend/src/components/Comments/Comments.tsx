@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CommentsService, type Comment, type CreateCommentRequest } from '../../services/api/comments.service'
 import { Button } from '../ui/Button'
 
@@ -16,11 +16,7 @@ export const Comments = ({ issueId }: CommentsProps) => {
   const [editContent, setEditContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
-    fetchComments()
-  }, [issueId])
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setLoading(true)
       const data = await CommentsService.getByIssue(issueId)
@@ -30,7 +26,11 @@ export const Comments = ({ issueId }: CommentsProps) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [issueId])
+
+  useEffect(() => {
+    fetchComments()
+  }, [fetchComments])
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()

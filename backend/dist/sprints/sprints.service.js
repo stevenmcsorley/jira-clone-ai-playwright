@@ -38,7 +38,7 @@ let SprintsService = class SprintsService {
     async findByProject(projectId) {
         return this.sprintsRepository.find({
             where: { projectId },
-            relations: ['issues', 'issues.assignee', 'issues.reporter'],
+            relations: ['issues', 'issues.assignee', 'issues.reporter', 'issues.project'],
             order: { position: 'ASC' },
         });
     }
@@ -68,6 +68,10 @@ let SprintsService = class SprintsService {
         });
     }
     async completeSprint(id) {
+        await this.issuesRepository.update({
+            sprintId: id,
+            status: (0, typeorm_2.Not)('done')
+        }, { sprintId: null });
         return this.update(id, {
             status: sprint_entity_1.SprintStatus.COMPLETED,
         });

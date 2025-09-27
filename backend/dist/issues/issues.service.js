@@ -37,6 +37,29 @@ let IssuesService = class IssuesService {
             order: { position: 'ASC', createdAt: 'DESC' },
         });
     }
+    async findForBoard(projectId) {
+        const activeSprint = await this.issuesRepository.manager
+            .getRepository('Sprint')
+            .findOne({
+            where: { projectId, status: 'active' }
+        });
+        if (!activeSprint) {
+            return [];
+        }
+        return this.issuesRepository
+            .createQueryBuilder('issue')
+            .leftJoinAndSelect('issue.project', 'project')
+            .leftJoinAndSelect('issue.assignee', 'assignee')
+            .leftJoinAndSelect('issue.reporter', 'reporter')
+            .leftJoinAndSelect('issue.epic', 'epic')
+            .leftJoinAndSelect('issue.epicIssues', 'epicIssues')
+            .leftJoinAndSelect('epicIssues.assignee', 'epicIssuesAssignee')
+            .where('issue.projectId = :projectId', { projectId })
+            .andWhere('issue.sprintId = :sprintId', { sprintId: activeSprint.id })
+            .orderBy('issue.position', 'ASC')
+            .addOrderBy('issue.createdAt', 'DESC')
+            .getMany();
+    }
     async findOne(id) {
         return this.issuesRepository.findOne({
             where: { id },
@@ -57,6 +80,93 @@ let IssuesService = class IssuesService {
     }
     async remove(id) {
         await this.issuesRepository.delete(id);
+    }
+    async search(query, projectId) {
+        const queryBuilder = this.issuesRepository
+            .createQueryBuilder('issue')
+            .leftJoinAndSelect('issue.project', 'project')
+            .leftJoinAndSelect('issue.assignee', 'assignee')
+            .leftJoinAndSelect('issue.reporter', 'reporter')
+            .leftJoinAndSelect('issue.epic', 'epic');
+        const conditions = this.parseSearchQuery(query, queryBuilder);
+        if (projectId) {
+            queryBuilder.andWhere('issue.projectId = :projectId', { projectId });
+        }
+        conditions.forEach(condition => {
+            queryBuilder.andWhere(condition.sql, condition.params);
+        });
+        const totalResults = await queryBuilder.getCount();
+        const results = await queryBuilder
+            .orderBy('issue.updatedAt', 'DESC')
+            .limit(20)
+            .getMany();
+        return { results, totalResults };
+    }
+    parseSearchQuery(query, queryBuilder) {
+        const conditions = [];
+        if (!query)
+            return conditions;
+        if (!query.includes('=') && !query.includes('IN')) {
+            conditions.push({
+                sql: '("issue"."title" ILIKE :searchText OR "issue"."description" ILIKE :searchText)',
+                params: { searchText: `%${query}%` }
+            });
+            return conditions;
+        }
+        const parts = query.split(/\s+AND\s+/i);
+        parts.forEach((part, index) => {
+            const trimmed = part.trim();
+            const projectMatch = trimmed.match(/project\s*=\s*([A-Z]+)/i);
+            if (projectMatch) {
+                conditions.push({
+                    sql: `"project"."key" = :projectKey${index}`,
+                    params: { [`projectKey${index}`]: projectMatch[1] }
+                });
+                return;
+            }
+            const assigneeMatch = trimmed.match(/assignee\s*=\s*['"]*([^'"]+)['"]*$/i);
+            if (assigneeMatch) {
+                conditions.push({
+                    sql: `"assignee"."name" = :assigneeUsername${index}`,
+                    params: { [`assigneeUsername${index}`]: assigneeMatch[1] }
+                });
+                return;
+            }
+            const statusInMatch = trimmed.match(/status\s+IN\s*\(([^)]+)\)/i);
+            if (statusInMatch) {
+                const statuses = statusInMatch[1].split(',').map(s => s.trim().replace(/['"]/g, ''));
+                conditions.push({
+                    sql: `"issue"."status" IN (:...statuses${index})`,
+                    params: { [`statuses${index}`]: statuses }
+                });
+                return;
+            }
+            const statusMatch = trimmed.match(/status\s*=\s*(\w+)/i);
+            if (statusMatch) {
+                conditions.push({
+                    sql: `"issue"."status" = :status${index}`,
+                    params: { [`status${index}`]: statusMatch[1] }
+                });
+                return;
+            }
+            const priorityMatch = trimmed.match(/priority\s*=\s*(\w+)/i);
+            if (priorityMatch) {
+                conditions.push({
+                    sql: `"issue"."priority" = :priority${index}`,
+                    params: { [`priority${index}`]: priorityMatch[1] }
+                });
+                return;
+            }
+            const typeMatch = trimmed.match(/type\s*=\s*(\w+)/i);
+            if (typeMatch) {
+                conditions.push({
+                    sql: `"issue"."type" = :type${index}`,
+                    params: { [`type${index}`]: typeMatch[1] }
+                });
+                return;
+            }
+        });
+        return conditions;
     }
 };
 exports.IssuesService = IssuesService;

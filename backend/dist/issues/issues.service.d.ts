@@ -7,6 +7,7 @@ export declare class IssuesService {
     create(createIssueDto: CreateIssueDto): Promise<Issue>;
     findAll(): Promise<Issue[]>;
     findByProject(projectId: number): Promise<Issue[]>;
+    findForBoard(projectId: number): Promise<Issue[]>;
     findOne(id: number): Promise<Issue>;
     update(id: number, updateData: Partial<Issue>): Promise<Issue>;
     updatePositions(updates: {
@@ -15,4 +16,9 @@ export declare class IssuesService {
         status: string;
     }[]): Promise<void>;
     remove(id: number): Promise<void>;
+    search(query: string, projectId?: number): Promise<{
+        results: Issue[];
+        totalResults: number;
+    }>;
+    private parseSearchQuery;
 }

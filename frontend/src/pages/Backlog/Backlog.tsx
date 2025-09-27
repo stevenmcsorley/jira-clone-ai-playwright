@@ -4,12 +4,16 @@ import { Button } from '../../components/ui/Button'
 import { SprintsService, type Sprint } from '../../services/api/sprints.service'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
+import { useTimerManager } from '../../hooks/useTimerManager'
+import { TimeProgressBar, TimeProgressIndicator } from '../../components/TimeProgressBar'
+import { ActiveTimerDisplay } from '../../components/ActiveTimerDisplay'
 import type { Issue } from '../../types/domain.types'
 
 export const Backlog = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const { projects } = useProjects()
   const { users } = useUsers()
+  const { handleIssueStatusChange } = useTimerManager()
 
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [backlogIssues, setBacklogIssues] = useState<Issue[]>([])
@@ -436,7 +440,7 @@ export const Backlog = () => {
                         key={issue.id}
                         draggable
                         onDragStart={() => handleDragStart(issue)}
-                        className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-move"
+                        className="relative flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-move"
                       >
                         <span className="text-lg">{getIssueTypeIcon(issue.type)}</span>
                         <span className="text-sm font-medium text-gray-500">
@@ -464,6 +468,9 @@ export const Backlog = () => {
                         >
                           Remove
                         </button>
+
+                        {/* Time Progress Indicator */}
+                        <TimeProgressIndicator issue={issue} />
                       </div>
                     ))}
                   </div>
@@ -508,7 +515,7 @@ export const Backlog = () => {
                       key={issue.id}
                       draggable
                       onDragStart={() => handleDragStart(issue)}
-                      className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-move"
+                      className="relative flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-move"
                     >
                       <span className="text-lg">{getIssueTypeIcon(issue.type)}</span>
                       <span className="text-sm font-medium text-gray-500">
@@ -530,6 +537,9 @@ export const Backlog = () => {
                           </span>
                         </div>
                       )}
+
+                      {/* Time Progress Indicator */}
+                      <TimeProgressIndicator issue={issue} />
                     </div>
                   ))}
                 </div>
@@ -545,22 +555,15 @@ export const Backlog = () => {
 
             return (
               <div className="bg-white rounded-lg border border-gray-200">
-                <button
-                  onClick={() => setShowClosedSprints(!showClosedSprints)}
-                  className="w-full px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                  <button
+                    onClick={() => setShowClosedSprints(!showClosedSprints)}
+                    className="flex items-center gap-3 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                  >
                     <h3 className="text-lg font-medium text-gray-900">Closed Sprints</h3>
                     <span className="text-sm text-gray-600">
                       {completedSprints.length} sprint{completedSprints.length === 1 ? '' : 's'}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Link to={`/projects/${projectId}/reports`}>
-                      <button className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded">
-                        View Reports
-                      </button>
-                    </Link>
                     <svg
                       className={`w-5 h-5 text-gray-500 transform transition-transform ${showClosedSprints ? 'rotate-180' : ''}`}
                       fill="currentColor"
@@ -568,8 +571,14 @@ export const Backlog = () => {
                     >
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
-                  </div>
-                </button>
+                  </button>
+                  <Link
+                    to={`/projects/${projectId}/reports`}
+                    className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                  >
+                    View Reports
+                  </Link>
+                </div>
 
                 {showClosedSprints && (
                   <div className="p-6 space-y-4">

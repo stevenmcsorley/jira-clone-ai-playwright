@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { IssuesService } from '../services/api/issues.service'
 import type { Issue, CreateIssueRequest, UpdateIssueRequest } from '../types/domain.types'
 
@@ -7,7 +7,7 @@ export const useIssues = (projectId?: number) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchIssues = async () => {
+  const fetchIssues = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -23,7 +23,7 @@ export const useIssues = (projectId?: number) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
 
   const updateIssue = async (issueId: number, updates: UpdateIssueRequest) => {
     try {
@@ -62,7 +62,7 @@ export const useIssues = (projectId?: number) => {
     } else {
       setLoading(false)
     }
-  }, [projectId])
+  }, [projectId, fetchIssues])
 
   return {
     issues,

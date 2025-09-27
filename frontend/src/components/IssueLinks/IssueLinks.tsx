@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { IssueLinksService, type IssueLink, type IssueLinkType } from '../../services/api/issue-links.service'
+import { useProjects } from '../../hooks/useProjects'
 import type { Issue } from '../../types/domain.types'
 
 
@@ -11,9 +12,11 @@ interface IssueLinksProps {
 }
 
 export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
+  const { projects } = useProjects()
+  const currentProject = projects.find(p => p.id === Number(projectId))
   const [showLinkForm, setShowLinkForm] = useState(false)
   const [linkType, setLinkType] = useState<IssueLinkType>('relates_to')
-  const [targetIssueId, setTargetIssueId] = useState('')
+  const [_targetIssueId, setTargetIssueId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [issueLinks, setIssueLinks] = useState<IssueLink[]>([])
@@ -253,7 +256,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
                           {searchIssue.title}
                         </div>
                         <div className="text-xs text-gray-500">
-                          JC-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
+                          {currentProject?.key || 'JC'}-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
                         </div>
                       </div>
                       <div className="ml-2 flex-shrink-0">
@@ -283,7 +286,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
                     Selected: {selectedIssue.title}
                   </div>
                   <div className="text-xs text-blue-700">
-                    JC-{selectedIssue.id} • {selectedIssue.type}
+                    {currentProject?.key || 'JC'}-{selectedIssue.id} • {selectedIssue.type}
                   </div>
                 </div>
               )}
@@ -357,7 +360,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
                     </Link>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>JC-{linkedIssue.id}</span>
+                    <span>{currentProject?.key || 'JC'}-{linkedIssue.id}</span>
                     <span className="capitalize">{linkedIssue.type}</span>
                     <span className="capitalize">{linkedIssue.status.replace('_', ' ')}</span>
                   </div>

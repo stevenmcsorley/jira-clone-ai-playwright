@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { SubtasksService, type Subtask, type CreateSubtaskRequest, type UpdateSubtaskRequest, type SubtaskProgress } from '../../services/api/subtasks.service'
 import { useUsers } from '../../hooks/useUsers'
 import { Button } from '../ui/Button'
@@ -19,17 +19,12 @@ export const Subtasks = ({ issueId }: SubtasksProps) => {
     assigneeId: undefined as number | undefined,
   })
   const [editingSubtask, setEditingSubtask] = useState<number | null>(null)
-  const [editFormData, setEditFormData] = useState<UpdateSubtaskRequest>({})
+  const [_editFormData, _setEditFormData] = useState<UpdateSubtaskRequest>({})
   const [submitting, setSubmitting] = useState(false)
 
   const { users } = useUsers()
 
-  useEffect(() => {
-    fetchSubtasks()
-    fetchProgress()
-  }, [issueId])
-
-  const fetchSubtasks = async () => {
+  const fetchSubtasks = useCallback(async () => {
     try {
       setLoading(true)
       const data = await SubtasksService.getByIssue(issueId)
@@ -39,16 +34,21 @@ export const Subtasks = ({ issueId }: SubtasksProps) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [issueId])
 
-  const fetchProgress = async () => {
+  const fetchProgress = useCallback(async () => {
     try {
       const data = await SubtasksService.getProgress(issueId)
       setProgress(data)
     } catch (error) {
       console.error('Error fetching progress:', error)
     }
-  }
+  }, [issueId])
+
+  useEffect(() => {
+    fetchSubtasks()
+    fetchProgress()
+  }, [fetchSubtasks, fetchProgress])
 
   const handleCreateSubtask = async (e: React.FormEvent) => {
     e.preventDefault()

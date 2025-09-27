@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { AttachmentsService, type Attachment } from '../../services/api/attachments.service'
 import { Button } from '../ui/Button'
 
@@ -13,11 +13,7 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    fetchAttachments()
-  }, [issueId])
-
-  const fetchAttachments = async () => {
+  const fetchAttachments = useCallback(async () => {
     try {
       setLoading(true)
       const data = await AttachmentsService.getByIssue(issueId)
@@ -27,7 +23,11 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [issueId])
+
+  useEffect(() => {
+    fetchAttachments()
+  }, [fetchAttachments])
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return

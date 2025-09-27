@@ -9,12 +9,22 @@ import { IssueDetail } from './pages/IssueDetail'
 import { IssueEdit } from './pages/IssueEdit'
 import { IssuesList } from './pages/IssuesList'
 import { SearchResults } from './pages/SearchResults'
+import { Search } from './pages/Search'
 import { ProjectSettings } from './pages/ProjectSettings'
 import { Reports } from './pages/Reports'
+import { SprintHistory } from './pages/SprintHistory'
+import { Components } from './pages/Components/Components'
+import { Releases } from './pages/Releases/Releases'
+// import { XStateDemo } from './components/XStateDemo/XStateDemo'
+import { SimpleXStateDemo } from './components/SimpleXStateDemo/SimpleXStateDemo'
 import { useProjects } from './hooks/useProjects'
+import { initializeInspector } from './lib/xstate-inspector'
+
+// Initialize XState inspector in development
+// initializeInspector() // Temporarily disabled
 
 export const App = () => {
-  const { projects, loading } = useProjects()
+  const { loading } = useProjects()
 
   if (loading) {
     return (
@@ -39,6 +49,14 @@ export const App = () => {
           element={
             <Layout>
               <ProjectsList />
+            </Layout>
+          }
+        />
+        <Route
+          path="/search"
+          element={
+            <Layout>
+              <Search />
             </Layout>
           }
         />
@@ -111,8 +129,48 @@ export const App = () => {
           }
         />
         <Route
+          path="/projects/:projectId/history"
+          element={
+            <Layout>
+              <SprintHistory />
+            </Layout>
+          }
+        />
+        <Route
           path="/projects/:projectId/settings"
           element={<ProjectSettings />}
+        />
+        <Route
+          path="/projects/:projectId/components"
+          element={
+            <Layout>
+              <Components />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/releases"
+          element={
+            <Layout>
+              <Releases />
+            </Layout>
+          }
+        />
+        {/* <Route
+          path="/xstate-demo"
+          element={
+            <Layout>
+              <XStateDemo />
+            </Layout>
+          }
+        /> */}
+        <Route
+          path="/simple-xstate-demo"
+          element={
+            <Layout>
+              <SimpleXStateDemo />
+            </Layout>
+          }
         />
         {/* Redirect to projects list for any unmatched routes */}
         <Route path="*" element={<Navigate to="/projects" replace />} />

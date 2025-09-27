@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { TimeTrackingService, type TimeLog, type CreateTimeLogRequest, type TimeTrackingSummary } from '../../services/api/time-tracking.service'
 import { Button } from '../ui/Button'
 
@@ -20,21 +20,16 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
   const [submitting, setSubmitting] = useState(false)
   const [timeParseError, setTimeParseError] = useState('')
 
-  useEffect(() => {
-    fetchTimeTrackingSummary()
-    fetchTimeLogs()
-  }, [issueId])
-
-  const fetchTimeTrackingSummary = async () => {
+  const fetchTimeTrackingSummary = useCallback(async () => {
     try {
       const data = await TimeTrackingService.getTimeTrackingSummary(issueId)
       setSummary(data)
     } catch (error) {
       console.error('Error fetching time tracking summary:', error)
     }
-  }
+  }, [issueId])
 
-  const fetchTimeLogs = async () => {
+  const fetchTimeLogs = useCallback(async () => {
     try {
       setLoading(true)
       const data = await TimeTrackingService.getTimeLogsByIssue(issueId)
@@ -44,7 +39,12 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
     } finally {
       setLoading(false)
     }
-  }
+  }, [issueId])
+
+  useEffect(() => {
+    fetchTimeTrackingSummary()
+    fetchTimeLogs()
+  }, [fetchTimeTrackingSummary, fetchTimeLogs])
 
   const handleLogTime = async (e: React.FormEvent) => {
     e.preventDefault()

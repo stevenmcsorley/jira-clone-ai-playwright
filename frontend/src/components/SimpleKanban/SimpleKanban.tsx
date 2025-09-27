@@ -6,19 +6,23 @@ import { TimeTrackingService } from '../../services/api/time-tracking.service'
 
 interface SimpleKanbanProps {
   issues: Issue[]
-  onIssueUpdate?: (issueId: number, updates: any) => void
-  project: any
+  onIssueUpdate?: (issueId: number, updates: Partial<Issue>) => void
+  project: {
+    id: number;
+    name: string;
+    key: string;
+  }
 }
 
 const SimpleIssueCard = ({ issue, onDragStart, onDragEnd, onUpdate, projectId }: {
   issue: Issue;
   onDragStart: (issue: Issue) => void;
   onDragEnd: () => void;
-  onUpdate?: (issueId: number, updates: any) => void;
+  onUpdate?: (issueId: number, updates: Partial<Issue>) => void;
   projectId: string;
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [_isEditingDescription, setIsEditingDescription] = useState(false)
   const [editTitle, setEditTitle] = useState(issue.title)
   const [editDescription, setEditDescription] = useState(issue.description || '')
   const metrics = useIssueMetrics(issue.id)
@@ -467,7 +471,7 @@ export const SimpleKanban = ({ issues, onIssueUpdate, project }: SimpleKanbanPro
     <div data-testid="simple-kanban">
       <div className="mb-6" data-testid="project-header">
         <h1 className="text-2xl font-bold mb-2" data-testid="project-name">{project.name}</h1>
-        <p className="text-gray-600" data-testid="project-description">{project.description}</p>
+        <p className="text-gray-600" data-testid="project-description">{(project as any).description || ''}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-6" data-testid="kanban-columns">

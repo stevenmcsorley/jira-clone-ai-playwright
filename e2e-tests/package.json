@@ -6,6 +6,9 @@
   "scripts": {
     "test": "playwright test",
     "test:bdd": "cucumber-js --config cucumber.config.js",
+    "test:bdd:basic": "HEADLESS=true cucumber-js --config cucumber.config.js features/basic-functionality.feature",
+    "test:bdd:workflow": "HEADLESS=true cucumber-js --config cucumber.config.js features/complete-jira-workflow.feature",
+    "test:bdd:project": "HEADLESS=true cucumber-js --config cucumber.config.js features/complete-project-workflow.feature",
     "test:bdd:headed": "HEADLESS=false cucumber-js --config cucumber.config.js",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",

@@ -76,7 +76,7 @@ export class Issue {
   @JoinColumn({ name: 'reporterId' })
   reporter: User
 
-  @Column({ nullable: true })
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
   estimate: number
 
   @Column('text', { array: true, default: [] })

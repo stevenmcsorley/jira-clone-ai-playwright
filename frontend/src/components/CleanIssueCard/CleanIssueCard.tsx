@@ -26,7 +26,7 @@ const typeIcons = {
 export const CleanIssueCard = ({
   issue,
   onEdit,
-  onDelete,
+  onDelete: _onDelete,
   isDragging = false,
   className,
 }: CleanIssueCardProps) => {

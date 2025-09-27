@@ -1,6 +1,10 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { useProjects } from '../../hooks/useProjects'
+import { ActiveTimerDisplay } from '../ActiveTimerDisplay'
+import { QuickActions } from '../QuickActions'
+import { Breadcrumb } from '../Breadcrumb'
+import { GlobalSearch } from '../Search/GlobalSearch'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -53,6 +57,20 @@ export const Layout = ({ children }: LayoutProps) => {
             </Link>
 
             <Link
+              to="/search"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+                location.pathname === '/search'
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Advanced Search
+            </Link>
+
+            <Link
               to={isProjectBoard ? `/projects/${projectId}/backlog` : '#'}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.includes('/backlog')
@@ -95,25 +113,47 @@ export const Layout = ({ children }: LayoutProps) => {
               Reports
             </Link>
 
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            <Link
+              to={isProjectBoard ? `/projects/${projectId}/history` : '#'}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+                location.pathname.includes('/history')
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              Sprint History
+            </Link>
+
+            <Link
+              to={isProjectBoard ? `/projects/${projectId}/releases` : '#'}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+                location.pathname.includes('/releases')
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
               </svg>
               Releases
-            </a>
+            </Link>
 
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            <Link
+              to={isProjectBoard ? `/projects/${projectId}/components` : '#'}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+                location.pathname.includes('/components')
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 110-2h4a1 1 0 011 1v4a1 1 0 11-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 112 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 110 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 110-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15.586 13H14a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
               Components
-            </a>
+            </Link>
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/issues` : '#'}
@@ -129,25 +169,31 @@ export const Layout = ({ children }: LayoutProps) => {
               Issues
             </Link>
 
-            <a
-              href="#"
+            <Link
+              to={`https://github.com/anthropics/jira-clone`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
               Repository
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fillRule="evenodd" clipRule="evenodd" />
+              <svg className="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-1a1 1 0 10-2 0v1H5V7h1a1 1 0 000-2H5z" />
               </svg>
-              Add item
-            </a>
+            </Link>
+
+            <div className="px-3 py-2">
+              <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" />
+                </svg>
+                <span className="flex-1">Quick Actions</span>
+                <QuickActions />
+              </div>
+            </div>
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/settings` : '#'}
@@ -164,6 +210,9 @@ export const Layout = ({ children }: LayoutProps) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Active Timer Display */}
+        <ActiveTimerDisplay />
+
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -172,6 +221,15 @@ export const Layout = ({ children }: LayoutProps) => {
                 Jira Clone
               </Link>
             </div>
+
+            {/* Global Search */}
+            <div className="flex-1 max-w-md mx-8">
+              <GlobalSearch
+                onNavigate={(path) => window.location.href = path}
+                className="w-full"
+              />
+            </div>
+
             <div className="flex items-center gap-3">
               {location.pathname === '/projects' && (
                 <Link to="/projects/create">
@@ -183,12 +241,17 @@ export const Layout = ({ children }: LayoutProps) => {
                   </Button>
                 </Link>
               )}
+              {/* Quick Actions in Header */}
+              {isProjectBoard && <QuickActions />}
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-blue-700">JD</span>
               </div>
             </div>
           </div>
         </header>
+
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb />
 
         {/* Page Content */}
         {children}

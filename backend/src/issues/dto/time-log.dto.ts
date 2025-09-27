@@ -1,7 +1,9 @@
-import { IsNumber, IsString, IsOptional, IsDateString } from 'class-validator'
+import { IsNumber, IsString, IsOptional, IsDateString, Min, Max } from 'class-validator'
 
 export class CreateTimeLogDto {
   @IsNumber()
+  @Min(0.1) // Minimum 6 minutes (0.1 hours)
+  @Max(24) // Maximum 24 hours per day
   hours: number
 
   @IsString()
@@ -17,6 +19,8 @@ export class CreateTimeLogDto {
 
 export class UpdateTimeLogDto {
   @IsNumber()
+  @Min(0.1) // Minimum 6 minutes (0.1 hours)
+  @Max(24) // Maximum 24 hours per day
   @IsOptional()
   hours?: number
 

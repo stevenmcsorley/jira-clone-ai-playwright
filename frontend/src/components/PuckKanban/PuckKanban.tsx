@@ -1,6 +1,10 @@
 import { Puck, type Data } from '@measured/puck'
 import type { Issue, IssueStatus } from '../../types/domain.types'
 
+interface PuckInstance {
+  renderDropZone: (zoneName: string) => React.ReactNode;
+}
+
 interface IssueComponentProps {
   issue: Issue
 }
@@ -78,6 +82,11 @@ const ColumnComponent = ({ title, status, children }: ColumnComponentProps) => {
       headerColor: 'text-blue-700',
       icon: '🚧',
     },
+    code_review: {
+      color: 'bg-purple-50 border-purple-200',
+      headerColor: 'text-purple-700',
+      icon: '👀',
+    },
     done: {
       color: 'bg-green-50 border-green-200',
       headerColor: 'text-green-700',
@@ -126,7 +135,7 @@ const config = {
           ],
         },
       },
-      render: ({ title, status, puck }: ColumnComponentProps & { puck: any }) => (
+      render: ({ title, status, puck }: ColumnComponentProps & { puck: PuckInstance }) => (
         <ColumnComponent title={title} status={status}>
           {puck.renderDropZone('items')}
         </ColumnComponent>
@@ -137,10 +146,10 @@ const config = {
 
 interface PuckKanbanProps {
   issues: Issue[]
-  onIssueUpdate?: (issueId: number, updates: any) => void
+  onIssueUpdate?: (issueId: number, updates: Partial<Issue>) => void
 }
 
-export const PuckKanban = ({ issues, onIssueUpdate }: PuckKanbanProps) => {
+export const PuckKanban = ({ issues, onIssueUpdate: _onIssueUpdate }: PuckKanbanProps) => {
   // Convert issues to Puck data format
   const todoIssues = issues.filter(issue => issue.status === 'todo')
   const inProgressIssues = issues.filter(issue => issue.status === 'in_progress')

@@ -17,6 +17,12 @@ const statusConfig = {
     accentColor: 'bg-blue-400',
     icon: '🚧',
   },
+  code_review: {
+    color: 'border-purple-300 bg-purple-50',
+    headerColor: 'text-purple-700',
+    accentColor: 'bg-purple-400',
+    icon: '👀',
+  },
   done: {
     color: 'border-green-300 bg-green-50',
     headerColor: 'text-green-700',
@@ -29,7 +35,7 @@ export const DroppableColumn = ({
   title,
   issues,
   status,
-  onIssueMove,
+  onIssueMove: _onIssueMove,
   onIssueCreate,
   onIssueEdit,
   onIssueDelete,

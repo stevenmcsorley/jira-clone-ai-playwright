@@ -30,7 +30,10 @@ export class BaseApiService {
   }
 
   protected static async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
+    // Add cache busting to force fresh data
+    const separator = endpoint.includes('?') ? '&' : '?';
+    const cacheBustedEndpoint = `${endpoint}${separator}_cb=${Date.now()}`;
+    return this.request<T>(cacheBustedEndpoint, { method: 'GET' })
   }
 
   protected static async post<T>(endpoint: string, data: unknown): Promise<T> {

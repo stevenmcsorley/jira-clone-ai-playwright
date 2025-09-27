@@ -26,7 +26,7 @@ const typeIcons = {
 export const SimpleIssueCard = ({
   issue,
   onEdit,
-  onDelete,
+  onDelete: _onDelete,
   onDragStart,
   className,
 }: SimpleIssueCardProps) => {

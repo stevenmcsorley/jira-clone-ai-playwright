@@ -10,6 +10,13 @@ exports.ProjectsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const project_entity_1 = require("./entities/project.entity");
+const issue_entity_1 = require("../issues/entities/issue.entity");
+const sprint_entity_1 = require("../sprints/entities/sprint.entity");
+const comment_entity_1 = require("../issues/entities/comment.entity");
+const attachment_entity_1 = require("../issues/entities/attachment.entity");
+const time_log_entity_1 = require("../issues/entities/time-log.entity");
+const issue_link_entity_1 = require("../issues/entities/issue-link.entity");
+const subtask_entity_1 = require("../issues/entities/subtask.entity");
 const projects_service_1 = require("./projects.service");
 const projects_controller_1 = require("./projects.controller");
 let ProjectsModule = class ProjectsModule {
@@ -17,7 +24,7 @@ let ProjectsModule = class ProjectsModule {
 exports.ProjectsModule = ProjectsModule;
 exports.ProjectsModule = ProjectsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([project_entity_1.Project])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([project_entity_1.Project, issue_entity_1.Issue, sprint_entity_1.Sprint, comment_entity_1.Comment, attachment_entity_1.Attachment, time_log_entity_1.TimeLog, issue_link_entity_1.IssueLink, subtask_entity_1.Subtask])],
         providers: [projects_service_1.ProjectsService],
         controllers: [projects_controller_1.ProjectsController],
         exports: [projects_service_1.ProjectsService],

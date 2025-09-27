@@ -12,8 +12,12 @@ export class IssuesController {
   }
 
   @Get()
-  findAll(@Query('projectId') projectId?: string) {
+  findAll(@Query('projectId') projectId?: string, @Query('boardView') boardView?: string) {
     if (projectId) {
+      if (boardView === 'true') {
+        // Return only issues that should appear on the main Kanban board
+        return this.issuesService.findForBoard(+projectId)
+      }
       return this.issuesService.findByProject(+projectId)
     }
     return this.issuesService.findAll()
@@ -37,5 +41,10 @@ export class IssuesController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.issuesService.remove(+id)
+  }
+
+  @Post('search')
+  search(@Body() searchData: { query: string; projectId?: number }) {
+    return this.issuesService.search(searchData.query, searchData.projectId)
   }
 }

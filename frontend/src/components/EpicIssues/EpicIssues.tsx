@@ -1,18 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { IssueLinksService } from '../../services/api/issue-links.service'
-import { IssuesService } from '../../services/api/issues.service'
+import { useProjects } from '../../hooks/useProjects'
 import type { Issue, IssueStatus } from '../../types/domain.types'
 
 interface EpicIssuesProps {
   epic: Issue
   projectId: string
-  onIssueUpdate?: (issueId: number, updates: any) => void
+  onIssueUpdate?: (issueId: number, updates: Partial<Issue>) => void
 }
 
 export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) => {
-  const epicIssues = epic.epicIssues || []
+  const { projects } = useProjects()
+  const currentProject = projects.find(p => p.id === Number(projectId))
+  const epicIssues = useMemo(() => epic.epicIssues || [], [epic.epicIssues])
   const [showAddIssue, setShowAddIssue] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Issue[]>([])
@@ -62,20 +64,13 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
   const handleRemoveFromEpic = async (issueId: number) => {
     if (onIssueUpdate) {
       try {
-        await onIssueUpdate(issueId, { epicId: null })
+        await onIssueUpdate(issueId, { epicId: undefined })
       } catch (error) {
         console.error('Failed to remove issue from epic:', error)
       }
     }
   }
 
-  const formatDate = (dateString: Date) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
 
   // Handle search for issues to add to epic
   useEffect(() => {
@@ -214,7 +209,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
                           {searchIssue.title}
                         </div>
                         <div className="text-xs text-gray-500">
-                          JC-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
+                          {currentProject?.key || 'JC'}-{searchIssue.id} • {searchIssue.type} • {searchIssue.status.replace('_', ' ')}
                         </div>
                       </div>
                       <div className="ml-2 flex-shrink-0">
@@ -244,7 +239,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
                     Selected: {selectedIssue.title}
                   </div>
                   <div className="text-xs text-blue-700">
-                    JC-{selectedIssue.id} • {selectedIssue.type}
+                    {currentProject?.key || 'JC'}-{selectedIssue.id} • {selectedIssue.type}
                   </div>
                 </div>
               )}
@@ -317,7 +312,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
                   {/* ID */}
                   <div className="col-span-1 flex items-center">
                     <span className="text-sm font-medium text-gray-500">
-                      JC-{issue.id}
+                      {currentProject?.key || 'JC'}-{issue.id}
                     </span>
                   </div>
 

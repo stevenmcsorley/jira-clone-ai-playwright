@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
+import { TimeEstimateInput } from '../../components/TimeEstimateInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
@@ -325,16 +326,12 @@ export const IssueEdit = () => {
           {/* Estimate */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <label htmlFor="estimate" className="block text-sm font-medium text-gray-700 mb-2">
-              Story Points / Estimate
+              Time Estimate
             </label>
-            <input
-              type="number"
-              id="estimate"
-              value={estimate || ''}
-              onChange={(e) => setEstimate(e.target.value ? Number(e.target.value) : undefined)}
-              min="0"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter story points..."
+            <TimeEstimateInput
+              value={estimate}
+              onChange={setEstimate}
+              placeholder="e.g., 10m, 1h 30m, 2h, 1:30"
             />
           </div>
         </form>

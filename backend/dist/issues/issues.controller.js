@@ -23,8 +23,11 @@ let IssuesController = class IssuesController {
     create(createIssueDto) {
         return this.issuesService.create(createIssueDto);
     }
-    findAll(projectId) {
+    findAll(projectId, boardView) {
         if (projectId) {
+            if (boardView === 'true') {
+                return this.issuesService.findForBoard(+projectId);
+            }
             return this.issuesService.findByProject(+projectId);
         }
         return this.issuesService.findAll();
@@ -41,6 +44,9 @@ let IssuesController = class IssuesController {
     remove(id) {
         return this.issuesService.remove(+id);
     }
+    search(searchData) {
+        return this.issuesService.search(searchData.query, searchData.projectId);
+    }
 };
 exports.IssuesController = IssuesController;
 __decorate([
@@ -53,8 +59,9 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)('projectId')),
+    __param(1, (0, common_1.Query)('boardView')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], IssuesController.prototype, "findAll", null);
 __decorate([
@@ -86,6 +93,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], IssuesController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('search'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], IssuesController.prototype, "search", null);
 exports.IssuesController = IssuesController = __decorate([
     (0, common_1.Controller)('api/issues'),
     __metadata("design:paramtypes", [issues_service_1.IssuesService])

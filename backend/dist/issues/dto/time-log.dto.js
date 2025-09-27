@@ -16,6 +16,8 @@ class CreateTimeLogDto {
 exports.CreateTimeLogDto = CreateTimeLogDto;
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    (0, class_validator_1.Max)(24),
     __metadata("design:type", Number)
 ], CreateTimeLogDto.prototype, "hours", void 0);
 __decorate([
@@ -36,6 +38,8 @@ class UpdateTimeLogDto {
 exports.UpdateTimeLogDto = UpdateTimeLogDto;
 __decorate([
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    (0, class_validator_1.Max)(24),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], UpdateTimeLogDto.prototype, "hours", void 0);

@@ -4,7 +4,7 @@ export declare class IssuesController {
     private readonly issuesService;
     constructor(issuesService: IssuesService);
     create(createIssueDto: CreateIssueDto): Promise<import("./entities/issue.entity").Issue>;
-    findAll(projectId?: string): Promise<import("./entities/issue.entity").Issue[]>;
+    findAll(projectId?: string, boardView?: string): Promise<import("./entities/issue.entity").Issue[]>;
     findOne(id: string): Promise<import("./entities/issue.entity").Issue>;
     update(id: string, updateData: Partial<CreateIssueDto>): Promise<import("./entities/issue.entity").Issue>;
     updatePositions(updates: {
@@ -13,4 +13,11 @@ export declare class IssuesController {
         status: string;
     }[]): Promise<void>;
     remove(id: string): Promise<void>;
+    search(searchData: {
+        query: string;
+        projectId?: number;
+    }): Promise<{
+        results: import("./entities/issue.entity").Issue[];
+        totalResults: number;
+    }>;
 }

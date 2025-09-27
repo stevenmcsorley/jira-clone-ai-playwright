@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, IsNull } from 'typeorm'
+import { Repository, IsNull, Not } from 'typeorm'
 import { Sprint, SprintStatus } from './entities/sprint.entity'
 import { Issue } from '../issues/entities/issue.entity'
 
@@ -48,7 +48,7 @@ export class SprintsService {
   async findByProject(projectId: number): Promise<Sprint[]> {
     return this.sprintsRepository.find({
       where: { projectId },
-      relations: ['issues', 'issues.assignee', 'issues.reporter'],
+      relations: ['issues', 'issues.assignee', 'issues.reporter', 'issues.project'],
       order: { position: 'ASC' },
     })
   }
@@ -90,6 +90,16 @@ export class SprintsService {
   }
 
   async completeSprint(id: number): Promise<Sprint> {
+    // Only move incomplete issues back to backlog (not "done" status)
+    // This matches real Jira behavior where completed issues stay in sprint for historical tracking
+    await this.issuesRepository.update(
+      {
+        sprintId: id,
+        status: Not('done' as any)
+      },
+      { sprintId: null }
+    )
+
     return this.update(id, {
       status: SprintStatus.COMPLETED,
     })

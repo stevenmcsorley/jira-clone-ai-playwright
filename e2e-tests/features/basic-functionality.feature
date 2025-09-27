@@ -6,13 +6,13 @@ Feature: Basic Jira Clone Functionality
   Background:
     Given I am on the Jira clone application
 
-  @smoke
+  @smoke @bug-report
   Scenario: View the project board
     Given I am on the project board
     Then I should see the kanban board
     And I should see 4 columns: "To Do", "In Progress", "Code Review", and "Done"
 
-  @smoke
+  @smoke @bug-report
   Scenario: Create a basic issue
     Given I am on the project board
     When I click the "Create Issue" button
@@ -23,7 +23,7 @@ Feature: Basic Jira Clone Functionality
     And I click the "Create Issue" button to submit
     Then I should see the new issue "Test Issue from E2E" on the board
 
-  @smoke
+  @smoke @bug-report
   Scenario: Navigate between project views
     Given I am on the project board
     When I navigate to different sections

@@ -1,13 +1,16 @@
 const config = {
   requireModule: ['ts-node/register'],
   require: [
-    'step-definitions/**/*.ts',
-    'support/**/*.ts'
+    './step-definitions/**/*.ts',
+    './support/**/*.ts'
   ],
   format: [
     'progress-bar'
   ],
-  features: 'features/**/*.feature',
+  formatOptions: {
+    snippetInterface: 'async-await'
+  },
+  features: './features/**/*.feature',
   parallel: 1,
   retryCount: 0
 };
