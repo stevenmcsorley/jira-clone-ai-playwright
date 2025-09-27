@@ -12,6 +12,9 @@ import { SearchResults } from './pages/SearchResults'
 import { Search } from './pages/Search'
 import { ProjectSettings } from './pages/ProjectSettings'
 import { Reports } from './pages/Reports'
+import { BurnupReport } from './components/Reports/BurnupReport/BurnupReport'
+import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
+import { VelocityReport } from './components/Reports/VelocityReport/VelocityReport'
 import { SprintHistory } from './pages/SprintHistory'
 import { Components } from './pages/Components/Components'
 import { Releases } from './pages/Releases/Releases'
@@ -38,7 +41,12 @@ export const App = () => {
   }
 
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <Routes>
         <Route
           path="/"
@@ -125,6 +133,30 @@ export const App = () => {
           element={
             <Layout>
               <Reports />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports/burnup"
+          element={
+            <Layout>
+              <BurnupReport />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports/burndown"
+          element={
+            <Layout>
+              <BurndownChart />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports/velocity"
+          element={
+            <Layout>
+              <VelocityReport />
             </Layout>
           }
         />

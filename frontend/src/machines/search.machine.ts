@@ -168,22 +168,22 @@ export const searchMachine = setup({
     })),
 
     // Cache management
-    cacheResults: assign(({ context }) => {
-      const newCache = new Map(context.cacheResults);
-      newCache.set(context.query, {
-        results: context.results,
-        totalResults: context.totalResults,
-        timestamp: Date.now(),
-      });
-      // Keep only last 50 cached queries
-      if (newCache.size > 50) {
-        const firstKey = newCache.keys().next().value;
-        newCache.delete(firstKey);
-      }
-      return {
-        cacheResults: newCache,
-      };
-    }),
+    cacheResults: assign(({ context }) => ({
+      cacheResults: (() => {
+        const newCache = new Map(context.cacheResults);
+        newCache.set(context.query, {
+          results: context.results,
+          totalResults: context.totalResults,
+          timestamp: Date.now(),
+        });
+        // Keep only last 50 cached queries
+        if (newCache.size > 50) {
+          const firstKey = newCache.keys().next().value;
+          newCache.delete(firstKey);
+        }
+        return newCache;
+      })()
+    })),
     loadFromCache: assign(({ event }) => ({
       results: (event as { type: 'CACHE_HIT'; results: SearchResult[] }).results,
       totalResults: (event as { type: 'CACHE_HIT'; totalResults: number }).totalResults,
