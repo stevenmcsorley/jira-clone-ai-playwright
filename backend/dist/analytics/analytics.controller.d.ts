@@ -24,6 +24,9 @@ export declare class AnalyticsController {
         completedWork: number;
         remainingWork: number;
         completionRate: number;
+        completedIssuesCount: number;
+        incompleteIssuesCount: number;
+        totalIssuesCount: number;
     }>;
     getSprintHealthMetrics(sprintId: number): Promise<import("./analytics.service").SprintHealthMetrics>;
     getCumulativeFlowData(projectId: number, days?: number): Promise<{

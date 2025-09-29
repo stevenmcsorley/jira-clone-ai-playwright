@@ -256,6 +256,9 @@ export class AnalyticsService {
     completedWork: number
     remainingWork: number
     completionRate: number
+    completedIssuesCount: number
+    incompleteIssuesCount: number
+    totalIssuesCount: number
   }> {
     const sprint = await this.sprintsRepository.findOne({
       where: { id: sprintId },
@@ -263,7 +266,15 @@ export class AnalyticsService {
     })
 
     if (!sprint) {
-      return { totalScope: 0, completedWork: 0, remainingWork: 0, completionRate: 0 }
+      return { 
+        totalScope: 0, 
+        completedWork: 0, 
+        remainingWork: 0, 
+        completionRate: 0,
+        completedIssuesCount: 0,
+        incompleteIssuesCount: 0,
+        totalIssuesCount: 0
+      }
     }
 
     // For completed sprints, we need to account for issues that were moved back to backlog
@@ -299,8 +310,10 @@ export class AnalyticsService {
       }
     }, 0)
 
-    // For completed work, only count issues that are still in the sprint or were completed in the sprint
-    const completedIssues = (sprint.issues || []).filter(issue => issue.status === 'done')
+    // Count completed and incomplete issues
+    const completedIssues = allSprintIssues.filter(issue => issue.status === 'done')
+    const incompleteIssues = allSprintIssues.filter(issue => issue.status !== 'done')
+    
     const completedWork = completedIssues.reduce((sum, issue) => {
       const storyPoints = issue.storyPoints
       if (typeof storyPoints === 'number') {
@@ -323,6 +336,9 @@ export class AnalyticsService {
       completedWork,
       remainingWork,
       completionRate: Math.round(completionRate * 10) / 10, // Round to 1 decimal place
+      completedIssuesCount: completedIssues.length,
+      incompleteIssuesCount: incompleteIssues.length,
+      totalIssuesCount: allSprintIssues.length
     }
   }
 

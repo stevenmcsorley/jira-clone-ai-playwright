@@ -69,19 +69,33 @@ export const SimpleIssueCard = ({
           {issue.title}
         </h3>
 
-        {/* Assignee */}
-        {issue.assignee && (
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-xs font-bold text-white">
-                {issue.assignee.name.charAt(0).toUpperCase()}
+        {/* Bottom row with assignee and story points */}
+        <div className="flex items-center justify-between">
+          {/* Assignee */}
+          {issue.assignee && (
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-white">
+                  {issue.assignee.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-xs text-gray-600">
+                {issue.assignee.name.split(' ')[0]}
               </span>
             </div>
-            <span className="text-xs text-gray-600">
-              {issue.assignee.name.split(' ')[0]}
+          )}
+
+          {/* Story Points */}
+          {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+              📊 {issue.storyPoints}
             </span>
-          </div>
-        )}
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
+              📊 ?
+            </span>
+          )}
+        </div>
       </div>
     </Card>
   )

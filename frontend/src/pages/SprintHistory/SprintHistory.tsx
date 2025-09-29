@@ -45,14 +45,14 @@ export const SprintHistory = () => {
               // Use story points instead of time estimates, and get total scope from analytics
               const totalStoryPoints = scopeData.totalScope || 0
               const completedStoryPoints = scopeData.completedWork || 0
-              // Calculate incomplete issues count: if there's remaining work, there's at least 1 incomplete issue
-              const incompleteIssuesCount = scopeData.remainingWork > 0 ? 1 : 0
+              // Use the actual counts from analytics API which properly accounts for moved issues
+              const incompleteIssuesCount = scopeData.incompleteIssuesCount || incompleteIssues.length
               const velocity = completedStoryPoints
 
               return {
                 ...sprint,
                 completedIssues,
-                incompleteIssues: [], // We'll show the count instead since moved issues aren't in sprint.issues
+                incompleteIssues,
                 incompleteIssuesCount,
                 totalStoryPoints,
                 completedStoryPoints,

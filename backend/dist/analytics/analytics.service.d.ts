@@ -52,6 +52,9 @@ export declare class AnalyticsService {
         completedWork: number;
         remainingWork: number;
         completionRate: number;
+        completedIssuesCount: number;
+        incompleteIssuesCount: number;
+        totalIssuesCount: number;
     }>;
     calculateSprintHealthMetrics(sprintId: number): Promise<SprintHealthMetrics>;
     getDashboardAnalytics(projectId: number): Promise<{

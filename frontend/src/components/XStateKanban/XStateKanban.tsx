@@ -153,7 +153,7 @@ const XStateIssueCard = ({
         </div>
       )}
 
-      {/* Bottom row with priority, task ID, and assignee */}
+      {/* Bottom row with priority, task ID, story points, and assignee */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {/* Priority indicator */}
@@ -169,14 +169,27 @@ const XStateIssueCard = ({
           </span>
         </div>
 
-        {/* Assignee avatar */}
-        {issue.assignee && (
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-white">
-              {issue.assignee.name.charAt(0)}
+        <div className="flex items-center gap-2">
+          {/* Story Points */}
+          {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+              📊 {issue.storyPoints}
             </span>
-          </div>
-        )}
+          ) : (
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
+              📊 ?
+            </span>
+          )}
+
+          {/* Assignee avatar */}
+          {issue.assignee && (
+            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-white">
+                {issue.assignee.name.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Time Progress Indicator */}

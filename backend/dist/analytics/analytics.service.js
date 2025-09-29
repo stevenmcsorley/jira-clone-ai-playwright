@@ -169,7 +169,15 @@ let AnalyticsService = class AnalyticsService {
             relations: ['issues'],
         });
         if (!sprint) {
-            return { totalScope: 0, completedWork: 0, remainingWork: 0, completionRate: 0 };
+            return {
+                totalScope: 0,
+                completedWork: 0,
+                remainingWork: 0,
+                completionRate: 0,
+                completedIssuesCount: 0,
+                incompleteIssuesCount: 0,
+                totalIssuesCount: 0
+            };
         }
         let allSprintIssues = sprint.issues || [];
         if (sprint.status === 'completed') {
@@ -199,7 +207,8 @@ let AnalyticsService = class AnalyticsService {
                 return sum + (storyPointMap[storyPoints] || 0);
             }
         }, 0);
-        const completedIssues = (sprint.issues || []).filter(issue => issue.status === 'done');
+        const completedIssues = allSprintIssues.filter(issue => issue.status === 'done');
+        const incompleteIssues = allSprintIssues.filter(issue => issue.status !== 'done');
         const completedWork = completedIssues.reduce((sum, issue) => {
             const storyPoints = issue.storyPoints;
             if (typeof storyPoints === 'number') {
@@ -222,6 +231,9 @@ let AnalyticsService = class AnalyticsService {
             completedWork,
             remainingWork,
             completionRate: Math.round(completionRate * 10) / 10,
+            completedIssuesCount: completedIssues.length,
+            incompleteIssuesCount: incompleteIssues.length,
+            totalIssuesCount: allSprintIssues.length
         };
     }
     async calculateSprintHealthMetrics(sprintId) {
