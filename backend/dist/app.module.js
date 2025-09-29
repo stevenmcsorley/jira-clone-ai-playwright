@@ -15,6 +15,8 @@ const projects_module_1 = require("./projects/projects.module");
 const issues_module_1 = require("./issues/issues.module");
 const sprints_module_1 = require("./sprints/sprints.module");
 const auth_module_1 = require("./auth/auth.module");
+const estimation_module_1 = require("./estimation/estimation.module");
+const analytics_module_1 = require("./analytics/analytics.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -36,6 +38,8 @@ exports.AppModule = AppModule = __decorate([
             issues_module_1.IssuesModule,
             sprints_module_1.SprintsModule,
             auth_module_1.AuthModule,
+            estimation_module_1.EstimationModule,
+            analytics_module_1.AnalyticsModule,
         ],
     })
 ], AppModule);

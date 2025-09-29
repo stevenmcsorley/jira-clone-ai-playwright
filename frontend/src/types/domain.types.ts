@@ -35,7 +35,8 @@ export interface Issue {
   assignee?: User
   reporterId: number
   reporter?: User
-  estimate?: number
+  estimate?: number // Time estimation in hours
+  storyPoints?: string | number // Story point estimation (relative complexity)
   labels: string[]
   epicId?: number
   epic?: Issue
@@ -48,7 +49,7 @@ export interface Issue {
   fixVersion?: Version // Populated version object
   affectsVersionId?: number // Affects version ID
   affectsVersion?: Version // Populated version object
-  originalEstimate?: number // Original time estimate in hours
+  originalEstimate?: number // Original time estimate in hours (synonym for estimate)
   remainingEstimate?: number // Remaining time estimate in hours
   timeSpent?: number // Actual time spent in hours
   createdAt: Date
@@ -142,7 +143,8 @@ export interface CreateIssueRequest {
   priority: IssuePriority
   projectId: number
   assigneeId?: number
-  estimate?: number
+  estimate?: number // Time estimation in hours
+  storyPoints?: string | number // Story point estimation
   labels?: string[]
   epicId?: number
 }
@@ -153,7 +155,8 @@ export interface UpdateIssueRequest {
   status?: IssueStatus
   priority?: IssuePriority
   assigneeId?: number
-  estimate?: number
+  estimate?: number // Time estimation in hours
+  storyPoints?: string | number // Story point estimation
   labels?: string[]
   epicId?: number
 }

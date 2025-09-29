@@ -47,4 +47,16 @@ export class IssuesController {
   search(@Body() searchData: { query: string; projectId?: number }) {
     return this.issuesService.search(searchData.query, searchData.projectId)
   }
+
+  @Post('bulk-update')
+  bulkUpdate(@Body() bulkUpdateData: {
+    issueIds: number[];
+    operation: {
+      type: 'assign' | 'status' | 'labels' | 'priority' | 'sprint' | 'estimate' | 'component' | 'version';
+      field: string;
+      value: any;
+    };
+  }) {
+    return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation)
+  }
 }

@@ -455,6 +455,11 @@ export const Backlog = () => {
                         <span className={`text-sm font-bold ${getPriorityColor(issue.priority)}`}>
                           {getPriorityIcon(issue.priority)}
                         </span>
+                        {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) && (
+                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                            📊 {issue.storyPoints}
+                          </span>
+                        )}
                         {issue.assignee && (
                           <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                             <span className="text-xs font-bold text-white">
@@ -530,6 +535,11 @@ export const Backlog = () => {
                       <span className={`text-sm font-bold ${getPriorityColor(issue.priority)}`}>
                         {getPriorityIcon(issue.priority)}
                       </span>
+                      {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) && (
+                        <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                          📊 {issue.storyPoints}
+                        </span>
+                      )}
                       {issue.assignee && (
                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                           <span className="text-xs font-bold text-white">

@@ -17,9 +17,11 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const issue_entity_1 = require("./entities/issue.entity");
+const time_tracking_service_1 = require("./time-tracking.service");
 let IssuesService = class IssuesService {
-    constructor(issuesRepository) {
+    constructor(issuesRepository, timeTrackingService) {
         this.issuesRepository = issuesRepository;
+        this.timeTrackingService = timeTrackingService;
     }
     async create(createIssueDto) {
         const issue = this.issuesRepository.create(createIssueDto);
@@ -67,12 +69,49 @@ let IssuesService = class IssuesService {
         });
     }
     async update(id, updateData) {
+        const currentIssue = await this.findOne(id);
+        if (!currentIssue) {
+            throw new Error('Issue not found');
+        }
+        const isStatusChangeToDone = currentIssue.status === 'in_progress' && updateData.status === 'done';
         await this.issuesRepository.update(id, updateData);
+        if (isStatusChangeToDone && currentIssue.assigneeId) {
+            try {
+                const timeSpentHours = this.calculateTimeSpent(currentIssue.updatedAt);
+                console.log(`Auto time tracking: Issue ${id}, time spent: ${timeSpentHours} hours, assignee: ${currentIssue.assigneeId}`);
+                if (timeSpentHours > 0) {
+                    console.log(`Logging time for issue ${id}: ${timeSpentHours} hours`);
+                    await this.timeTrackingService.logTime({
+                        issueId: id,
+                        hours: timeSpentHours,
+                        date: new Date().toISOString(),
+                        description: 'Auto-logged time (in_progress → done)'
+                    }, currentIssue.assigneeId);
+                    console.log(`Time logged successfully for issue ${id}`);
+                }
+                else {
+                    console.log(`No time to log for issue ${id} (time spent: ${timeSpentHours})`);
+                }
+            }
+            catch (error) {
+                console.warn('Failed to auto-log time for issue', id, error);
+            }
+        }
         return this.findOne(id);
+    }
+    calculateTimeSpent(lastUpdated) {
+        const now = new Date();
+        const diffMs = now.getTime() - lastUpdated.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const roundedHours = Math.round(diffHours * 4) / 4;
+        if (roundedHours >= 0.017 && roundedHours <= 8) {
+            return Math.max(roundedHours, 0.25);
+        }
+        return 0;
     }
     async updatePositions(updates) {
         for (const update of updates) {
-            await this.issuesRepository.update(update.id, {
+            await this.update(update.id, {
                 position: update.position,
                 status: update.status
             });
@@ -168,11 +207,74 @@ let IssuesService = class IssuesService {
         });
         return conditions;
     }
+    async bulkUpdate(issueIds, operation) {
+        const errors = [];
+        let successCount = 0;
+        let failureCount = 0;
+        for (const issueId of issueIds) {
+            try {
+                const updateData = {};
+                switch (operation.type) {
+                    case 'assign':
+                        updateData.assigneeId = operation.value;
+                        break;
+                    case 'status':
+                        updateData.status = operation.value;
+                        break;
+                    case 'priority':
+                        updateData.priority = operation.value;
+                        break;
+                    case 'sprint':
+                        updateData.sprintId = operation.value;
+                        break;
+                    case 'estimate':
+                        updateData.estimate = operation.value;
+                        break;
+                    case 'labels':
+                        const currentIssue = await this.issuesRepository.findOne({ where: { id: issueId } });
+                        if (!currentIssue) {
+                            throw new Error('Issue not found');
+                        }
+                        let updatedLabels = [...currentIssue.labels];
+                        if (operation.field === 'add') {
+                            if (!updatedLabels.includes(operation.value)) {
+                                updatedLabels.push(operation.value);
+                            }
+                        }
+                        else if (operation.field === 'remove') {
+                            updatedLabels = updatedLabels.filter(label => label !== operation.value);
+                        }
+                        else {
+                            updatedLabels = [operation.value];
+                        }
+                        updateData.labels = updatedLabels;
+                        break;
+                    default:
+                        throw new Error(`Unsupported operation type: ${operation.type}`);
+                }
+                await this.update(issueId, updateData);
+                successCount++;
+            }
+            catch (error) {
+                errors.push({
+                    issueId,
+                    error: error instanceof Error ? error.message : 'Unknown error occurred'
+                });
+                failureCount++;
+            }
+        }
+        return {
+            successCount,
+            failureCount,
+            errors
+        };
+    }
 };
 exports.IssuesService = IssuesService;
 exports.IssuesService = IssuesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(issue_entity_1.Issue)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        time_tracking_service_1.TimeTrackingService])
 ], IssuesService);
 //# sourceMappingURL=issues.service.js.map

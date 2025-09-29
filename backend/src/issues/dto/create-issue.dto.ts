@@ -36,6 +36,9 @@ export class CreateIssueDto {
   estimate?: number
 
   @IsOptional()
+  storyPoints?: string | number
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   labels?: string[]

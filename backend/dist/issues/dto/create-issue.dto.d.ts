@@ -10,6 +10,7 @@ export declare class CreateIssueDto {
     assigneeId?: number;
     reporterId: number;
     estimate?: number;
+    storyPoints?: string | number;
     labels?: string[];
     epicId?: number;
 }

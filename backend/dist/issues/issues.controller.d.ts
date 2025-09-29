@@ -20,4 +20,19 @@ export declare class IssuesController {
         results: import("./entities/issue.entity").Issue[];
         totalResults: number;
     }>;
+    bulkUpdate(bulkUpdateData: {
+        issueIds: number[];
+        operation: {
+            type: 'assign' | 'status' | 'labels' | 'priority' | 'sprint' | 'estimate' | 'component' | 'version';
+            field: string;
+            value: any;
+        };
+    }): Promise<{
+        successCount: number;
+        failureCount: number;
+        errors: Array<{
+            issueId: number;
+            error: string;
+        }>;
+    }>;
 }

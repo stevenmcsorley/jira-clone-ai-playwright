@@ -47,6 +47,9 @@ let IssuesController = class IssuesController {
     search(searchData) {
         return this.issuesService.search(searchData.query, searchData.projectId);
     }
+    bulkUpdate(bulkUpdateData) {
+        return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation);
+    }
 };
 exports.IssuesController = IssuesController;
 __decorate([
@@ -100,6 +103,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], IssuesController.prototype, "search", null);
+__decorate([
+    (0, common_1.Post)('bulk-update'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], IssuesController.prototype, "bulkUpdate", null);
 exports.IssuesController = IssuesController = __decorate([
     (0, common_1.Controller)('api/issues'),
     __metadata("design:paramtypes", [issues_service_1.IssuesService])

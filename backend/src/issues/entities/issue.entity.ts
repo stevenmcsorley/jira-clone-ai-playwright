@@ -79,6 +79,9 @@ export class Issue {
   @Column('decimal', { precision: 5, scale: 2, nullable: true })
   estimate: number
 
+  @Column('varchar', { length: 10, nullable: true })
+  storyPoints: string | number
+
   @Column('text', { array: true, default: [] })
   labels: string[]
 

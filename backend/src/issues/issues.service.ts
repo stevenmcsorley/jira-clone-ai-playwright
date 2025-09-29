@@ -4,12 +4,14 @@ import { Repository } from 'typeorm'
 import { Issue } from './entities/issue.entity'
 import { CreateIssueDto } from './dto/create-issue.dto'
 import { Sprint } from '../sprints/entities/sprint.entity'
+import { TimeTrackingService } from './time-tracking.service'
 
 @Injectable()
 export class IssuesService {
   constructor(
     @InjectRepository(Issue)
     private issuesRepository: Repository<Issue>,
+    private timeTrackingService: TimeTrackingService,
   ) {}
 
   async create(createIssueDto: CreateIssueDto): Promise<Issue> {
@@ -69,13 +71,68 @@ export class IssuesService {
   }
 
   async update(id: number, updateData: Partial<Issue>): Promise<Issue> {
+    // Get the current issue to check for status changes
+    const currentIssue = await this.findOne(id)
+    if (!currentIssue) {
+      throw new Error('Issue not found')
+    }
+
+    // Check if status is changing from in_progress to done
+    const isStatusChangeToDone = currentIssue.status === 'in_progress' && updateData.status === 'done'
+
+    // Update the issue
     await this.issuesRepository.update(id, updateData)
+
+    // Auto time tracking: log time when moving from in_progress to done
+    if (isStatusChangeToDone && currentIssue.assigneeId) {
+      try {
+        // Calculate time spent since last status change to in_progress
+        // For now, we'll use a simplified calculation based on updatedAt
+        const timeSpentHours = this.calculateTimeSpent(currentIssue.updatedAt)
+        console.log(`Auto time tracking: Issue ${id}, time spent: ${timeSpentHours} hours, assignee: ${currentIssue.assigneeId}`)
+
+        if (timeSpentHours > 0) {
+          console.log(`Logging time for issue ${id}: ${timeSpentHours} hours`)
+          await this.timeTrackingService.logTime({
+            issueId: id,
+            hours: timeSpentHours,
+            date: new Date().toISOString(),
+            description: 'Auto-logged time (in_progress → done)'
+          }, currentIssue.assigneeId)
+          console.log(`Time logged successfully for issue ${id}`)
+        } else {
+          console.log(`No time to log for issue ${id} (time spent: ${timeSpentHours})`)
+        }
+      } catch (error) {
+        console.warn('Failed to auto-log time for issue', id, error)
+        // Don't fail the update if time tracking fails
+      }
+    }
+
     return this.findOne(id)
+  }
+
+  private calculateTimeSpent(lastUpdated: Date): number {
+    const now = new Date()
+    const diffMs = now.getTime() - lastUpdated.getTime()
+    const diffHours = diffMs / (1000 * 60 * 60)
+
+    // Round to 15-minute increments and cap at reasonable limits
+    const roundedHours = Math.round(diffHours * 4) / 4  // Round to 0.25h increments
+
+    // Only log if between 1 minute and 8 hours (reasonable work session)
+    // Minimum 1 minute to avoid noise from quick status changes
+    if (roundedHours >= 0.017 && roundedHours <= 8) { // 0.017 hours = 1 minute
+      return Math.max(roundedHours, 0.25) // Always log at least 15 minutes for completed work
+    }
+
+    return 0
   }
 
   async updatePositions(updates: { id: number; position: number; status: string }[]): Promise<void> {
     for (const update of updates) {
-      await this.issuesRepository.update(update.id, {
+      // Use the main update method to ensure auto time tracking works
+      await this.update(update.id, {
         position: update.position,
         status: update.status as any
       })
@@ -201,5 +258,85 @@ export class IssuesService {
     })
 
     return conditions
+  }
+
+  async bulkUpdate(
+    issueIds: number[],
+    operation: {
+      type: 'assign' | 'status' | 'labels' | 'priority' | 'sprint' | 'estimate' | 'component' | 'version';
+      field: string;
+      value: any;
+    }
+  ): Promise<{ successCount: number; failureCount: number; errors: Array<{ issueId: number; error: string }> }> {
+    const errors: Array<{ issueId: number; error: string }> = [];
+    let successCount = 0;
+    let failureCount = 0;
+
+    // Process each issue individually to handle potential failures
+    for (const issueId of issueIds) {
+      try {
+        const updateData: Partial<Issue> = {};
+
+        // Build update data based on operation type
+        switch (operation.type) {
+          case 'assign':
+            updateData.assigneeId = operation.value;
+            break;
+          case 'status':
+            updateData.status = operation.value;
+            break;
+          case 'priority':
+            updateData.priority = operation.value;
+            break;
+          case 'sprint':
+            updateData.sprintId = operation.value;
+            break;
+          case 'estimate':
+            updateData.estimate = operation.value;
+            break;
+          case 'labels':
+            // For labels, we need special handling
+            const currentIssue = await this.issuesRepository.findOne({ where: { id: issueId } });
+            if (!currentIssue) {
+              throw new Error('Issue not found');
+            }
+
+            let updatedLabels = [...currentIssue.labels];
+
+            if (operation.field === 'add') {
+              if (!updatedLabels.includes(operation.value)) {
+                updatedLabels.push(operation.value);
+              }
+            } else if (operation.field === 'remove') {
+              updatedLabels = updatedLabels.filter(label => label !== operation.value);
+            } else {
+              // Replace all labels
+              updatedLabels = [operation.value];
+            }
+
+            updateData.labels = updatedLabels;
+            break;
+          default:
+            throw new Error(`Unsupported operation type: ${operation.type}`);
+        }
+
+        // Use the main update method to ensure auto time tracking works
+        await this.update(issueId, updateData);
+        successCount++;
+
+      } catch (error) {
+        errors.push({
+          issueId,
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+        failureCount++;
+      }
+    }
+
+    return {
+      successCount,
+      failureCount,
+      errors
+    };
   }
 }

@@ -15,6 +15,7 @@ import { Reports } from './pages/Reports'
 import { BurnupReport } from './components/Reports/BurnupReport/BurnupReport'
 import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
 import { VelocityReport } from './components/Reports/VelocityReport/VelocityReport'
+import { CumulativeFlowDiagram } from './components/Reports/CumulativeFlowDiagram/CumulativeFlowDiagram'
 import { SprintHistory } from './pages/SprintHistory'
 import { Components } from './pages/Components/Components'
 import { Releases } from './pages/Releases/Releases'
@@ -157,6 +158,14 @@ export const App = () => {
           element={
             <Layout>
               <VelocityReport />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports/cumulative-flow"
+          element={
+            <Layout>
+              <CumulativeFlowDiagram />
             </Layout>
           }
         />

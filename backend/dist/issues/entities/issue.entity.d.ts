@@ -33,6 +33,7 @@ export declare class Issue {
     reporterId: number;
     reporter: User;
     estimate: number;
+    storyPoints: string | number;
     labels: string[];
     position: number;
     epicId: number;

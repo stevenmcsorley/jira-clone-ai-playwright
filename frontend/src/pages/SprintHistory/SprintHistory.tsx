@@ -7,6 +7,7 @@ import type { Issue } from '../../types/domain.types'
 interface SprintWithMetrics extends Sprint {
   completedIssues: Issue[]
   incompleteIssues: Issue[]
+  incompleteIssuesCount: number
   totalStoryPoints: number
   completedStoryPoints: number
   velocity: number
@@ -30,27 +31,39 @@ export const SprintHistory = () => {
         const sprintsData = await SprintsService.getByProject(parseInt(projectId))
 
         // Only show completed sprints, with metrics
-        const completedSprints = sprintsData
-          .filter(sprint => sprint.status === 'completed')
-          .map(sprint => {
-            const completedIssues = sprint.issues.filter(issue => issue.status === 'done')
-            const incompleteIssues = sprint.issues.filter(issue => issue.status !== 'done')
-            const totalStoryPoints = sprint.issues.reduce((sum, issue) => sum + (issue.estimate || 0), 0)
-            const completedStoryPoints = completedIssues.reduce((sum, issue) => sum + (issue.estimate || 0), 0)
-            const velocity = completedStoryPoints
+        const completedSprints = await Promise.all(
+          sprintsData
+            .filter(sprint => sprint.status === 'completed')
+            .map(async sprint => {
+              // For completed sprints, get the full scope data including moved issues
+              const scopeResponse = await fetch(`/api/analytics/sprint-scope/${sprint.id}`)
+              const scopeData = await scopeResponse.json()
 
-            return {
-              ...sprint,
-              completedIssues,
-              incompleteIssues,
-              totalStoryPoints,
-              completedStoryPoints,
-              velocity
-            }
+              const completedIssues = sprint.issues.filter(issue => issue.status === 'done')
+              const incompleteIssues = sprint.issues.filter(issue => issue.status !== 'done')
+
+              // Use story points instead of time estimates, and get total scope from analytics
+              const totalStoryPoints = scopeData.totalScope || 0
+              const completedStoryPoints = scopeData.completedWork || 0
+              // Calculate incomplete issues count: if there's remaining work, there's at least 1 incomplete issue
+              const incompleteIssuesCount = scopeData.remainingWork > 0 ? 1 : 0
+              const velocity = completedStoryPoints
+
+              return {
+                ...sprint,
+                completedIssues,
+                incompleteIssues: [], // We'll show the count instead since moved issues aren't in sprint.issues
+                incompleteIssuesCount,
+                totalStoryPoints,
+                completedStoryPoints,
+                velocity
+              }
           })
-          .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) // Most recent first
+        )
 
-        setSprints(completedSprints)
+        const sortedSprints = completedSprints.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()) // Most recent first
+
+        setSprints(sortedSprints)
       } catch (error) {
         console.error('Error fetching sprint history:', error)
       } finally {
@@ -175,7 +188,7 @@ export const SprintHistory = () => {
                     <div>
                       <span className="text-gray-500">Incomplete:</span>
                       <span className="ml-1 font-medium text-orange-600">
-                        {sprint.incompleteIssues.length} issues
+                        {sprint.incompleteIssuesCount} issues
                       </span>
                     </div>
                   </div>
@@ -240,9 +253,9 @@ export const SprintHistory = () => {
                                 <div className="font-medium text-sm text-gray-900">{issue.title}</div>
                                 <div className="text-xs text-gray-600">{issue.type} • {issue.priority}</div>
                               </div>
-                              {issue.estimate && (
+                              {issue.storyPoints && (
                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                  {issue.estimate} pts
+                                  {issue.storyPoints} pts
                                 </span>
                               )}
                             </div>
@@ -269,9 +282,9 @@ export const SprintHistory = () => {
                                   <div className="font-medium text-sm text-gray-900">{issue.title}</div>
                                   <div className="text-xs text-gray-600">{issue.type} • {issue.status}</div>
                                 </div>
-                                {issue.estimate && (
+                                {issue.storyPoints && (
                                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                    {issue.estimate} pts
+                                    {issue.storyPoints} pts
                                   </span>
                                 )}
                               </div>

@@ -19,6 +19,7 @@ import {
   Filler
 } from 'chart.js'
 import { Line } from 'react-chartjs-2'
+import { useBurndownDataEffect } from '../../../hooks/effect/useAnalyticsEffect'
 
 // Register Chart.js components
 ChartJS.register(
@@ -35,8 +36,9 @@ ChartJS.register(
 interface BurndownData {
   date: string
   remainingWork: number
-  idealBurndown: number
-  workCompleted: number
+  idealRemaining: number
+  actualCompleted: number
+  idealCompleted: number
 }
 
 interface Sprint {
@@ -51,8 +53,14 @@ export const BurndownChart = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null)
   const [sprints, setSprints] = useState<Sprint[]>([])
-  const [burndownData, setBurndownData] = useState<BurndownData[]>([])
-  const [loading, setLoading] = useState(true)
+
+  // Use analytics hook for burndown data
+  const {
+    burndownData,
+    loading: burndownLoading,
+    error: burndownError,
+    refetch: refetchBurndown
+  } = useBurndownDataEffect(selectedSprint?.id)
 
   // Fetch sprints for project
   useEffect(() => {
@@ -80,89 +88,6 @@ export const BurndownChart = () => {
     }
   }, [projectId])
 
-  // Generate burndown data for selected sprint
-  useEffect(() => {
-    const generateBurndownData = async () => {
-      if (!selectedSprint) return
-
-      setLoading(true)
-      try {
-        // Fetch issues for the sprint
-        const response = await fetch(`/api/issues?projectId=${projectId}&sprintId=${selectedSprint.id}`)
-        const issues = await response.json()
-
-        // Generate daily burndown data
-        if (!selectedSprint.startDate || !selectedSprint.endDate) {
-          console.warn('Sprint has null start or end date')
-          setBurndownData([])
-          return
-        }
-
-        const startDate = new Date(selectedSprint.startDate)
-        const endDate = new Date(selectedSprint.endDate)
-        const today = new Date()
-        const currentEnd = today < endDate ? today : endDate
-
-        const data: BurndownData[] = []
-        const currentDate = new Date(startDate)
-
-        // Initial scope (story points at sprint start)
-        const totalScope = issues.reduce((sum: number, issue: any) => {
-          const estimate = parseFloat(issue.estimate) || 0
-          return sum + estimate
-        }, 0)
-        const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-
-        let cumulativeCompleted = 0
-
-        while (currentDate <= currentEnd) {
-          const dateStr = currentDate.toISOString().split('T')[0]
-          const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-
-          // Ideal burndown (linear)
-          const idealBurndown = totalScope - (totalScope / totalDays) * daysPassed
-
-          // Simulate actual work completion with some variance
-          if (daysPassed > 0) {
-            // Base completion rate with some randomness
-            const baseCompletionRate = totalScope / totalDays
-            const variance = (Math.random() - 0.5) * 0.4 * baseCompletionRate
-            const dailyWork = Math.max(0, baseCompletionRate + variance)
-
-            // Add some sprint rhythm (slower start, faster middle, slower end)
-            const sprintPhase = daysPassed / totalDays
-            let phaseMultiplier = 1
-            if (sprintPhase < 0.3) phaseMultiplier = 0.7 // Slow start
-            else if (sprintPhase < 0.7) phaseMultiplier = 1.3 // Fast middle
-            else phaseMultiplier = 0.9 // Slower end
-
-            cumulativeCompleted += dailyWork * phaseMultiplier
-            cumulativeCompleted = Math.min(cumulativeCompleted, totalScope)
-          }
-
-          const remainingWork = Math.max(0, totalScope - cumulativeCompleted)
-
-          data.push({
-            date: dateStr,
-            remainingWork: Math.round(remainingWork),
-            idealBurndown: Math.max(0, Math.round(idealBurndown)),
-            workCompleted: Math.round(cumulativeCompleted)
-          })
-
-          currentDate.setDate(currentDate.getDate() + 1)
-        }
-
-        setBurndownData(data)
-      } catch (error) {
-        console.error('Error generating burndown data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    generateBurndownData()
-  }, [selectedSprint, projectId])
-
   // Chart configuration
   const chartData = {
     labels: burndownData.map((d, index) => {
@@ -173,7 +98,7 @@ export const BurndownChart = () => {
     datasets: [
       {
         label: 'Ideal Burndown',
-        data: burndownData.map(d => d.idealBurndown),
+        data: burndownData.map(d => d.idealRemaining),
         borderColor: 'rgb(156, 163, 175)',
         backgroundColor: 'rgba(156, 163, 175, 0.1)',
         borderDash: [5, 5],
@@ -214,7 +139,7 @@ export const BurndownChart = () => {
             const value = context.parsed.y
 
             if (label === 'Actual Remaining Work') {
-              return `${label}: ${value} story points (${point.workCompleted} completed)`
+              return `${label}: ${value} story points (${point.actualCompleted} completed)`
             } else {
               return `${label}: ${value} story points`
             }
@@ -245,14 +170,16 @@ export const BurndownChart = () => {
 
     const firstDay = burndownData[0]
     const lastDay = burndownData[burndownData.length - 1]
-    const totalScope = firstDay?.idealBurndown || firstDay?.remainingWork || 0
-    const completed = lastDay?.workCompleted || 0
+
+    // Calculate actual total scope based on the data (completed + remaining)
+    const completed = lastDay?.actualCompleted || 0
     const remaining = lastDay?.remainingWork || 0
+    const totalScope = completed + remaining
 
     const completionRate = totalScope > 0 ? (completed / totalScope) * 100 : 0
 
     // Calculate if sprint is on track
-    const idealRemaining = lastDay?.idealBurndown || 0
+    const idealRemaining = lastDay?.idealRemaining || 0
     const actualRemaining = lastDay?.remainingWork || 0
     const variance = actualRemaining - idealRemaining
     const variancePercentage = totalScope > 0 ? (variance / totalScope) * 100 : 0
@@ -269,11 +196,28 @@ export const BurndownChart = () => {
     }
   }, [burndownData])
 
-  if (loading) {
+  if (burndownLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <span className="ml-3 text-gray-600">Loading burndown data...</span>
+      </div>
+    )
+  }
+
+  if (burndownError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-600">
+          <p className="font-medium">Error loading burndown data</p>
+          <p className="text-sm">{burndownError.message}</p>
+          <button
+            onClick={() => refetchBurndown()}
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     )
   }

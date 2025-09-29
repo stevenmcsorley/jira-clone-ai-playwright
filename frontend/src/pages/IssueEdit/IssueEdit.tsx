@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
-import { TimeEstimateInput } from '../../components/TimeEstimateInput'
+import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
+import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
@@ -26,7 +27,9 @@ export const IssueEdit = () => {
   const [type, setType] = useState<IssueType>('task')
   const [assigneeId, setAssigneeId] = useState<number | undefined>()
   const [labels, setLabels] = useState<string[]>([])
-  const [estimate, setEstimate] = useState<number | undefined>()
+  const [timeEstimate, setTimeEstimate] = useState<number | undefined>()
+  const [storyPoints, setStoryPoints] = useState<string | number | undefined>()
+  const [estimationScale, setEstimationScale] = useState<EstimationScale>('fibonacci')
 
   const currentProject = projects.find(p => p.id === Number(projectId))
 
@@ -47,7 +50,8 @@ export const IssueEdit = () => {
         setType(issueData.type)
         setAssigneeId(issueData.assigneeId)
         setLabels(issueData.labels || [])
-        setEstimate(issueData.estimate)
+        setTimeEstimate(issueData.estimate)
+        setStoryPoints(issueData.storyPoints)
       } catch (err) {
         setError('Failed to load issue')
         console.error('Error fetching issue:', err)
@@ -70,7 +74,8 @@ export const IssueEdit = () => {
       priority,
       assigneeId,
       labels: labels.length > 0 ? labels : undefined,
-      estimate,
+      estimate: timeEstimate,
+      storyPoints,
     }
 
     try {
@@ -323,16 +328,32 @@ export const IssueEdit = () => {
             />
           </div>
 
-          {/* Estimate */}
+          {/* Time Estimation */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <label htmlFor="estimate" className="block text-sm font-medium text-gray-700 mb-2">
-              Time Estimate
-            </label>
-            <TimeEstimateInput
-              value={estimate}
-              onChange={setEstimate}
-              placeholder="e.g., 10m, 1h 30m, 2h, 1:30"
+            <TimeInput
+              value={timeEstimate}
+              onChange={setTimeEstimate}
+              label="Time Estimate"
+              placeholder="e.g., 2h 30m, 1.5h, 90m"
+              helperText="⏰ Time tracking: Estimated time for budget and project management"
+              disabled={saving}
             />
+          </div>
+
+          {/* Story Point Estimate */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <StoryPointInput
+              value={storyPoints}
+              onChange={setStoryPoints}
+              scale={estimationScale}
+              onScaleChange={setEstimationScale}
+              placeholder="Select story point estimate..."
+              showScaleSelector={true}
+              disabled={saving}
+            />
+            <div className="mt-2 text-xs text-gray-500">
+              💡 <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
+            </div>
           </div>
         </form>
         </div>

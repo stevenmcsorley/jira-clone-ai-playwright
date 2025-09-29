@@ -105,6 +105,10 @@ __decorate([
     __metadata("design:type", Number)
 ], Issue.prototype, "estimate", void 0);
 __decorate([
+    (0, typeorm_1.Column)('varchar', { length: 10, nullable: true }),
+    __metadata("design:type", Object)
+], Issue.prototype, "storyPoints", void 0);
+__decorate([
     (0, typeorm_1.Column)('text', { array: true, default: [] }),
     __metadata("design:type", Array)
 ], Issue.prototype, "labels", void 0);

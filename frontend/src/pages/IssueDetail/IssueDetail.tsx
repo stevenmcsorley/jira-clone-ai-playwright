@@ -7,6 +7,8 @@ import { Subtasks } from '../../components/Subtasks/Subtasks'
 import { TimeTracking } from '../../components/TimeTracking/TimeTracking'
 import { EpicIssues } from '../../components/EpicIssues/EpicIssues'
 import { IssueLinks } from '../../components/IssueLinks/IssueLinks'
+import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
+import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
@@ -22,6 +24,7 @@ export const IssueDetail = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [estimationScale, setEstimationScale] = useState<EstimationScale>('fibonacci')
 
   const currentProject = projects.find(p => p.id === Number(projectId))
 
@@ -68,6 +71,14 @@ export const IssueDetail = () => {
 
   const handleAssigneeChange = (assigneeId: number | undefined) => {
     handleUpdate({ assigneeId })
+  }
+
+  const handleTimeEstimateChange = (estimate: number | undefined) => {
+    handleUpdate({ estimate })
+  }
+
+  const handleStoryPointsChange = (storyPoints: string | number | undefined) => {
+    handleUpdate({ storyPoints })
   }
 
   const priorityIcons = {
@@ -237,6 +248,33 @@ export const IssueDetail = () => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Time Estimate */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <TimeInput
+                value={issue.estimate}
+                onChange={handleTimeEstimateChange}
+                label="Time Estimate"
+                placeholder="e.g., 2h 30m, 1.5h, 90m"
+                helperText="⏰ Time tracking: Estimated time for budget planning"
+                disabled={saving}
+              />
+            </div>
+
+            {/* Story Points */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <StoryPointInput
+                value={issue.storyPoints}
+                onChange={handleStoryPointsChange}
+                scale={estimationScale}
+                onScaleChange={setEstimationScale}
+                disabled={saving}
+                showScaleSelector={true}
+              />
+              <div className="mt-2 text-xs text-gray-500">
+                💡 Use Planning Poker for team estimation sessions
+              </div>
             </div>
 
             {/* Assignee */}

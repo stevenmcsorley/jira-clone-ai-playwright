@@ -113,9 +113,13 @@ export const CleanIssueCard = ({
           )}
 
           <div className="flex items-center gap-2">
-            {issue.estimate && (
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {issue.estimate}sp
+            {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                📊 {issue.storyPoints}
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
+                📊 ?
               </span>
             )}
           </div>

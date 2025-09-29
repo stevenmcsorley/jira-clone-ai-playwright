@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
-import { TimeEstimateInput } from '../../components/TimeEstimateInput'
+import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
+import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { useIssues } from '../../hooks/useIssues'
@@ -27,7 +28,9 @@ export const CreateIssue = () => {
   const [type, setType] = useState<IssueType>('task')
   const [assigneeId, setAssigneeId] = useState<number | undefined>()
   const [labels, setLabels] = useState<string[]>([])
-  const [estimate, setEstimate] = useState<number | undefined>()
+  const [timeEstimate, setTimeEstimate] = useState<number | undefined>()
+  const [storyPoints, setStoryPoints] = useState<string | number | undefined>()
+  const [estimationScale, setEstimationScale] = useState<EstimationScale>('fibonacci')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,7 +48,8 @@ export const CreateIssue = () => {
       type,
       assigneeId,
       labels: labels.length > 0 ? labels : undefined,
-      estimate,
+      estimate: timeEstimate,
+      storyPoints,
       projectId: currentProject.id,
       reporterId: 1, // TODO: Get current user ID
     }
@@ -302,16 +306,30 @@ export const CreateIssue = () => {
             />
           </div>
 
-          {/* Estimate */}
+          {/* Time Estimation */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <label htmlFor="estimate" className="block text-sm font-medium text-gray-700 mb-2">
-              Time Estimate
-            </label>
-            <TimeEstimateInput
-              value={estimate}
-              onChange={setEstimate}
-              placeholder="e.g., 10m, 1h 30m, 2h, 1:30"
+            <TimeInput
+              value={timeEstimate}
+              onChange={setTimeEstimate}
+              label="Time Estimate"
+              placeholder="e.g., 2h 30m, 1.5h, 90m"
+              helperText="⏰ Time tracking: Estimated time for budget and project management"
             />
+          </div>
+
+          {/* Story Point Estimate */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <StoryPointInput
+              value={storyPoints}
+              onChange={setStoryPoints}
+              scale={estimationScale}
+              onScaleChange={setEstimationScale}
+              placeholder="Select story point estimate..."
+              showScaleSelector={true}
+            />
+            <div className="mt-2 text-xs text-gray-500">
+              💡 <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
+            </div>
           </div>
         </form>
         </div>

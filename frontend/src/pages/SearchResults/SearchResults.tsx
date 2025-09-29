@@ -135,6 +135,11 @@ export const SearchResults = () => {
                       <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 capitalize">
                         {issue.type}
                       </span>
+                      {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) && (
+                        <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">
+                          📊 {issue.storyPoints}
+                        </span>
+                      )}
                     </div>
 
                     {/* Title */}

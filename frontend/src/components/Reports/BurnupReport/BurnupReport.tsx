@@ -87,67 +87,36 @@ export const BurnupReport = () => {
 
       setLoading(true)
       try {
-        // Fetch issues for the sprint
-        const response = await fetch(`/api/issues?projectId=${projectId}&sprintId=${selectedSprint.id}`)
-        const issues = await response.json()
+        // Get burndown data which has daily progression we can use for burnup
+        const burndownResponse = await fetch(`/api/analytics/burndown/${selectedSprint.id}`)
+        const burndownData = await burndownResponse.json()
 
-        // Generate daily burnup data
+        // Get sprint scope data for final totals
+        const sprintScopeResponse = await fetch(`/api/analytics/sprint-scope/${selectedSprint.id}`)
+        const sprintScope = await sprintScopeResponse.json()
+
         if (!selectedSprint.startDate || !selectedSprint.endDate) {
           console.warn('Sprint has null start or end date')
           setBurnupData([])
           return
         }
 
-        const startDate = new Date(selectedSprint.startDate)
-        const endDate = new Date(selectedSprint.endDate)
-        const today = new Date()
-        const currentEnd = today < endDate ? today : endDate
+        // Convert burndown data to burnup format
+        const data: BurnupData[] = burndownData.map((dayData: any, index: number) => {
+          const completed = dayData.actualCompleted || 0
+          const remainingWork = dayData.remainingWork || 0
 
-        const data: BurnupData[] = []
-        const currentDate = new Date(startDate)
+          // Current scope = completed + remaining work
+          const currentScope = completed + remainingWork
+          const originalScope = sprintScope.totalScope
 
-        // Initial scope (story points at sprint start)
-        const initialScope = issues.reduce((sum: number, issue: any) => {
-          const estimate = parseFloat(issue.estimate) || 0
-          return sum + estimate
-        }, 0)
-        let totalScope = initialScope
-        let completed = 0
-
-        while (currentDate <= currentEnd) {
-          const dateStr = currentDate.toISOString().split('T')[0]
-
-          // Calculate completed work up to this date
-          completed = issues
-            .filter((issue: any) => issue.status === 'done')
-            .reduce((sum: number, issue: any) => {
-              const estimate = parseFloat(issue.estimate) || 0
-              return sum + estimate
-            }, 0)
-
-          // For demo purposes, simulate scope changes and gradual completion
-          const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-          const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-
-          // Simulate scope additions (10% chance each day)
-          if (Math.random() > 0.9 && daysPassed < totalDays * 0.7) {
-            totalScope += Math.floor(Math.random() * 3) + 1
+          return {
+            date: dayData.date,
+            completed: completed,
+            totalScope: currentScope,
+            scopeAdded: currentScope - originalScope
           }
-
-          // Simulate gradual completion with some variance
-          const expectedProgress = (daysPassed / totalDays) * initialScope
-          const variance = (Math.random() - 0.5) * 0.2 * expectedProgress
-          completed = Math.min(Math.max(0, expectedProgress + variance), totalScope)
-
-          data.push({
-            date: dateStr,
-            completed: Math.round(completed),
-            totalScope,
-            scopeAdded: totalScope - initialScope
-          })
-
-          currentDate.setDate(currentDate.getDate() + 1)
-        }
+        })
 
         setBurnupData(data)
       } catch (error) {

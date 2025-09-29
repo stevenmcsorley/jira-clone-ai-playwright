@@ -227,7 +227,8 @@ export const IssuesList = () => {
             <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
               <div className="col-span-1">Type</div>
               <div className="col-span-1">ID</div>
-              <div className="col-span-4">Title</div>
+              <div className="col-span-3">Title</div>
+              <div className="col-span-1">Story Points</div>
               <div className="col-span-2">Status</div>
               <div className="col-span-1">Priority</div>
               <div className="col-span-2">Assignee</div>
@@ -256,13 +257,26 @@ export const IssuesList = () => {
                   </div>
 
                   {/* Title */}
-                  <div className="col-span-4 flex items-center">
+                  <div className="col-span-3 flex items-center">
                     <Link
                       to={`/projects/${projectId}/issues/${issue.id}`}
                       className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
                     >
                       {issue.title}
                     </Link>
+                  </div>
+
+                  {/* Story Points */}
+                  <div className="col-span-1 flex items-center">
+                    {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+                      <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                        📊 {issue.storyPoints}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
+                        —
+                      </span>
+                    )}
                   </div>
 
                   {/* Status */}

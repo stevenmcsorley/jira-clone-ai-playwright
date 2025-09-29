@@ -67,27 +67,17 @@ export const VelocityReport = () => {
         const sprintsResponse = await fetch(`/api/sprints?projectId=${projectId}&status=completed`)
         const sprints = await sprintsResponse.json()
 
-        // Generate velocity data for each sprint
+        // Generate velocity data for each sprint using analytics API
         const velocityPromises = sprints.map(async (sprint: any) => {
-          const issuesResponse = await fetch(`/api/issues?projectId=${projectId}&sprintId=${sprint.id}`)
-          const issues = await issuesResponse.json()
-
-          const planned = issues.reduce((sum: number, issue: any) => {
-            const estimate = parseFloat(issue.estimate) || 0
-            return sum + estimate
-          }, 0)
-          const completed = issues
-            .filter((issue: any) => issue.status === 'done')
-            .reduce((sum: number, issue: any) => {
-              const estimate = parseFloat(issue.estimate) || 0
-              return sum + estimate
-            }, 0)
+          // Use the sprint scope analytics API for accurate historical data
+          const scopeResponse = await fetch(`/api/analytics/sprint-scope/${sprint.id}`)
+          const scopeData = await scopeResponse.json()
 
           return {
             sprintName: sprint.name,
             sprintNumber: sprint.id,
-            planned,
-            completed,
+            planned: scopeData.totalScope || 0,
+            completed: scopeData.completedWork || 0,
             startDate: sprint.startDate,
             endDate: sprint.endDate
           }
