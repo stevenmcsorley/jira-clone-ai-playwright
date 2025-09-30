@@ -1,5 +1,6 @@
 import { SprintsService } from './sprints.service';
 import { SprintStatus } from './entities/sprint.entity';
+import { EventsGateway } from '../events/events.gateway';
 interface CreateSprintDto {
     name: string;
     goal?: string;
@@ -19,7 +20,8 @@ interface StartSprintDto {
 }
 export declare class SprintsController {
     private readonly sprintsService;
-    constructor(sprintsService: SprintsService);
+    private readonly eventsGateway;
+    constructor(sprintsService: SprintsService, eventsGateway: EventsGateway);
     create(createSprintDto: CreateSprintDto): Promise<import("./entities/sprint.entity").Sprint>;
     findByProject(projectId: string): Promise<import("./entities/sprint.entity").Sprint[]>;
     getBacklog(projectId: string): Promise<import("../issues/entities/issue.entity").Issue[]>;
@@ -29,6 +31,8 @@ export declare class SprintsController {
     completeSprint(id: string): Promise<import("./entities/sprint.entity").Sprint>;
     addIssueToSprint(id: string, issueId: string): Promise<void>;
     removeIssueFromSprint(issueId: string): Promise<void>;
-    remove(id: string): Promise<void>;
+    remove(id: string): Promise<{
+        message: string;
+    }>;
 }
 export {};

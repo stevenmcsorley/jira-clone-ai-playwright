@@ -16,12 +16,16 @@ exports.IssuesController = void 0;
 const common_1 = require("@nestjs/common");
 const issues_service_1 = require("./issues.service");
 const create_issue_dto_1 = require("./dto/create-issue.dto");
+const events_gateway_1 = require("../events/events.gateway");
 let IssuesController = class IssuesController {
-    constructor(issuesService) {
+    constructor(issuesService, eventsGateway) {
         this.issuesService = issuesService;
+        this.eventsGateway = eventsGateway;
     }
-    create(createIssueDto) {
-        return this.issuesService.create(createIssueDto);
+    async create(createIssueDto) {
+        const issue = await this.issuesService.create(createIssueDto);
+        this.eventsGateway.emitIssueCreated(issue);
+        return issue;
     }
     findAll(projectId, boardView) {
         if (projectId) {
@@ -35,14 +39,23 @@ let IssuesController = class IssuesController {
     findOne(id) {
         return this.issuesService.findOne(+id);
     }
-    update(id, updateData) {
-        return this.issuesService.update(+id, updateData);
+    async update(id, updateData) {
+        const issue = await this.issuesService.update(+id, updateData);
+        this.eventsGateway.emitIssueUpdated(issue);
+        return issue;
     }
-    updatePositions(updates) {
-        return this.issuesService.updatePositions(updates);
+    async updatePositions(updates) {
+        const result = await this.issuesService.updatePositions(updates);
+        for (const update of updates) {
+            const issue = await this.issuesService.findOne(update.id);
+            this.eventsGateway.emitIssueUpdated(issue);
+        }
+        return result;
     }
-    remove(id) {
-        return this.issuesService.remove(+id);
+    async remove(id) {
+        await this.issuesService.remove(+id);
+        this.eventsGateway.emitIssueDeleted(+id);
+        return { message: 'Issue deleted successfully' };
     }
     search(searchData) {
         return this.issuesService.search(searchData.query, searchData.projectId);
@@ -57,7 +70,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_issue_dto_1.CreateIssueDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], IssuesController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
@@ -80,21 +93,21 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], IssuesController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)('reorder'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], IssuesController.prototype, "updatePositions", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], IssuesController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('search'),
@@ -112,6 +125,7 @@ __decorate([
 ], IssuesController.prototype, "bulkUpdate", null);
 exports.IssuesController = IssuesController = __decorate([
     (0, common_1.Controller)('api/issues'),
-    __metadata("design:paramtypes", [issues_service_1.IssuesService])
+    __metadata("design:paramtypes", [issues_service_1.IssuesService,
+        events_gateway_1.EventsGateway])
 ], IssuesController);
 //# sourceMappingURL=issues.controller.js.map

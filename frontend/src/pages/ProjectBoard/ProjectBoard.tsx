@@ -16,37 +16,74 @@ export const ProjectBoard = () => {
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSprint, setActiveSprint] = useState<Sprint | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Find the current project
   const currentProject = projects.find(p => p.id === Number(projectId))
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!projectId) return
+  const fetchData = async (showLoadingState = true) => {
+    if (!projectId) return
 
-      try {
+    try {
+      if (showLoadingState) {
         setLoading(true)
-        const sprintsData = await SprintsService.getByProject(parseInt(projectId))
-        setSprints(sprintsData)
+      }
+      const sprintsData = await SprintsService.getByProject(parseInt(projectId))
+      setSprints(sprintsData)
 
-        // Find active sprint and get its issues
-        const activeSprintData = sprintsData.find(sprint => sprint.status === 'active')
-        setActiveSprint(activeSprintData || null)
+      // Find active sprint and get its issues
+      const activeSprintData = sprintsData.find(sprint => sprint.status === 'active')
+      setActiveSprint(activeSprintData || null)
 
-        if (activeSprintData) {
-          setIssues(activeSprintData.issues)
-        } else {
-          // No active sprint = empty board (like real Jira)
-          setIssues([])
-        }
-      } catch (error) {
-        console.error('Error fetching board data:', error)
-      } finally {
+      if (activeSprintData) {
+        setIssues(activeSprintData.issues)
+      } else {
+        // No active sprint = empty board (like real Jira)
+        setIssues([])
+      }
+    } catch (error) {
+      console.error('Error fetching board data:', error)
+    } finally {
+      if (showLoadingState) {
         setLoading(false)
       }
     }
+  }
 
+  useEffect(() => {
     fetchData()
+  }, [projectId])
+
+  // Listen for WebSocket real-time updates
+  useEffect(() => {
+    const handleRefresh = (event: CustomEvent) => {
+      const { type } = event.detail
+      if (type === 'issues' || type === 'sprints') {
+        console.log('🔄 Real-time update detected, refreshing board data...')
+        if (projectId) {
+          // Directly call the fetch logic here to ensure it runs
+          SprintsService.getByProject(parseInt(projectId)).then(sprintsData => {
+            setSprints([...sprintsData]) // Force new array reference
+            const activeSprintData = sprintsData.find(sprint => sprint.status === 'active')
+            setActiveSprint(activeSprintData || null)
+            if (activeSprintData) {
+              setIssues([...activeSprintData.issues]) // Force new array reference
+            } else {
+              setIssues([])
+            }
+            setRefreshKey(prev => prev + 1) // Force re-render
+            console.log('✅ Board data refreshed successfully', activeSprintData?.issues?.length, 'issues')
+          }).catch(error => {
+            console.error('Error refreshing board data:', error)
+          })
+        }
+      }
+    }
+
+    window.addEventListener('jira-refresh', handleRefresh as EventListener)
+    return () => {
+      window.removeEventListener('jira-refresh', handleRefresh as EventListener)
+    }
   }, [projectId])
 
   // Don't render issues until we have the correct project
@@ -214,7 +251,7 @@ export const ProjectBoard = () => {
         {shouldShowIssues ? (
           <div data-testid="kanban-board">
             <KanbanBoard
-              key={currentProject.id} // Force re-mount when project changes
+              key={`${currentProject.id}-${refreshKey}`} // Force re-mount when data changes
               project={currentProject}
               issues={issues}
               loading={loading}

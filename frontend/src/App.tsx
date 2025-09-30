@@ -22,6 +22,7 @@ import { Releases } from './pages/Releases/Releases'
 // import { XStateDemo } from './components/XStateDemo/XStateDemo'
 import { SimpleXStateDemo } from './components/SimpleXStateDemo/SimpleXStateDemo'
 import { useProjects } from './hooks/useProjects'
+import { useWebSocket } from './hooks/useWebSocket'
 import { initializeInspector } from './lib/xstate-inspector'
 
 // Initialize XState inspector in development
@@ -29,6 +30,9 @@ import { initializeInspector } from './lib/xstate-inspector'
 
 export const App = () => {
   const { loading } = useProjects()
+
+  // Connect to WebSocket for real-time updates
+  useWebSocket()
 
   if (loading) {
     return (

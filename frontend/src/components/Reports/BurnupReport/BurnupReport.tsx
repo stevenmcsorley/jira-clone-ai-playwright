@@ -62,13 +62,16 @@ export const BurnupReport = () => {
         const sprintData = await response.json()
         setSprints(sprintData)
 
-        // Select most recent active or completed sprint
-        const activeSprint = sprintData.find((s: Sprint) => s.status === 'active') ||
-                           sprintData.find((s: Sprint) => s.status === 'completed') ||
-                           sprintData[0]
+        // Select most recently worked sprint (completed first, then active)
+        const completedSprints = sprintData.filter((s: Sprint) => s.status === 'completed')
+        // Get the LAST completed sprint (most recent)
+        const mostRecentCompleted = completedSprints.length > 0 ? completedSprints[completedSprints.length - 1] : null
+        const activeSprint = sprintData.find((s: Sprint) => s.status === 'active')
 
-        if (activeSprint) {
-          setSelectedSprint(activeSprint)
+        const defaultSprint = mostRecentCompleted || activeSprint || sprintData[0]
+
+        if (defaultSprint) {
+          setSelectedSprint(defaultSprint)
         }
       } catch (error) {
         console.error('Error fetching sprints:', error)

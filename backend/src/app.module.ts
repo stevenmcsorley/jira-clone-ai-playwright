@@ -8,6 +8,7 @@ import { SprintsModule } from './sprints/sprints.module'
 import { AuthModule } from './auth/auth.module'
 import { EstimationModule } from './estimation/estimation.module'
 import { AnalyticsModule } from './analytics/analytics.module'
+import { EventsModule } from './events/events.module'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AnalyticsModule } from './analytics/analytics.module'
     AuthModule,
     EstimationModule,
     AnalyticsModule,
+    EventsModule,
   ],
 })
 export class AppModule {}

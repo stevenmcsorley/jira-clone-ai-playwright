@@ -32,43 +32,85 @@ export const Backlog = () => {
 
   const currentProject = projects.find(p => p.id === Number(projectId))
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!projectId) return
+  const fetchData = async (showLoadingState = true) => {
+    if (!projectId) return
 
-      try {
+    try {
+      if (showLoadingState) {
         setLoading(true)
-        setError(null)
+      }
+      setError(null)
 
-        const [sprintsData, backlogData] = await Promise.all([
-          SprintsService.getByProject(parseInt(projectId)),
-          SprintsService.getBacklogIssues(parseInt(projectId))
-        ])
+      const [sprintsData, backlogData] = await Promise.all([
+        SprintsService.getByProject(parseInt(projectId)),
+        SprintsService.getBacklogIssues(parseInt(projectId))
+      ])
 
-        // Sort sprints: future first, then active, then completed (most recent first)
-        const sortedSprints = sprintsData.sort((a, b) => {
-          if (a.status === 'future' && b.status !== 'future') return -1
-          if (b.status === 'future' && a.status !== 'future') return 1
-          if (a.status === 'active' && b.status !== 'active') return -1
-          if (b.status === 'active' && a.status !== 'active') return 1
-          // For completed sprints, sort by end date (most recent first)
-          if (a.status === 'completed' && b.status === 'completed') {
-            return new Date(b.endDate || b.updatedAt).getTime() - new Date(a.endDate || a.updatedAt).getTime()
-          }
-          return 0
-        })
+      // Sort sprints: future first, then active, then completed (most recent first)
+      const sortedSprints = sprintsData.sort((a, b) => {
+        if (a.status === 'future' && b.status !== 'future') return -1
+        if (b.status === 'future' && a.status !== 'future') return 1
+        if (a.status === 'active' && b.status !== 'active') return -1
+        if (b.status === 'active' && a.status !== 'active') return 1
+        // For completed sprints, sort by end date (most recent first)
+        if (a.status === 'completed' && b.status === 'completed') {
+          return new Date(b.endDate || b.updatedAt).getTime() - new Date(a.endDate || a.updatedAt).getTime()
+        }
+        return 0
+      })
 
-        setSprints(sortedSprints)
-        setBacklogIssues(backlogData)
-      } catch (err) {
-        setError('Failed to load backlog data')
-        console.error('Error fetching backlog:', err)
-      } finally {
+      setSprints(sortedSprints)
+      setBacklogIssues(backlogData)
+    } catch (err) {
+      setError('Failed to load backlog data')
+      console.error('Error fetching backlog:', err)
+    } finally {
+      if (showLoadingState) {
         setLoading(false)
       }
     }
+  }
 
+  useEffect(() => {
     fetchData()
+  }, [projectId])
+
+  // Listen for WebSocket real-time updates
+  useEffect(() => {
+    const handleRefresh = (event: CustomEvent) => {
+      const { type } = event.detail
+      if (type === 'issues' || type === 'sprints') {
+        console.log('🔄 Real-time update detected, refreshing backlog data...')
+        if (projectId) {
+          // Directly call the fetch logic here to ensure it runs
+          Promise.all([
+            SprintsService.getByProject(parseInt(projectId)),
+            SprintsService.getBacklogIssues(parseInt(projectId))
+          ]).then(([sprintsData, backlogData]) => {
+            const sortedSprints = sprintsData.sort((a, b) => {
+              if (a.status === 'future' && b.status !== 'future') return -1
+              if (b.status === 'future' && a.status !== 'future') return 1
+              if (a.status === 'active' && b.status !== 'active') return -1
+              if (b.status === 'active' && a.status !== 'active') return 1
+              if (a.status === 'completed' && b.status === 'completed') {
+                return new Date(b.endDate || b.updatedAt).getTime() - new Date(a.endDate || a.updatedAt).getTime()
+              }
+              return 0
+            })
+            setSprints(sortedSprints)
+            setBacklogIssues(backlogData)
+            console.log('✅ Backlog data refreshed successfully')
+          }).catch(error => {
+            console.error('Error refreshing backlog data:', error)
+          })
+        }
+      }
+    }
+
+    window.addEventListener('jira-refresh', handleRefresh as EventListener)
+    return () => {
+      window.removeEventListener('jira-refresh', handleRefresh as EventListener)
+    }
   }, [projectId])
 
   const handleCreateSprint = async (e: React.FormEvent) => {
@@ -458,13 +500,13 @@ export const Backlog = () => {
                         >
                           {/* Type */}
                           <div className="col-span-1 flex items-center">
-                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
                               issue.type === 'story' ? 'bg-green-100 text-green-800' :
                               issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
                               issue.type === 'bug' ? 'bg-red-100 text-red-800' :
                               'bg-purple-100 text-purple-800'
                             }`}>
-                              {getIssueTypeIcon(issue.type)}
+                              {issue.type}
                             </span>
                           </div>
 
@@ -489,7 +531,7 @@ export const Backlog = () => {
                           <div className="col-span-1 flex items-center">
                             {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
                               <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                                📊 {issue.storyPoints}
+                                {issue.storyPoints}
                               </span>
                             ) : (
                               <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
@@ -610,13 +652,13 @@ export const Backlog = () => {
                       >
                         {/* Type */}
                         <div className="col-span-1 flex items-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
                             issue.type === 'story' ? 'bg-green-100 text-green-800' :
                             issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
                             issue.type === 'bug' ? 'bg-red-100 text-red-800' :
                             'bg-purple-100 text-purple-800'
                           }`}>
-                            {getIssueTypeIcon(issue.type)}
+                            {issue.type}
                           </span>
                         </div>
 
@@ -641,7 +683,7 @@ export const Backlog = () => {
                         <div className="col-span-1 flex items-center">
                           {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
                             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                              📊 {issue.storyPoints}
+                              {issue.storyPoints}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
@@ -693,10 +735,13 @@ export const Backlog = () => {
                         {/* Updated */}
                         <div className="col-span-1 flex items-center">
                           <span className="text-sm text-gray-500">
-                            {new Date(issue.updatedAt).toLocaleDateString('en-US', {
+                            {new Date(issue.updatedAt).toLocaleString('en-US', {
                               month: 'short',
                               day: 'numeric',
-                              year: 'numeric'
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true
                             })}
                           </span>
                         </div>

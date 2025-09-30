@@ -15,12 +15,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SprintsController = void 0;
 const common_1 = require("@nestjs/common");
 const sprints_service_1 = require("./sprints.service");
+const events_gateway_1 = require("../events/events.gateway");
 let SprintsController = class SprintsController {
-    constructor(sprintsService) {
+    constructor(sprintsService, eventsGateway) {
         this.sprintsService = sprintsService;
+        this.eventsGateway = eventsGateway;
     }
-    create(createSprintDto) {
-        return this.sprintsService.create(createSprintDto);
+    async create(createSprintDto) {
+        const sprint = await this.sprintsService.create(createSprintDto);
+        this.eventsGateway.emitSprintCreated(sprint);
+        return sprint;
     }
     findByProject(projectId) {
         return this.sprintsService.findByProject(+projectId);
@@ -31,23 +35,34 @@ let SprintsController = class SprintsController {
     findOne(id) {
         return this.sprintsService.findOne(+id);
     }
-    update(id, updateSprintDto) {
-        return this.sprintsService.update(+id, updateSprintDto);
+    async update(id, updateSprintDto) {
+        const sprint = await this.sprintsService.update(+id, updateSprintDto);
+        this.eventsGateway.emitSprintUpdated(sprint);
+        return sprint;
     }
-    startSprint(id, startSprintDto) {
-        return this.sprintsService.startSprint(+id, startSprintDto.startDate, startSprintDto.endDate);
+    async startSprint(id, startSprintDto) {
+        const sprint = await this.sprintsService.startSprint(+id, startSprintDto.startDate, startSprintDto.endDate);
+        this.eventsGateway.emitSprintStarted(sprint);
+        return sprint;
     }
-    completeSprint(id) {
-        return this.sprintsService.completeSprint(+id);
+    async completeSprint(id) {
+        const sprint = await this.sprintsService.completeSprint(+id);
+        this.eventsGateway.emitSprintCompleted(sprint);
+        return sprint;
     }
-    addIssueToSprint(id, issueId) {
-        return this.sprintsService.addIssueToSprint(+id, +issueId);
+    async addIssueToSprint(id, issueId) {
+        await this.sprintsService.addIssueToSprint(+id, +issueId);
+        const sprint = await this.sprintsService.findOne(+id);
+        this.eventsGateway.emitSprintUpdated(sprint);
     }
-    removeIssueFromSprint(issueId) {
-        return this.sprintsService.removeIssueFromSprint(+issueId);
+    async removeIssueFromSprint(issueId) {
+        await this.sprintsService.removeIssueFromSprint(+issueId);
+        this.eventsGateway.emitIssueUpdated({ id: +issueId });
     }
-    remove(id) {
-        return this.sprintsService.remove(+id);
+    async remove(id) {
+        await this.sprintsService.remove(+id);
+        this.eventsGateway.emitSprintDeleted(+id);
+        return { message: 'Sprint deleted successfully' };
     }
 };
 exports.SprintsController = SprintsController;
@@ -56,7 +71,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
@@ -85,7 +100,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/start'),
@@ -93,14 +108,14 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "startSprint", null);
 __decorate([
     (0, common_1.Post)(':id/complete'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "completeSprint", null);
 __decorate([
     (0, common_1.Post)(':id/add-issue/:issueId'),
@@ -108,24 +123,25 @@ __decorate([
     __param(1, (0, common_1.Param)('issueId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "addIssueToSprint", null);
 __decorate([
     (0, common_1.Post)('remove-issue/:issueId'),
     __param(0, (0, common_1.Param)('issueId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "removeIssueFromSprint", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], SprintsController.prototype, "remove", null);
 exports.SprintsController = SprintsController = __decorate([
     (0, common_1.Controller)('api/sprints'),
-    __metadata("design:paramtypes", [sprints_service_1.SprintsService])
+    __metadata("design:paramtypes", [sprints_service_1.SprintsService,
+        events_gateway_1.EventsGateway])
 ], SprintsController);
 //# sourceMappingURL=sprints.controller.js.map

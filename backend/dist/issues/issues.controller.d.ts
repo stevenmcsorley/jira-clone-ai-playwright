@@ -1,8 +1,10 @@
 import { IssuesService } from './issues.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
+import { EventsGateway } from '../events/events.gateway';
 export declare class IssuesController {
     private readonly issuesService;
-    constructor(issuesService: IssuesService);
+    private readonly eventsGateway;
+    constructor(issuesService: IssuesService, eventsGateway: EventsGateway);
     create(createIssueDto: CreateIssueDto): Promise<import("./entities/issue.entity").Issue>;
     findAll(projectId?: string, boardView?: string): Promise<import("./entities/issue.entity").Issue[]>;
     findOne(id: string): Promise<import("./entities/issue.entity").Issue>;
@@ -12,7 +14,9 @@ export declare class IssuesController {
         position: number;
         status: string;
     }[]): Promise<void>;
-    remove(id: string): Promise<void>;
+    remove(id: string): Promise<{
+        message: string;
+    }>;
     search(searchData: {
         query: string;
         projectId?: number;
