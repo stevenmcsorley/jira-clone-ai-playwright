@@ -11,6 +11,7 @@ import { StoryPointInput, type EstimationScale } from '../../components/StoryPoi
 import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
+import { useTimerManager } from '../../hooks/useTimerManager'
 import { IssuesService } from '../../services/api/issues.service'
 import type { Issue, UpdateIssueRequest, IssueStatus, IssuePriority, IssueType } from '../../types/domain.types'
 
@@ -19,6 +20,7 @@ export const IssueDetail = () => {
   const navigate = useNavigate()
   const { projects } = useProjects()
   const { users } = useUsers()
+  const { handleIssueStatusChange } = useTimerManager()
 
   const [issue, setIssue] = useState<Issue | null>(null)
   const [loading, setLoading] = useState(true)
@@ -54,6 +56,11 @@ export const IssueDetail = () => {
       setSaving(true)
       const updatedIssue = await IssuesService.update(issue.id, updates)
       setIssue(updatedIssue)
+
+      // Trigger timer status change if status was updated
+      if (updates.status) {
+        handleIssueStatusChange(issue.id, updates.status, updatedIssue.estimate)
+      }
     } catch (err) {
       console.error('Error updating issue:', err)
     } finally {

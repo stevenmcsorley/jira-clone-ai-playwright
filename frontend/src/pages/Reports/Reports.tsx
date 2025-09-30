@@ -20,19 +20,13 @@ export const Reports = () => {
   const currentProject = projects.find(p => p.id === Number(projectId))
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Breadcrumb */}
+    <div className="flex-1 flex flex-col bg-gray-50">
+      {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <nav className="flex items-center text-sm text-gray-500">
-          <Link to="/projects" className="hover:text-gray-700">Projects</Link>
-          <span className="mx-2">/</span>
-          <Link to={`/projects/${projectId}`} className="hover:text-gray-700">
-            {currentProject?.name || 'Project'}
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 font-medium">Reports</span>
-        </nav>
-        <h1 className="text-2xl font-semibold text-gray-900 mt-2">Overview</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Reports Overview</h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Track project progress with comprehensive analytics and reports
+        </p>
       </div>
 
       <div className="flex">

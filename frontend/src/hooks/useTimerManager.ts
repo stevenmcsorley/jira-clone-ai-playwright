@@ -4,7 +4,7 @@
  * Provides automatic time tracking with visual progress indicators
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { timerManagerMachine, getTimerProgress } from '../machines/timer.machine';
 import { TimeTrackingService } from '../services/api/time-tracking.service';
@@ -14,6 +14,39 @@ import type { Issue } from '../types/domain.types';
 // Hook for managing all timers in the application
 export const useTimerManager = () => {
   const [state, send] = useMachine(timerManagerMachine);
+
+  // Sync timer states with actual issue status on mount (fix stuck timers)
+  useEffect(() => {
+    const syncTimersWithIssueStatus = async () => {
+      const activeTimers = Array.from(state.context.activeTimers.entries());
+
+      for (const [issueId, timer] of activeTimers) {
+        if (timer.status === 'running' || timer.status === 'paused') {
+          try {
+            const { IssuesService } = await import('../services/api/issues.service');
+            const issue = await IssuesService.getById(issueId);
+
+            // If issue is done but timer is still active, force complete it
+            if (issue && issue.status === 'done' && timer.status !== 'completed') {
+              console.log(`🔄 Found stuck timer for completed issue ${issueId}, fixing...`);
+              send({
+                type: 'ISSUE_STATUS_CHANGED',
+                issueId,
+                newStatus: 'done',
+                estimate: issue.estimate
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to sync timer for issue ${issueId}:`, error);
+          }
+        }
+      }
+    };
+
+    // Run sync after a short delay to let the component mount
+    const timeoutId = setTimeout(syncTimersWithIssueStatus, 1000);
+    return () => clearTimeout(timeoutId);
+  }, []); // Only run on mount
 
   // Save timer state before page unload
   useEffect(() => {
@@ -39,6 +72,7 @@ export const useTimerManager = () => {
   // Handle issue status changes (called from kanban, issue detail, etc.)
   const handleIssueStatusChange = useCallback(
     (issueId: number, newStatus: string, estimate?: number) => {
+      console.log(`🎰 Timer Manager: Issue ${issueId} status changed to ${newStatus}, estimate: ${estimate}`);
       send({
         type: 'ISSUE_STATUS_CHANGED',
         issueId,
@@ -167,14 +201,56 @@ export const useTimerProgressBar = (issue: Issue) => {
 // Hook for active timer display in header
 export const useActiveTimerDisplay = () => {
   const { activeTimerIds, timerManagerState } = useTimerManager();
-
-  if (activeTimerIds.length === 0) return null;
+  const [issueData, setIssueData] = useState<{issueId: number, projectKey: string} | null>(null);
 
   // Get the first active timer for header display
-  const firstActiveId = activeTimerIds[0];
-  const timerState = timerManagerState.context.activeTimers.get(firstActiveId);
+  const firstActiveId = activeTimerIds[0] || null;
+  const timerState = firstActiveId ? timerManagerState.context.activeTimers.get(firstActiveId) : null;
 
-  if (!timerState) return null;
+  // Fetch issue and project data for the active timer
+  useEffect(() => {
+    if (!firstActiveId) {
+      setIssueData(null);
+      return;
+    }
+
+    let isMounted = true; // Prevent state updates if component unmounts
+
+    const fetchIssueData = async () => {
+      try {
+        const { IssuesService } = await import('../services/api/issues.service');
+        const issue = await IssuesService.getById(firstActiveId);
+
+        if (isMounted && issue && issue.project) {
+          setIssueData({
+            issueId: firstActiveId,
+            projectKey: issue.project.key
+          });
+        } else if (isMounted) {
+          // Issue found but no project data
+          setIssueData({
+            issueId: firstActiveId,
+            projectKey: 'JCD'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching issue data for timer display:', error);
+        // Fallback to default JCD if issue fetch fails
+        if (isMounted) {
+          setIssueData({
+            issueId: firstActiveId,
+            projectKey: 'JCD'
+          });
+        }
+      }
+    };
+
+    fetchIssueData().catch(console.error);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [firstActiveId]);
 
   const formatElapsedTime = (ms: number): string => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -191,8 +267,14 @@ export const useActiveTimerDisplay = () => {
     return `0:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Early return after hooks
+  if (activeTimerIds.length === 0 || !timerState || !firstActiveId) {
+    return null;
+  }
+
   return {
     issueId: firstActiveId,
+    projectKey: issueData?.projectKey || 'JCD', // Fallback to JCD while loading
     elapsedTime: formatElapsedTime(timerState.totalElapsed),
     isRunning: timerState.status === 'running',
     totalActiveTimers: activeTimerIds.length,

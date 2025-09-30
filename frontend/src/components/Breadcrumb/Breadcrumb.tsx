@@ -67,10 +67,50 @@ export const Breadcrumb: React.FC = () => {
           });
         }
       } else if (path.includes('/reports')) {
-        breadcrumbs.push({
-          label: 'Reports',
-          isActive: true
-        });
+        // Handle specific report pages
+        if (path.includes('/reports/burndown')) {
+          breadcrumbs.push({
+            label: 'Reports',
+            href: `/projects/${projectId}/reports`
+          });
+          breadcrumbs.push({
+            label: 'Burndown Chart',
+            isActive: true
+          });
+        } else if (path.includes('/reports/burnup')) {
+          breadcrumbs.push({
+            label: 'Reports',
+            href: `/projects/${projectId}/reports`
+          });
+          breadcrumbs.push({
+            label: 'Burnup Report',
+            isActive: true
+          });
+        } else if (path.includes('/reports/velocity')) {
+          breadcrumbs.push({
+            label: 'Reports',
+            href: `/projects/${projectId}/reports`
+          });
+          breadcrumbs.push({
+            label: 'Velocity Report',
+            isActive: true
+          });
+        } else if (path.includes('/reports/cumulative-flow')) {
+          breadcrumbs.push({
+            label: 'Reports',
+            href: `/projects/${projectId}/reports`
+          });
+          breadcrumbs.push({
+            label: 'Cumulative Flow Diagram',
+            isActive: true
+          });
+        } else {
+          // Main reports page
+          breadcrumbs.push({
+            label: 'Reports',
+            isActive: true
+          });
+        }
       } else if (path.includes('/history')) {
         breadcrumbs.push({
           label: 'Sprint History',

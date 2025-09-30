@@ -198,8 +198,7 @@ export const timerMachine = createMachine(
         const { issueId, totalElapsed } = input as TimerContext;
         const hours = totalElapsed / (1000 * 60 * 60);
 
-        if (hours < 0.001) return; // Don't log very short times (less than 3.6 seconds)
-
+        // Log ANY amount of time - no restrictions!
         try {
           await TimeTrackingService.logTime({
             issueId,
@@ -322,6 +321,7 @@ export const timerManagerMachine = createMachine(
     actions: {
       handleStatusChange: assign(({ context, event }) => {
         const { issueId, newStatus, estimate } = event;
+        console.log(`⚙️ Timer Machine: Processing status change for issue ${issueId}: ${newStatus}, estimate: ${estimate}`);
         const existingTimer = context.activeTimers.get(issueId);
 
         switch (newStatus) {
@@ -376,21 +376,18 @@ export const timerManagerMachine = createMachine(
               const sessionHours = existingTimer.totalElapsed / (1000 * 60 * 60);
               console.log(`🕐 Timer completed for issue ${issueId}: ${sessionHours} hours (${existingTimer.totalElapsed}ms)`);
 
-              if (sessionHours >= 0.001) { // Reduced from 0.01 to 0.001 (3.6 seconds)
-                console.log(`✅ Logging time for issue ${issueId}: ${sessionHours} hours`);
-                TimeTrackingService.logTime({
-                  issueId,
-                  hours: Math.round(sessionHours * 1000) / 1000, // Round to 0.001h precision
-                  description: 'Automatic time tracking session',
-                  date: new Date().toISOString(),
-                }).then(() => {
-                  console.log(`📝 Time logged successfully for issue ${issueId}`);
-                }).catch((error) => {
-                  console.error(`❌ Failed to log time for issue ${issueId}:`, error);
-                });
-              } else {
-                console.log(`⏭️ Session too short for issue ${issueId}, not logging (${sessionHours} hours < 0.001h threshold)`);
-              }
+              // Log ALL time - no restrictions!
+              console.log(`✅ Logging time for issue ${issueId}: ${sessionHours} hours`);
+              TimeTrackingService.logTime({
+                issueId,
+                hours: Math.round(sessionHours * 1000) / 1000, // Round to 0.001h precision
+                description: 'Automatic time tracking session',
+                date: new Date().toISOString(),
+              }).then(() => {
+                console.log(`📝 Time logged successfully for issue ${issueId}`);
+              }).catch((error) => {
+                console.error(`❌ Failed to log time for issue ${issueId}:`, error);
+              });
 
               // Reset timer for potential future sessions (don't delete)
               existingTimer.totalElapsed = 0;
@@ -432,14 +429,13 @@ export const timerManagerMachine = createMachine(
           }
 
           const sessionHours = timer.totalElapsed / (1000 * 60 * 60);
-          if (sessionHours >= 0.001) {
-            TimeTrackingService.logTime({
-              issueId,
-              hours: Math.round(sessionHours * 1000) / 1000,
-              description: 'Manual stop - automatic time tracking',
-              date: new Date().toISOString(),
-            }).catch(console.error);
-          }
+          // Log ALL time - no restrictions!
+          TimeTrackingService.logTime({
+            issueId,
+            hours: Math.round(sessionHours * 1000) / 1000,
+            description: 'Manual stop - automatic time tracking',
+            date: new Date().toISOString(),
+          }).catch(console.error);
 
           // Reset timer but don't delete (keep for future sessions)
           timer.totalElapsed = 0;

@@ -393,6 +393,8 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
     const draggedIssue = machine.context.draggedIssue;
     if (!draggedIssue) return;
 
+    console.log(`🎯 XStateKanban: Dropping issue ${draggedIssue.id} to ${targetStatus}, estimate: ${draggedIssue.estimate}`);
+
     // Trigger timer status change
     handleIssueStatusChange(draggedIssue.id, targetStatus, draggedIssue.estimate);
 

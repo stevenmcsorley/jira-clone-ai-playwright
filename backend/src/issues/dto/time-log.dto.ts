@@ -2,7 +2,7 @@ import { IsNumber, IsString, IsOptional, IsDateString, Min, Max } from 'class-va
 
 export class CreateTimeLogDto {
   @IsNumber()
-  @Min(0.1) // Minimum 6 minutes (0.1 hours)
+  @Min(0.001) // Allow any amount of time - minimum 1 millisecond (0.001 hours ≈ 3.6 seconds)
   @Max(24) // Maximum 24 hours per day
   hours: number
 
@@ -19,7 +19,7 @@ export class CreateTimeLogDto {
 
 export class UpdateTimeLogDto {
   @IsNumber()
-  @Min(0.1) // Minimum 6 minutes (0.1 hours)
+  @Min(0.001) // Allow any amount of time - minimum 1 millisecond (0.001 hours ≈ 3.6 seconds)
   @Max(24) // Maximum 24 hours per day
   @IsOptional()
   hours?: number

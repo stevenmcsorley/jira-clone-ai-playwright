@@ -14,7 +14,7 @@ const ActiveTimerDisplayInner: React.FC = () => {
 
   if (!timerDisplay) return null;
 
-  const { issueId, elapsedTime, isRunning, totalActiveTimers } = timerDisplay;
+  const { issueId, projectKey, elapsedTime, isRunning, totalActiveTimers } = timerDisplay;
 
   const handleStopTimer = () => {
     forceStopTimer(issueId);
@@ -32,7 +32,7 @@ const ActiveTimerDisplayInner: React.FC = () => {
       <div className="flex items-center gap-2">
         <span className="font-mono font-bold text-lg">{elapsedTime}</span>
         <span className="text-blue-600">
-          JCD-{issueId}
+          {projectKey}-{issueId}
         </span>
         {totalActiveTimers > 1 && (
           <span className="text-xs bg-blue-200 px-2 py-1 rounded-full">
