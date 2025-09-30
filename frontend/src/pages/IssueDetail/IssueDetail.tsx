@@ -233,6 +233,24 @@ export const IssueDetail = () => {
               </select>
             </div>
 
+            {/* Issue Type */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Issue Type</h4>
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${
+                  issue.type === 'story' ? 'bg-green-100 text-green-800' :
+                  issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
+                  issue.type === 'bug' ? 'bg-red-100 text-red-800' :
+                  'bg-purple-100 text-purple-800'
+                }`}>
+                  {issue.type === 'story' ? '📖 Story' :
+                   issue.type === 'task' ? '✓ Task' :
+                   issue.type === 'bug' ? '🐛 Bug' :
+                   '⚡ Epic'}
+                </span>
+              </div>
+            </div>
+
             {/* Priority */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Priority</h4>
@@ -262,18 +280,32 @@ export const IssueDetail = () => {
               />
             </div>
 
-            {/* Story Points */}
+            {/* Story Points Display */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <StoryPointInput
-                value={issue.storyPoints}
-                onChange={handleStoryPointsChange}
-                scale={estimationScale}
-                onScaleChange={setEstimationScale}
-                disabled={saving}
-                showScaleSelector={true}
-              />
-              <div className="mt-2 text-xs text-gray-500">
-                💡 Use Planning Poker for team estimation sessions
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Story Points</h4>
+              <div className="flex items-center gap-2 mb-4">
+                {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+                  <span className="inline-flex items-center px-3 py-1 text-sm font-medium bg-blue-50 text-blue-700 rounded-full">
+                    📊 {issue.storyPoints}
+                  </span>
+                ) : (
+                  <span className="text-sm text-gray-400">No story points assigned</span>
+                )}
+              </div>
+
+              {/* Story Points Editor */}
+              <div className="border-t border-gray-100 pt-3">
+                <StoryPointInput
+                  value={issue.storyPoints}
+                  onChange={handleStoryPointsChange}
+                  scale={estimationScale}
+                  onScaleChange={setEstimationScale}
+                  disabled={saving}
+                  showScaleSelector={true}
+                />
+                <div className="mt-2 text-xs text-gray-500">
+                  💡 Use Planning Poker for team estimation sessions
+                </div>
               </div>
             </div>
 

@@ -879,7 +879,7 @@ const mainIssue = await fetch('http://localhost:4000/api/issues', {
     type: 'story',
     projectId: 1,
     reporterId: 1,
-    estimate: 8,
+    estimate: 0.133 // 8 minutes,
     labels: ['authentication', 'security']
   })
 }).then(r => r.json())
@@ -1098,7 +1098,7 @@ for (const storyTitle of stories) {
       projectId: projectId,
       reporterId: 1,
       epicId: epic.id, // Link to epic
-      estimate: 8
+      estimate: 0.133 // 8 minutes
     })
   })
 }
@@ -1202,6 +1202,27 @@ This section provides a comprehensive guide for AI agents to manage complete pro
 - **Sprint Duration:** Use 1-day sprints for AI work since AI can complete tasks rapidly
 - **Time Logging:** Log actual time spent in minutes (e.g., 5-15 minutes per task)
 
+**⚠️ IMPORTANT: Time Estimate API Format**
+The API expects time estimates as **decimal hours** (numbers), not minute strings:
+- **5 minutes** = `"estimate": 0.083` (5÷60)
+- **8 minutes** = `"estimate": 0.133` (8÷60)
+- **15 minutes** = `"estimate": 0.25` (15÷60)
+- **30 minutes** = `"estimate": 0.5` (30÷60)
+
+**❌ Incorrect:** `"estimate": 5` (= 5 hours!)
+**❌ Incorrect:** `"estimate": "5m"` (API expects number)
+**✅ Correct:** `"estimate": 0.083` (= 5 minutes)
+
+**Quick Conversion Table for AI Tasks:**
+| Minutes | Decimal Hours | Usage |
+|---------|---------------|-------|
+| 5 min   | 0.083        | Simple UI changes |
+| 8 min   | 0.133        | Small component updates |
+| 15 min  | 0.25         | Medium features |
+| 30 min  | 0.5          | Complex implementations |
+
+**Note:** The frontend TimeInput component can parse user-friendly formats like "5m" or "2h 30m", but the API create/update endpoints require decimal hours as numbers.
+
 ### Complete AI Workflow Example
 
 ```javascript
@@ -1235,7 +1256,7 @@ const mainTask = await fetch('http://localhost:4000/api/issues', {
     projectId: project.id,
     reporterId: 1, // AI user ID
     assigneeId: 1, // Assign to AI user
-    estimate: 15, // 15 minutes estimate for AI
+    estimate: 0.25, // 15 minutes estimate for AI (15÷60 = 0.25 hours)
     storyPoints: 3, // Complex task
     labels: ['authentication', 'security', 'ai-task']
   })
@@ -1248,21 +1269,21 @@ const subTasks = [
     description: 'Implement JWT token creation and validation logic',
     type: 'task',
     storyPoints: 1,
-    estimate: 5
+    estimate: 0.083 // 5 minutes
   },
   {
     title: 'Create login API endpoint',
     description: 'POST /api/auth/login endpoint with email/password validation',
     type: 'task',
     storyPoints: 2,
-    estimate: 8
+    estimate: 0.133 // 8 minutes
   },
   {
     title: 'Create registration API endpoint',
     description: 'POST /api/auth/register endpoint with user validation',
     type: 'task',
     storyPoints: 2,
-    estimate: 7
+    estimate: 0.117 // 7 minutes
   }
 ]
 
@@ -1402,7 +1423,7 @@ for (const issue of allIssues) {
         projectId: project.id,
         reporterId: 1,
         assigneeId: 1,
-        estimate: 5, // 5 minutes to fix
+        estimate: 0.083 // 5 minutes, // 5 minutes to fix
         storyPoints: 1,
         labels: ['ai-found-bug', 'urgent-fix']
       })
@@ -1518,7 +1539,7 @@ const testIssue = await createIssue({
   type: 'task',
   description: 'Create comprehensive test suite and run validation',
   storyPoints: 2,
-  estimate: 15,
+  estimate: 0.25,
   labels: ['testing', 'ai-automated', 'quality-assurance']
 })
 ```
@@ -1531,7 +1552,7 @@ const improvementIssue = await createIssue({
   type: 'task',
   description: 'Analyze and improve slow queries found during implementation',
   storyPoints: 2,
-  estimate: 12,
+  estimate: 0.2, // 12 minutes
   priority: 'low',
   labels: ['optimization', 'ai-suggested', 'performance']
 })
