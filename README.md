@@ -39,34 +39,95 @@ A modern project management tool built with React, TypeScript, NestJS, and Postg
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js 18+ (for local development)
+- Node.js 20+ (for local development)
 
 ### Development Setup
 
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd jira-clone
+   cd jira-clone-ai-playwright
    ```
 
-2. **Start the development environment**
+2. **Install dependencies locally**
+
+   **Important**: You MUST install dependencies on your local machine first, even when using Docker. This ensures native modules (like bcrypt) are compiled for the correct platform.
+
+   ```bash
+   # Install backend dependencies
+   cd backend
+   npm install
+   cd ..
+
+   # Install frontend dependencies
+   cd frontend
+   npm install --legacy-peer-deps
+   cd ..
+   ```
+
+3. **Start Docker services**
    ```bash
    docker-compose up -d
    ```
 
-3. **Access the application**
+4. **Import database schema and seed data**
+
+   The database schema needs to be imported on first setup:
+
+   ```bash
+   # Import the database schema (only needed on first setup)
+   docker-compose exec -T postgres psql -U jira_clone -d jira_clone < db_schema_dump.sql
+
+   # Rebuild bcrypt for Linux (required after installing dependencies locally)
+   docker-compose exec backend npm rebuild bcrypt
+
+   # Rebuild TypeScript
+   docker-compose exec backend npx nest build
+
+   # Restart backend to apply changes
+   docker-compose restart backend
+
+   # Seed the database with sample data
+   docker-compose exec backend node seed.js
+   ```
+
+5. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:4000
    - MinIO Console: http://localhost:9001 (minio/minio123)
 
-### Database Setup
+### Default Users
 
-The database will be automatically created and synchronized when you start the backend.
+After seeding, you can use these test accounts:
+- **Email**: john@example.com (Project Lead)
+- **Email**: jane@example.com
+- **Email**: mike@example.com
 
-To seed with sample data:
-```bash
-docker-compose exec backend npm run seed
-```
+*Note: Passwords are hashed in the seed file. You'll need to implement login or update the seed script with proper password hashing.*
+
+### Troubleshooting
+
+**Issue: Backend shows "Error loading shared library bcrypt_lib.node"**
+- Solution: Run `docker-compose exec backend npm rebuild bcrypt` and restart the backend
+
+**Issue: Backend shows "Cannot find module 'bcrypt'"**
+- Solution: Run `docker-compose exec backend npm install bcrypt` and restart the backend
+
+**Issue: Frontend shows dependency conflicts**
+- Solution: Use `npm install --legacy-peer-deps` when installing frontend dependencies
+
+**Issue: Node modules from different OS**
+- Solution: Delete `node_modules` and `package-lock.json` from both frontend and backend directories, then reinstall dependencies
+
+### Moving to Another Computer
+
+When moving this project to a new machine:
+
+1. **DO NOT commit node_modules** - The `.gitignore` is configured to exclude them
+2. Clone the repo on the new machine
+3. Follow the "Install dependencies locally" step above
+4. Run Docker commands as normal
+5. The database schema and seed data will need to be imported again (unless you backup the PostgreSQL volume)
 
 ## 📁 Project Structure
 

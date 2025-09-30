@@ -47,6 +47,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    command: ["npm", "run", "start:prod"]
     environment:
       DATABASE_URL: postgres://jira_clone:secret@postgres:5432/jira_clone
       REDIS_URL: redis://redis:6379
