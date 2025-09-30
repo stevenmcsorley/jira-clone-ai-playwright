@@ -68,6 +68,10 @@ let SprintsService = class SprintsService {
         });
     }
     async completeSprint(id) {
+        const sprint = await this.findOne(id);
+        if (!sprint.startDate || !sprint.endDate) {
+            throw new Error('Cannot complete a sprint that has not been started. Please start the sprint first with start and end dates.');
+        }
         await this.issuesRepository.update({
             sprintId: id,
             status: (0, typeorm_2.Not)('done')

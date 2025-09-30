@@ -376,18 +376,22 @@ export const timerManagerMachine = createMachine(
               const sessionHours = existingTimer.totalElapsed / (1000 * 60 * 60);
               console.log(`🕐 Timer completed for issue ${issueId}: ${sessionHours} hours (${existingTimer.totalElapsed}ms)`);
 
-              // Log ALL time - no restrictions!
-              console.log(`✅ Logging time for issue ${issueId}: ${sessionHours} hours`);
-              TimeTrackingService.logTime({
-                issueId,
-                hours: Math.round(sessionHours * 1000) / 1000, // Round to 0.001h precision
-                description: 'Automatic time tracking session',
-                date: new Date().toISOString(),
-              }).then(() => {
-                console.log(`📝 Time logged successfully for issue ${issueId}`);
-              }).catch((error) => {
-                console.error(`❌ Failed to log time for issue ${issueId}:`, error);
-              });
+              // Only log time if there's actually time elapsed (> 0)
+              if (sessionHours > 0) {
+                console.log(`✅ Logging time for issue ${issueId}: ${sessionHours} hours`);
+                TimeTrackingService.logTime({
+                  issueId,
+                  hours: Math.round(sessionHours * 1000) / 1000, // Round to 0.001h precision
+                  description: 'Automatic time tracking session',
+                  date: new Date().toISOString(),
+                }).then(() => {
+                  console.log(`📝 Time logged successfully for issue ${issueId}`);
+                }).catch((error) => {
+                  console.error(`❌ Failed to log time for issue ${issueId}:`, error);
+                });
+              } else {
+                console.log(`⏭️ Skipping time log for issue ${issueId}: No time elapsed (timer was never started)`);
+              }
 
               // Reset timer for potential future sessions (don't delete)
               existingTimer.totalElapsed = 0;
@@ -429,13 +433,15 @@ export const timerManagerMachine = createMachine(
           }
 
           const sessionHours = timer.totalElapsed / (1000 * 60 * 60);
-          // Log ALL time - no restrictions!
-          TimeTrackingService.logTime({
-            issueId,
-            hours: Math.round(sessionHours * 1000) / 1000,
-            description: 'Manual stop - automatic time tracking',
-            date: new Date().toISOString(),
-          }).catch(console.error);
+          // Only log time if there's actually time elapsed (> 0)
+          if (sessionHours > 0) {
+            TimeTrackingService.logTime({
+              issueId,
+              hours: Math.round(sessionHours * 1000) / 1000,
+              description: 'Manual stop - automatic time tracking',
+              date: new Date().toISOString(),
+            }).catch(console.error);
+          }
 
           // Reset timer but don't delete (keep for future sessions)
           timer.totalElapsed = 0;

@@ -90,6 +90,12 @@ export class SprintsService {
   }
 
   async completeSprint(id: number): Promise<Sprint> {
+    // Validate that sprint has been started (has dates)
+    const sprint = await this.findOne(id)
+    if (!sprint.startDate || !sprint.endDate) {
+      throw new Error('Cannot complete a sprint that has not been started. Please start the sprint first with start and end dates.')
+    }
+
     // Only move incomplete issues back to backlog (not "done" status)
     // This matches real Jira behavior where completed issues stay in sprint for historical tracking
     await this.issuesRepository.update(

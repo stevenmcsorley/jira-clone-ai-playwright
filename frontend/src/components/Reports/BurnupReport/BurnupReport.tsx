@@ -97,7 +97,9 @@ export const BurnupReport = () => {
 
         if (!selectedSprint.startDate || !selectedSprint.endDate) {
           console.warn('Sprint has null start or end date')
+          setError('This sprint has not been started yet. Please start the sprint with dates to view the burnup chart.')
           setBurnupData([])
+          setLoading(false)
           return
         }
 
