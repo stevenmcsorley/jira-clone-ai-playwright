@@ -1,0 +1,68 @@
+# Production stack for the Pi (behind the Cloudflare tunnel).
+#   cp .env.prod.example .env.prod   # then fill in secrets
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Only the frontend port (${WEB_PORT}) is published; everything else is internal.
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ossicone
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: ossicone
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ossicone -d ossicone"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    environment:
+      DATABASE_URL: postgres://ossicone:${POSTGRES_PASSWORD}@postgres:5432/ossicone
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env.prod}
+      FRONTEND_URL: ${PUBLIC_URL:-https://ossicone.halfagiraf.com}
+      PORT: 4000
+      # Schema sync on boot until migrations land (single-writer, low risk here)
+      TYPEORM_SYNC: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - "${WEB_PORT:-8087}:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:

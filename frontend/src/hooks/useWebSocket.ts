@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 
-const SOCKET_URL = 'http://localhost:4000'
+// Dev: VITE_WS_URL points at the exposed backend port.
+// Prod: same origin — nginx proxies /socket.io to the backend.
+const SOCKET_URL = import.meta.env.VITE_WS_URL || window.location.origin
 
 // Custom event system for notifying components of real-time updates
 export const emitRefreshEvent = (type: string) => {
