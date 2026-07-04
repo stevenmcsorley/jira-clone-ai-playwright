@@ -19,7 +19,11 @@ import { EventsModule } from './events/events.module'
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      // Dev: schema auto-sync for fast iteration. Prod: deliberate migrations
+      // (TYPEORM_MIGRATIONS=true runs them on boot; see src/migrations/).
       synchronize: process.env.NODE_ENV === 'development' || process.env.TYPEORM_SYNC === 'true',
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
+      migrationsRun: process.env.TYPEORM_MIGRATIONS === 'true',
       logging: process.env.NODE_ENV === 'development',
     }),
     UsersModule,
