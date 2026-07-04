@@ -56,11 +56,21 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+    container_name: ossicone-web
+    networks:
+      - default
+      - tunnel
     ports:
-      - "${WEB_PORT:-8087}:80"
+      # Local debug only — public traffic arrives via the Cloudflare tunnel
+      - "127.0.0.1:${WEB_PORT:-8087}:80"
     depends_on:
       - backend
     restart: unless-stopped
+
+networks:
+  tunnel:
+    external: true
+    name: halfagiraf_web
 
 volumes:
   pgdata:
