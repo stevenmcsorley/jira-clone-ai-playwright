@@ -19,7 +19,6 @@ import { TimeTrackingService } from './time-tracking.service'
 import { TimeTrackingController } from './time-tracking.controller'
 import { IssueLinksService } from './issue-links.service'
 import { IssueLinksController } from './issue-links.controller'
-import { PublicSubtasksController } from './controllers/public-subtasks.controller' // New import
 import { EventsModule } from '../events/events.module'
 
 @Module({
@@ -32,7 +31,6 @@ import { EventsModule } from '../events/events.module'
     SubtasksController,
     TimeTrackingController,
     IssueLinksController,
-    PublicSubtasksController, // New controller added here
   ],
   exports: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService, IssueLinksService],
 })

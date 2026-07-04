@@ -1,7 +1,12 @@
 const { Client } = require('pg')
+const bcrypt = require('bcrypt')
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@ossicone.local'
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ossicone'
+const ADMIN_NAME = process.env.ADMIN_NAME || 'Admin'
 
 const client = new Client({
-  connectionString: process.env.DATABASE_URL || 'postgres://jira_clone:secret@localhost:5432/jira_clone'
+  connectionString: process.env.DATABASE_URL || 'postgres://ossicone:secret@localhost:5432/ossicone'
 })
 
 async function seed() {
@@ -9,36 +14,48 @@ async function seed() {
     await client.connect()
     console.log('Connected to database')
 
-    // Insert seed users
-    await client.query(`
-      INSERT INTO users (email, name, password) VALUES
-      ('john@example.com', 'John Doe', '$2b$10$hash1'),
-      ('jane@example.com', 'Jane Smith', '$2b$10$hash2'),
-      ('mike@example.com', 'Mike Johnson', '$2b$10$hash3')
-      ON CONFLICT (email) DO NOTHING;
-    `)
+    const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10)
 
-    // Insert seed project
-    await client.query(`
-      INSERT INTO projects (name, key, description, "leadId") VALUES
-      ('Jira Clone', 'JC', 'A modern project management tool', 1)
-      ON CONFLICT (key) DO NOTHING;
-    `)
+    const adminResult = await client.query(
+      `INSERT INTO users (email, name, password, role) VALUES ($1, $2, $3, 'admin')
+       ON CONFLICT (email) DO UPDATE SET role = 'admin'
+       RETURNING id`,
+      [ADMIN_EMAIL, ADMIN_NAME, passwordHash]
+    )
+    const adminId = adminResult.rows[0].id
 
-    // Insert seed issues
-    await client.query(`
-      INSERT INTO issues (title, description, status, priority, type, "projectId", "assigneeId", "reporterId", estimate, labels) VALUES
-      ('Set up project structure', 'Create the initial project structure', 'done', 'high', 'task', 1, 1, 1, 5, '{}'),
-      ('Design authentication system', 'Create login and signup functionality', 'in_progress', 'high', 'story', 1, 2, 1, 8, '{}'),
-      ('Implement drag and drop', 'Allow users to drag issues between columns', 'todo', 'medium', 'story', 1, 1, 1, 3, '{}'),
-      ('Fix mobile responsiveness', 'Issue cards not displaying correctly on mobile', 'todo', 'low', 'bug', 1, 2, 2, 2, '{}')
-      ON CONFLICT DO NOTHING;
-    `)
+    await client.query(
+      `INSERT INTO projects (name, key, description, "leadId") VALUES
+       ('Ossicone', 'OSS', 'Improve and extend the Ossicone project tracker', $1)
+       ON CONFLICT (key) DO NOTHING`,
+      [adminId]
+    )
+
+    const projectResult = await client.query(`SELECT id FROM projects WHERE key = 'OSS'`)
+    const projectId = projectResult.rows[0].id
+
+    const issueCount = await client.query(
+      `SELECT COUNT(*)::int AS count FROM issues WHERE "projectId" = $1`,
+      [projectId]
+    )
+    if (issueCount.rows[0].count === 0) {
+      await client.query(
+        `INSERT INTO issues (title, description, status, priority, type, "projectId", "assigneeId", "reporterId", estimate, labels, position) VALUES
+         ('Real authentication', 'Login with email/password, JWT sessions, admin user management', 'done', 'high', 'story', $1, $2, $2, 8, '{auth}', 0),
+         ('MCP server for Claude', 'Expose projects, sprints and issues as MCP tools so Claude can plan and track work', 'todo', 'high', 'story', $1, $2, $2, 13, '{mcp,ai}', 1),
+         ('Deploy to the Pi', 'Production build behind nginx + Cloudflare tunnel at ossicone.halfagiraf.com', 'todo', 'medium', 'task', $1, $2, $2, 5, '{infra}', 2)`,
+        [projectId, adminId]
+      )
+    }
 
     console.log('Database seeded successfully!')
-
+    console.log(`Admin login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`)
+    if (!process.env.ADMIN_PASSWORD) {
+      console.log('(Set ADMIN_EMAIL / ADMIN_PASSWORD env vars to override, and change the password after first login.)')
+    }
   } catch (error) {
     console.error('Error seeding database:', error)
+    process.exitCode = 1
   } finally {
     await client.end()
   }

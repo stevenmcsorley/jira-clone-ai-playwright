@@ -10,6 +10,7 @@ export declare class User {
     name: string;
     avatar: string;
     password: string;
+    role: 'admin' | 'member';
     ledProjects: Project[];
     assignedIssues: Issue[];
     reportedIssues: Issue[];

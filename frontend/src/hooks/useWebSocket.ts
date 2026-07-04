@@ -5,7 +5,7 @@ const SOCKET_URL = 'http://localhost:4000'
 
 // Custom event system for notifying components of real-time updates
 export const emitRefreshEvent = (type: string) => {
-  window.dispatchEvent(new CustomEvent('jira-refresh', { detail: { type } }))
+  window.dispatchEvent(new CustomEvent('ossicone-refresh', { detail: { type } }))
 }
 
 export const useWebSocket = () => {

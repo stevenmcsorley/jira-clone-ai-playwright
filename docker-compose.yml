@@ -2,16 +2,16 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: jira_clone
+      POSTGRES_USER: ossicone
       POSTGRES_PASSWORD: secret
-      POSTGRES_DB: jira_clone
+      POSTGRES_DB: ossicone
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U jira_clone -d jira_clone"]
+      test: ["CMD-SHELL", "pg_isready -U ossicone -d ossicone"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -47,9 +47,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: ["npm", "run", "start:prod"]
+    command: ["npm", "run", "start:dev"]
     environment:
-      DATABASE_URL: postgres://jira_clone:secret@postgres:5432/jira_clone
+      DATABASE_URL: postgres://ossicone:secret@postgres:5432/ossicone
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minio
@@ -68,6 +68,9 @@ services:
       - "4000:4000"
     volumes:
       - ./backend:/usr/src/app
+      # Named volume so the image's Linux node_modules (incl. native bcrypt)
+      # aren't shadowed by host-installed Windows modules
+      - backend_node_modules:/usr/src/app/node_modules
     restart: unless-stopped
 
   frontend:
@@ -93,3 +96,4 @@ volumes:
   redisdata:
   miniodata:
   frontend_node_modules:
+  backend_node_modules:

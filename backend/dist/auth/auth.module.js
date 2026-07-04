@@ -8,15 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
 const typeorm_1 = require("@nestjs/typeorm");
 const passport_1 = require("@nestjs/passport");
 const jwt_1 = require("@nestjs/jwt");
 const api_token_entity_1 = require("./entities/api-token.entity");
 const api_token_service_1 = require("./services/api-token.service");
+const auth_service_1 = require("./services/auth.service");
 const api_tokens_controller_1 = require("./controllers/api-tokens.controller");
+const auth_controller_1 = require("./controllers/auth.controller");
 const api_token_guard_1 = require("./guards/api-token.guard");
 const optional_api_token_guard_1 = require("./guards/optional-api-token.guard");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const global_auth_guard_1 = require("./guards/global-auth.guard");
+const admin_guard_1 = require("./guards/admin.guard");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const user_entity_1 = require("../users/entities/user.entity");
 let AuthModule = class AuthModule {
@@ -29,12 +34,24 @@ exports.AuthModule = AuthModule = __decorate([
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
-                signOptions: { expiresIn: '1d' },
+                signOptions: { expiresIn: '7d' },
             }),
         ],
-        controllers: [api_tokens_controller_1.ApiTokensController],
-        providers: [api_token_service_1.ApiTokenService, api_token_guard_1.ApiTokenGuard, optional_api_token_guard_1.OptionalApiTokenGuard, jwt_auth_guard_1.JwtAuthGuard, jwt_strategy_1.JwtStrategy],
-        exports: [api_token_service_1.ApiTokenService, api_token_guard_1.ApiTokenGuard, optional_api_token_guard_1.OptionalApiTokenGuard, jwt_auth_guard_1.JwtAuthGuard],
+        controllers: [api_tokens_controller_1.ApiTokensController, auth_controller_1.AuthController],
+        providers: [
+            api_token_service_1.ApiTokenService,
+            auth_service_1.AuthService,
+            api_token_guard_1.ApiTokenGuard,
+            optional_api_token_guard_1.OptionalApiTokenGuard,
+            jwt_auth_guard_1.JwtAuthGuard,
+            admin_guard_1.AdminGuard,
+            jwt_strategy_1.JwtStrategy,
+            {
+                provide: core_1.APP_GUARD,
+                useClass: global_auth_guard_1.GlobalAuthGuard,
+            },
+        ],
+        exports: [api_token_service_1.ApiTokenService, api_token_guard_1.ApiTokenGuard, optional_api_token_guard_1.OptionalApiTokenGuard, jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

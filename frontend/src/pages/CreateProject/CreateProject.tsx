@@ -106,7 +106,7 @@ export const CreateProject = () => {
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-blue-600">Jira Clone</h1>
+            <h1 className="text-xl font-bold text-blue-600">Ossicone</h1>
             <span className="text-gray-400">/</span>
             <h2 className="text-lg text-gray-700">Create Project</h2>
           </div>

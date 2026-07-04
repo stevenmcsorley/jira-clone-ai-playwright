@@ -21,41 +21,45 @@ import { Components } from './pages/Components/Components'
 import { Releases } from './pages/Releases/Releases'
 // import { XStateDemo } from './components/XStateDemo/XStateDemo'
 import { SimpleXStateDemo } from './components/SimpleXStateDemo/SimpleXStateDemo'
-import { useProjects } from './hooks/useProjects'
-import { useWebSocket } from './hooks/useWebSocket'
-import { initializeInspector } from './lib/xstate-inspector'
-
-// Initialize XState inspector in development
-// initializeInspector() // Temporarily disabled
+import { Login } from './pages/Login'
+import { Users } from './pages/Users'
+import { AuthProvider } from './contexts/AuthContext'
+import { RequireAuth } from './components/Auth/RequireAuth'
 
 export const App = () => {
-  const { loading } = useProjects()
-
-  // Connect to WebSocket for real-time updates
-  useWebSocket()
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <Router
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true
-      }}
-    >
+    <AuthProvider>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
+  )
+}
+
+const AppRoutes = () => {
+  return (
       <Routes>
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+        <Route element={<RequireAuth />}>
         <Route
           path="/"
           element={<Navigate to="/projects" replace />}
+        />
+        <Route
+          path="/users"
+          element={
+            <Layout>
+              <Users />
+            </Layout>
+          }
         />
         <Route
           path="/projects"
@@ -219,7 +223,7 @@ export const App = () => {
         />
         {/* Redirect to projects list for any unmatched routes */}
         <Route path="*" element={<Navigate to="/projects" replace />} />
+        </Route>
       </Routes>
-    </Router>
   )
 }

@@ -28,7 +28,6 @@ const time_tracking_service_1 = require("./time-tracking.service");
 const time_tracking_controller_1 = require("./time-tracking.controller");
 const issue_links_service_1 = require("./issue-links.service");
 const issue_links_controller_1 = require("./issue-links.controller");
-const public_subtasks_controller_1 = require("./controllers/public-subtasks.controller");
 const events_module_1 = require("../events/events.module");
 let IssuesModule = class IssuesModule {
 };
@@ -44,7 +43,6 @@ exports.IssuesModule = IssuesModule = __decorate([
             subtasks_controller_1.SubtasksController,
             time_tracking_controller_1.TimeTrackingController,
             issue_links_controller_1.IssueLinksController,
-            public_subtasks_controller_1.PublicSubtasksController,
         ],
         exports: [issues_service_1.IssuesService, comments_service_1.CommentsService, attachments_service_1.AttachmentsService, subtasks_service_1.SubtasksService, time_tracking_service_1.TimeTrackingService, issue_links_service_1.IssueLinksService],
     })

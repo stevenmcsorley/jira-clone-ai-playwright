@@ -9,6 +9,8 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common'
 import { ApiTokenService } from '../services/api-token.service'
 
@@ -33,14 +35,10 @@ export class ApiTokensController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async createToken(@Body() createTokenDto: CreateTokenDto, @Body('userId') userId?: number) {
-    // For now, allow creating tokens for any user by passing userId
-    // In a real app, this would be restricted to authenticated users
-    const targetUserId = userId || 1 // Default to first user
-
+  async createToken(@Body() createTokenDto: CreateTokenDto, @Req() req: any) {
     const result = await this.apiTokenService.createToken({
       ...createTokenDto,
-      userId: targetUserId,
+      userId: req.user.id,
       expiresAt: createTokenDto.expiresAt ? new Date(createTokenDto.expiresAt) : undefined
     })
 
@@ -60,8 +58,16 @@ export class ApiTokensController {
     }
   }
 
+  @Get()
+  async getMyTokens(@Req() req: any) {
+    return this.getTokensByUser(req.user.id, req)
+  }
+
   @Get('user/:userId')
-  async getTokensByUser(@Param('userId', ParseIntPipe) userId: number) {
+  async getTokensByUser(@Param('userId', ParseIntPipe) userId: number, @Req() req: any) {
+    if (req.user.id !== userId && req.user.role !== 'admin') {
+      throw new ForbiddenException('You can only view your own tokens')
+    }
     const tokens = await this.apiTokenService.findAllByUser(userId)
 
     // Hide the actual token values

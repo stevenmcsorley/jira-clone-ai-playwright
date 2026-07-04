@@ -1,8 +1,8 @@
 {
-  "name": "jira-clone-backend",
+  "name": "ossicone-backend",
   "version": "0.0.1",
-  "description": "Jira Clone Backend API",
-  "author": "Jira Clone Team",
+  "description": "Ossicone Backend API",
+  "author": "halfagiraf",
   "private": true,
   "license": "MIT",
   "scripts": {

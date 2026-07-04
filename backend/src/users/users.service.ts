@@ -18,7 +18,9 @@ export class UsersService {
       ...createUserDto,
       password: hashedPassword,
     })
-    return this.usersRepository.save(user)
+    const saved = await this.usersRepository.save(user)
+    delete saved.password
+    return saved
   }
 
   async findAll(): Promise<User[]> {
@@ -34,6 +36,9 @@ export class UsersService {
   }
 
   async update(id: number, updateData: Partial<User>): Promise<User> {
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10)
+    }
     await this.usersRepository.update(id, updateData)
     return this.findOne(id)
   }

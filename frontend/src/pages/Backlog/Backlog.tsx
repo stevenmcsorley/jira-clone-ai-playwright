@@ -5,6 +5,7 @@ import { SprintsService, type Sprint } from '../../services/api/sprints.service'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { useTimerManager } from '../../hooks/useTimerManager'
+import { useAuth } from '../../contexts/AuthContext'
 import { TimeProgressBar, TimeProgressIndicator } from '../../components/TimeProgressBar'
 import { ActiveTimerDisplay } from '../../components/ActiveTimerDisplay'
 import type { Issue } from '../../types/domain.types'
@@ -13,6 +14,7 @@ export const Backlog = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const { projects } = useProjects()
   const { users } = useUsers()
+  const { user: currentUser } = useAuth()
   const { handleIssueStatusChange } = useTimerManager()
 
   const [sprints, setSprints] = useState<Sprint[]>([])
@@ -107,9 +109,9 @@ export const Backlog = () => {
       }
     }
 
-    window.addEventListener('jira-refresh', handleRefresh as EventListener)
+    window.addEventListener('ossicone-refresh', handleRefresh as EventListener)
     return () => {
-      window.removeEventListener('jira-refresh', handleRefresh as EventListener)
+      window.removeEventListener('ossicone-refresh', handleRefresh as EventListener)
     }
   }, [projectId])
 
@@ -123,7 +125,7 @@ export const Backlog = () => {
         name: newSprintName.trim(),
         goal: newSprintGoal.trim() || undefined,
         projectId: parseInt(projectId),
-        createdById: 1 // TODO: Get current user
+        createdById: currentUser!.id
       })
 
       setSprints(prev => [...prev, newSprint])

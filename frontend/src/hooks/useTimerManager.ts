@@ -60,7 +60,7 @@ export const useTimerManager = () => {
           .map(([id, timer]) => [id, timer]);
 
         if (activeTimerArray.length > 0) {
-          localStorage.setItem('jira-clone-active-timers', JSON.stringify(activeTimerArray));
+          localStorage.setItem('ossicone-active-timers', JSON.stringify(activeTimerArray));
         }
       }
     };

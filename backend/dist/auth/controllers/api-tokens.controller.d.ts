@@ -15,7 +15,7 @@ interface UpdateTokenDto {
 export declare class ApiTokensController {
     private readonly apiTokenService;
     constructor(apiTokenService: ApiTokenService);
-    createToken(createTokenDto: CreateTokenDto, userId?: number): Promise<{
+    createToken(createTokenDto: CreateTokenDto, req: any): Promise<{
         message: string;
         token: string;
         tokenInfo: {
@@ -27,7 +27,18 @@ export declare class ApiTokensController {
             createdAt: Date;
         };
     }>;
-    getTokensByUser(userId: number): Promise<{
+    getMyTokens(req: any): Promise<{
+        id: number;
+        name: string;
+        description: string;
+        scopes: string[];
+        isActive: boolean;
+        expiresAt: Date;
+        lastUsedAt: Date;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    getTokensByUser(userId: number, req: any): Promise<{
         id: number;
         name: string;
         description: string;

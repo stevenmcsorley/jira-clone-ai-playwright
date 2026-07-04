@@ -19,11 +19,10 @@ let ApiTokensController = class ApiTokensController {
     constructor(apiTokenService) {
         this.apiTokenService = apiTokenService;
     }
-    async createToken(createTokenDto, userId) {
-        const targetUserId = userId || 1;
+    async createToken(createTokenDto, req) {
         const result = await this.apiTokenService.createToken({
             ...createTokenDto,
-            userId: targetUserId,
+            userId: req.user.id,
             expiresAt: createTokenDto.expiresAt ? new Date(createTokenDto.expiresAt) : undefined
         });
         const { rawToken, token } = result;
@@ -40,7 +39,13 @@ let ApiTokensController = class ApiTokensController {
             }
         };
     }
-    async getTokensByUser(userId) {
+    async getMyTokens(req) {
+        return this.getTokensByUser(req.user.id, req);
+    }
+    async getTokensByUser(userId, req) {
+        if (req.user.id !== userId && req.user.role !== 'admin') {
+            throw new common_1.ForbiddenException('You can only view your own tokens');
+        }
         const tokens = await this.apiTokenService.findAllByUser(userId);
         return tokens.map(token => ({
             id: token.id,
@@ -119,16 +124,24 @@ __decorate([
     (0, common_1.Post)(),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, common_1.Body)('userId')),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ApiTokensController.prototype, "createToken", null);
 __decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], ApiTokensController.prototype, "getMyTokens", null);
+__decorate([
     (0, common_1.Get)('user/:userId'),
     __param(0, (0, common_1.Param)('userId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], ApiTokensController.prototype, "getTokensByUser", null);
 __decorate([

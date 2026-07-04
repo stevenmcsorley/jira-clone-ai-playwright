@@ -215,7 +215,7 @@ export const timerMachine = createMachine(
 );
 
 // Timer persistence helpers
-const TIMER_STORAGE_KEY = 'jira-clone-active-timers';
+const TIMER_STORAGE_KEY = 'ossicone-active-timers';
 
 const saveTimersToStorage = (timers: Map<number, any>) => {
   try {

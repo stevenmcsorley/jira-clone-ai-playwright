@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { useProjects } from '../../hooks/useProjects'
+import { useAuth } from '../../contexts/AuthContext'
 import { ActiveTimerDisplay } from '../ActiveTimerDisplay'
 import { QuickActions } from '../QuickActions'
 import { Breadcrumb } from '../Breadcrumb'
@@ -14,6 +16,8 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
   const { projectId } = useParams<{ projectId: string }>()
   const { projects } = useProjects()
+  const { user, logout } = useAuth()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const currentProject = projects.find(p => p.id === Number(projectId))
   const isProjectBoard = location.pathname.includes('/projects/') && projectId
@@ -27,12 +31,12 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
               <span className="text-white text-sm font-medium">
-                {currentProject?.key || 'JC'}
+                {currentProject?.key || 'OSS'}
               </span>
             </div>
             <div>
               <h3 className="font-medium text-gray-900">
-                {currentProject?.name || 'Teams in Space'}
+                {currentProject?.name || 'Ossicone'}
               </h3>
               <p className="text-xs text-gray-500">Software project</p>
             </div>
@@ -170,7 +174,7 @@ export const Layout = ({ children }: LayoutProps) => {
             </Link>
 
             <Link
-              to={`https://github.com/anthropics/jira-clone`}
+              to={`https://github.com/stevenmcsorley/jira-clone-ai-playwright`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -218,7 +222,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/projects" className="text-xl font-bold text-blue-600">
-                Jira Clone
+                Ossicone
               </Link>
             </div>
 
@@ -243,8 +247,42 @@ export const Layout = ({ children }: LayoutProps) => {
               )}
               {/* Quick Actions in Header */}
               {isProjectBoard && <QuickActions />}
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-700">JD</span>
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(open => !open)}
+                  className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-300"
+                  title={user?.name}
+                >
+                  <span className="text-sm font-medium text-blue-700">
+                    {(user?.name || '?')
+                      .split(' ')
+                      .map(part => part[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </span>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                      <p className="text-xs text-gray-500">{user?.email}</p>
+                    </div>
+                    <Link
+                      to="/users"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      People
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

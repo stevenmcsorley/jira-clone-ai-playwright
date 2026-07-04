@@ -6,6 +6,7 @@ import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { useIssues } from '../../hooks/useIssues'
+import { useAuth } from '../../contexts/AuthContext'
 import type { IssueStatus, IssuePriority, IssueType } from '../../types/domain.types'
 
 export const CreateIssue = () => {
@@ -13,6 +14,7 @@ export const CreateIssue = () => {
   const navigate = useNavigate()
   const { projects } = useProjects()
   const { users } = useUsers()
+  const { user: currentUser } = useAuth()
 
   const currentProject = projects.find(p => p.id === Number(projectId))
   const { createIssue } = useIssues(currentProject?.id)
@@ -51,7 +53,7 @@ export const CreateIssue = () => {
       estimate: timeEstimate,
       storyPoints,
       projectId: currentProject.id,
-      reporterId: 1, // TODO: Get current user ID
+      reporterId: currentUser!.id,
     }
 
     console.log('Issue data to create:', issueData)

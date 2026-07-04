@@ -20,8 +20,11 @@ export class User {
   @Column({ nullable: true })
   avatar: string
 
-  @Column()
+  @Column({ select: false })
   password: string
+
+  @Column({ default: 'member' })
+  role: 'admin' | 'member'
 
   @OneToMany(() => Project, project => project.lead)
   ledProjects: Project[]

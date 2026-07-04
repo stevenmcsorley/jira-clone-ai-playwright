@@ -80,9 +80,9 @@ export const ProjectBoard = () => {
       }
     }
 
-    window.addEventListener('jira-refresh', handleRefresh as EventListener)
+    window.addEventListener('ossicone-refresh', handleRefresh as EventListener)
     return () => {
-      window.removeEventListener('jira-refresh', handleRefresh as EventListener)
+      window.removeEventListener('ossicone-refresh', handleRefresh as EventListener)
     }
   }, [projectId])
 

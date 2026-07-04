@@ -33,7 +33,7 @@ interface UseRecentItemsOptions {
 export const useRecentItems = (options: UseRecentItemsOptions = {}) => {
   const {
     maxItems = 20,
-    storageKey = 'jira-recent-items',
+    storageKey = 'ossicone-recent-items',
     enableAnalytics = true,
   } = options;
 
