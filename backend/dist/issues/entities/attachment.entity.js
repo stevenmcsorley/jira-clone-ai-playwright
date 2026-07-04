@@ -50,7 +50,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Attachment.prototype, "uploadedById", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.attachments),
+    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.attachments, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'issueId' }),
     __metadata("design:type", issue_entity_1.Issue)
 ], Attachment.prototype, "issue", void 0);

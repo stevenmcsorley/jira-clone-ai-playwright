@@ -1,0 +1,420 @@
+#!/usr/bin/env node
+/**
+ * Ossicone MCP server
+ *
+ * Exposes the Ossicone project tracker (projects, issues, sprints, reports)
+ * as MCP tools so an AI agent can plan projects and track work Jira-style.
+ *
+ * Env:
+ *   OSSICONE_URL        Base URL of the Ossicone backend (default http://localhost:4000)
+ *   OSSICONE_API_TOKEN  API token created in Ossicone (POST /api/tokens) — required
+ */
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { z } from 'zod'
+
+const BASE_URL = (process.env.OSSICONE_URL || 'http://localhost:4000').replace(/\/$/, '')
+const API_TOKEN = process.env.OSSICONE_API_TOKEN
+
+if (!API_TOKEN) {
+  console.error('OSSICONE_API_TOKEN is required (create one in Ossicone: POST /api/tokens)')
+  process.exit(1)
+}
+
+async function api(path, { method = 'GET', body } = {}) {
+  const response = await fetch(`${BASE_URL}/api${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${API_TOKEN}`,
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+  const text = await response.text()
+  let data
+  try {
+    data = text ? JSON.parse(text) : null
+  } catch {
+    data = text
+  }
+  if (!response.ok) {
+    const message = data?.message
+      ? Array.isArray(data.message) ? data.message.join('; ') : data.message
+      : `${response.status} ${response.statusText}`
+    throw new Error(`Ossicone API error on ${method} ${path}: ${message}`)
+  }
+  return data
+}
+
+let cachedMe = null
+async function me() {
+  if (!cachedMe) cachedMe = await api('/auth/me')
+  return cachedMe
+}
+
+const ok = (data) => ({ content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] })
+const fail = (error) => ({
+  isError: true,
+  content: [{ type: 'text', text: error instanceof Error ? error.message : String(error) }],
+})
+
+const run = (fn) => async (args) => {
+  try {
+    return ok(await fn(args))
+  } catch (error) {
+    return fail(error)
+  }
+}
+
+// Trim issue objects so tool output stays readable
+const slimIssue = (issue) => ({
+  id: issue.id,
+  title: issue.title,
+  type: issue.type,
+  status: issue.status,
+  priority: issue.priority,
+  storyPoints: issue.storyPoints ?? null,
+  estimate: issue.estimate ?? null,
+  labels: issue.labels ?? [],
+  assignee: issue.assignee ? { id: issue.assignee.id, name: issue.assignee.name } : null,
+  sprintId: issue.sprintId ?? null,
+  epicId: issue.epicId ?? null,
+})
+
+const server = new McpServer({ name: 'ossicone', version: '0.1.0' })
+
+const ISSUE_STATUSES = ['todo', 'in_progress', 'code_review', 'done']
+const ISSUE_TYPES = ['story', 'task', 'bug', 'epic']
+const ISSUE_PRIORITIES = ['low', 'medium', 'high', 'urgent']
+
+// ---------- Projects & people ----------
+
+server.registerTool(
+  'list_projects',
+  { description: 'List all projects with id, name, key and lead.' },
+  run(async () => {
+    const projects = await api('/projects')
+    return projects.map(p => ({
+      id: p.id, name: p.name, key: p.key, description: p.description,
+      lead: p.lead ? { id: p.lead.id, name: p.lead.name } : null,
+    }))
+  })
+)
+
+server.registerTool(
+  'create_project',
+  {
+    description: 'Create a new project. The key is a short uppercase identifier like "OSS".',
+    inputSchema: {
+      name: z.string().describe('Project name'),
+      key: z.string().describe('Short uppercase project key, e.g. "RADAR"'),
+      description: z.string().optional(),
+    },
+  },
+  run(async ({ name, key, description }) => {
+    const lead = await me()
+    return api('/projects', { method: 'POST', body: { name, key: key.toUpperCase(), description, leadId: lead.id } })
+  })
+)
+
+server.registerTool(
+  'list_users',
+  { description: 'List all users (for assigning issues).' },
+  run(async () => {
+    const users = await api('/users')
+    return users.map(u => ({ id: u.id, name: u.name, email: u.email, role: u.role }))
+  })
+)
+
+// ---------- Board & issues ----------
+
+server.registerTool(
+  'get_board',
+  {
+    description: 'Get the project board: issues grouped by status column, plus the active sprint if any.',
+    inputSchema: { projectId: z.number() },
+  },
+  run(async ({ projectId }) => {
+    const [issues, sprints] = await Promise.all([
+      api(`/issues?projectId=${projectId}`),
+      api(`/sprints?projectId=${projectId}`),
+    ])
+    const activeSprint = sprints.find(s => s.status === 'active') || null
+    const boardIssues = activeSprint
+      ? issues.filter(i => i.sprintId === activeSprint.id)
+      : issues.filter(i => i.sprintId == null)
+    const columns = {}
+    for (const status of ISSUE_STATUSES) {
+      columns[status] = boardIssues.filter(i => i.status === status).map(slimIssue)
+    }
+    return {
+      activeSprint: activeSprint
+        ? { id: activeSprint.id, name: activeSprint.name, goal: activeSprint.goal, startDate: activeSprint.startDate, endDate: activeSprint.endDate }
+        : null,
+      note: activeSprint ? undefined : 'No active sprint — showing backlog issues by status.',
+      columns,
+    }
+  })
+)
+
+server.registerTool(
+  'get_backlog',
+  {
+    description: 'Get backlog issues for a project (issues not assigned to any sprint).',
+    inputSchema: { projectId: z.number() },
+  },
+  run(async ({ projectId }) => {
+    const issues = await api(`/sprints/backlog?projectId=${projectId}`)
+    return issues.map(slimIssue)
+  })
+)
+
+server.registerTool(
+  'list_issues',
+  {
+    description: 'List issues in a project, optionally filtered by status, type or assignee.',
+    inputSchema: {
+      projectId: z.number(),
+      status: z.enum(ISSUE_STATUSES).optional(),
+      type: z.enum(ISSUE_TYPES).optional(),
+      assigneeId: z.number().optional(),
+    },
+  },
+  run(async ({ projectId, status, type, assigneeId }) => {
+    let issues = await api(`/issues?projectId=${projectId}`)
+    if (status) issues = issues.filter(i => i.status === status)
+    if (type) issues = issues.filter(i => i.type === type)
+    if (assigneeId) issues = issues.filter(i => i.assigneeId === assigneeId)
+    return issues.map(slimIssue)
+  })
+)
+
+server.registerTool(
+  'get_issue',
+  {
+    description: 'Get full details of an issue including description, comments and time tracking summary.',
+    inputSchema: { issueId: z.number() },
+  },
+  run(async ({ issueId }) => {
+    const [issue, comments, timeSummary] = await Promise.all([
+      api(`/issues/${issueId}`),
+      api(`/comments/issue/${issueId}`).catch(() => []),
+      api(`/time-tracking/issue/${issueId}/summary`).catch(() => null),
+    ])
+    return {
+      ...slimIssue(issue),
+      description: issue.description,
+      reporter: issue.reporter ? { id: issue.reporter.id, name: issue.reporter.name } : null,
+      subtasks: (issue.subtasks || []).map(s => ({ id: s.id, title: s.title, status: s.status })),
+      comments: comments.map(c => ({ id: c.id, author: c.author?.name, content: c.content, createdAt: c.createdAt })),
+      timeTracking: timeSummary,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+    }
+  })
+)
+
+server.registerTool(
+  'create_issue',
+  {
+    description: 'Create an issue (story, task, bug or epic) in a project. Reporter defaults to the token owner. Use plan_sprint to put it in a sprint afterwards.',
+    inputSchema: {
+      projectId: z.number(),
+      title: z.string(),
+      type: z.enum(ISSUE_TYPES).default('task'),
+      description: z.string().optional().describe('Markdown description'),
+      priority: z.enum(ISSUE_PRIORITIES).optional(),
+      status: z.enum(ISSUE_STATUSES).optional(),
+      assigneeId: z.number().optional(),
+      storyPoints: z.union([z.string(), z.number()]).optional(),
+      estimate: z.number().optional().describe('Time estimate in hours'),
+      labels: z.array(z.string()).optional(),
+      epicId: z.number().optional().describe('Parent epic issue id'),
+    },
+  },
+  run(async ({ projectId, title, type, description, priority, status, assigneeId, storyPoints, estimate, labels, epicId }) => {
+    const reporter = await me()
+    const issue = await api('/issues', {
+      method: 'POST',
+      body: { projectId, title, type, description, priority, status, assigneeId, storyPoints, estimate, labels, epicId, reporterId: reporter.id },
+    })
+    return slimIssue(issue)
+  })
+)
+
+server.registerTool(
+  'update_issue',
+  {
+    description: 'Update an issue: move it across the board (status), reassign, edit title/description/priority/points/labels.',
+    inputSchema: {
+      issueId: z.number(),
+      title: z.string().optional(),
+      description: z.string().optional(),
+      status: z.enum(ISSUE_STATUSES).optional(),
+      priority: z.enum(ISSUE_PRIORITIES).optional(),
+      assigneeId: z.number().nullable().optional(),
+      storyPoints: z.union([z.string(), z.number()]).nullable().optional(),
+      estimate: z.number().nullable().optional(),
+      labels: z.array(z.string()).optional(),
+      epicId: z.number().nullable().optional(),
+    },
+  },
+  run(async ({ issueId, ...fields }) => {
+    const body = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined))
+    const issue = await api(`/issues/${issueId}`, { method: 'PATCH', body })
+    return slimIssue(issue)
+  })
+)
+
+server.registerTool(
+  'add_comment',
+  {
+    description: 'Add a comment to an issue (authored by the token owner). Use this to log progress notes.',
+    inputSchema: { issueId: z.number(), content: z.string() },
+  },
+  run(({ issueId, content }) => api('/comments', { method: 'POST', body: { issueId, content } }))
+)
+
+server.registerTool(
+  'log_time',
+  {
+    description: 'Log time spent on an issue.',
+    inputSchema: {
+      issueId: z.number(),
+      hours: z.number().min(0.001).max(24),
+      description: z.string().optional(),
+      date: z.string().optional().describe('ISO date, defaults to today'),
+    },
+  },
+  run(({ issueId, hours, description, date }) =>
+    api('/time-tracking/log', {
+      method: 'POST',
+      body: { issueId, hours, description, date: date || new Date().toISOString().slice(0, 10) },
+    })
+  )
+)
+
+server.registerTool(
+  'search_issues',
+  {
+    description: 'Full-text search issues by title/description, optionally within one project.',
+    inputSchema: { query: z.string(), projectId: z.number().optional() },
+  },
+  run(async ({ query, projectId }) => {
+    const { results, totalResults } = await api('/issues/search', { method: 'POST', body: { query, projectId } })
+    return { totalResults, results: results.map(slimIssue) }
+  })
+)
+
+// ---------- Sprints ----------
+
+server.registerTool(
+  'list_sprints',
+  {
+    description: 'List sprints for a project with status (future/active/completed) and issue counts.',
+    inputSchema: { projectId: z.number() },
+  },
+  run(async ({ projectId }) => {
+    const sprints = await api(`/sprints?projectId=${projectId}`)
+    return sprints.map(s => ({
+      id: s.id, name: s.name, goal: s.goal, status: s.status,
+      startDate: s.startDate, endDate: s.endDate,
+      issueCount: s.issues?.length ?? undefined,
+    }))
+  })
+)
+
+server.registerTool(
+  'create_sprint',
+  {
+    description: 'Create a new (future) sprint. Use plan_sprint to fill it and start_sprint to begin it.',
+    inputSchema: { projectId: z.number(), name: z.string(), goal: z.string().optional() },
+  },
+  run(async ({ projectId, name, goal }) => {
+    const creator = await me()
+    return api('/sprints', { method: 'POST', body: { projectId, name, goal, createdById: creator.id } })
+  })
+)
+
+server.registerTool(
+  'plan_sprint',
+  {
+    description: 'Move issues from the backlog into a sprint (Jira-style sprint planning).',
+    inputSchema: { sprintId: z.number(), issueIds: z.array(z.number()).min(1) },
+  },
+  run(async ({ sprintId, issueIds }) => {
+    const results = []
+    for (const issueId of issueIds) {
+      await api(`/sprints/${sprintId}/add-issue/${issueId}`, { method: 'POST', body: {} })
+      results.push(issueId)
+    }
+    return { sprintId, added: results }
+  })
+)
+
+server.registerTool(
+  'remove_from_sprint',
+  {
+    description: 'Move an issue out of a sprint back to the backlog.',
+    inputSchema: { sprintId: z.number(), issueId: z.number() },
+  },
+  run(({ sprintId, issueId }) => api(`/sprints/${sprintId}/remove-issue/${issueId}`, { method: 'POST', body: {} }))
+)
+
+server.registerTool(
+  'start_sprint',
+  {
+    description: 'Start a sprint. Defaults to a 2-week sprint starting today if dates are omitted.',
+    inputSchema: {
+      sprintId: z.number(),
+      startDate: z.string().optional().describe('ISO date'),
+      endDate: z.string().optional().describe('ISO date'),
+    },
+  },
+  run(({ sprintId, startDate, endDate }) => {
+    const start = startDate ? new Date(startDate) : new Date()
+    const end = endDate ? new Date(endDate) : new Date(start.getTime() + 14 * 24 * 60 * 60 * 1000)
+    return api(`/sprints/${sprintId}/start`, { method: 'POST', body: { startDate: start.toISOString(), endDate: end.toISOString() } })
+  })
+)
+
+server.registerTool(
+  'complete_sprint',
+  {
+    description: 'Complete a sprint. Unfinished issues return to the backlog.',
+    inputSchema: { sprintId: z.number() },
+  },
+  run(({ sprintId }) => api(`/sprints/${sprintId}/complete`, { method: 'POST', body: {} }))
+)
+
+// ---------- Reports ----------
+
+server.registerTool(
+  'sprint_report',
+  {
+    description: 'Sprint burndown and health metrics for a sprint.',
+    inputSchema: { sprintId: z.number() },
+  },
+  run(async ({ sprintId }) => {
+    const [burndown, health] = await Promise.all([
+      api(`/analytics/burndown/${sprintId}`).catch(e => ({ error: e.message })),
+      api(`/analytics/sprint-health/${sprintId}`).catch(e => ({ error: e.message })),
+    ])
+    return { burndown, health }
+  })
+)
+
+server.registerTool(
+  'project_dashboard',
+  {
+    description: 'Project analytics dashboard: velocity, throughput, cycle time overview.',
+    inputSchema: { projectId: z.number() },
+  },
+  run(({ projectId }) => api(`/analytics/dashboard/${projectId}`))
+)
+
+// ---------- start ----------
+
+const transport = new StdioServerTransport()
+await server.connect(transport)
+console.error(`Ossicone MCP server connected (${BASE_URL})`)

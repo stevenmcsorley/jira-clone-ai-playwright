@@ -49,7 +49,7 @@ __decorate([
     __metadata("design:type", Number)
 ], TimeLog.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.timeLogs),
+    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.timeLogs, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'issueId' }),
     __metadata("design:type", issue_entity_1.Issue)
 ], TimeLog.prototype, "issue", void 0);

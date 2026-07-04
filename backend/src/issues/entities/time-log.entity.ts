@@ -30,7 +30,7 @@ export class TimeLog {
   @Column()
   userId: number;
 
-  @ManyToOne(() => Issue, issue => issue.timeLogs)
+  @ManyToOne(() => Issue, issue => issue.timeLogs, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'issueId' })
   issue: Issue;
 

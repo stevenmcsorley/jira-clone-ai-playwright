@@ -34,7 +34,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Comment.prototype, "authorId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.comments),
+    (0, typeorm_1.ManyToOne)(() => issue_entity_1.Issue, issue => issue.comments, { onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'issueId' }),
     __metadata("design:type", issue_entity_1.Issue)
 ], Comment.prototype, "issue", void 0);
@@ -43,7 +43,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Comment.prototype, "issueId", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => Comment, comment => comment.children, { nullable: true }),
+    (0, typeorm_1.ManyToOne)(() => Comment, comment => comment.children, { nullable: true, onDelete: 'CASCADE' }),
     (0, typeorm_1.JoinColumn)({ name: 'parentId' }),
     __metadata("design:type", Comment)
 ], Comment.prototype, "parent", void 0);

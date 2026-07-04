@@ -17,14 +17,14 @@ export class Comment {
   @Column()
   authorId: number;
 
-  @ManyToOne(() => Issue, issue => issue.comments)
+  @ManyToOne(() => Issue, issue => issue.comments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'issueId' })
   issue: Issue;
 
   @Column()
   issueId: number;
 
-  @ManyToOne(() => Comment, comment => comment.children, { nullable: true })
+  @ManyToOne(() => Comment, comment => comment.children, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'parentId' })
   parent?: Comment;
 
