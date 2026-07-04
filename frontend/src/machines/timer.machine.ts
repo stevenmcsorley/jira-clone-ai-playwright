@@ -126,7 +126,9 @@ export const timerMachine = createMachine(
       },
       completed: {
         type: 'final',
-        data: ({ context }) => ({
+        // XState v5: final-state `data` was renamed to `output` (nothing consumes
+        // this machine's done data, so the rename is purely type-level)
+        output: ({ context }) => ({
           totalHours: context.totalElapsed / (1000 * 60 * 60),
           issueId: context.issueId,
         }),
@@ -188,27 +190,32 @@ export const timerMachine = createMachine(
         }
       },
 
-      handleSaveError: (_, params) => {
-        console.error('Failed to save time log:', params.data);
+      handleSaveError: (_: unknown, params: unknown) => {
+        console.error('Failed to save time log:', (params as { data?: unknown } | undefined)?.data);
       },
     },
 
     actors: {
-      saveTimeToAPI: fromCallback(async ({ input, sendBack }) => {
-        const { issueId, totalElapsed } = input as TimerContext;
-        const hours = totalElapsed / (1000 * 60 * 60);
+      saveTimeToAPI: fromCallback(({ input }) => {
+        // fromCallback logic must be synchronous; the async work is fire-and-forget,
+        // exactly as it was when the callback itself was declared async (the returned
+        // promise was ignored by XState either way).
+        void (async () => {
+          const { issueId, totalElapsed } = input as TimerContext;
+          const hours = totalElapsed / (1000 * 60 * 60);
 
-        // Log ANY amount of time - no restrictions!
-        try {
-          await TimeTrackingService.logTime({
-            issueId,
-            hours: Math.round(hours * 1000) / 1000, // Round to 0.001h
-            description: `Automatic time tracking session`,
-            date: new Date().toISOString(),
-          });
-        } catch (error) {
-          throw error;
-        }
+          // Log ANY amount of time - no restrictions!
+          try {
+            await TimeTrackingService.logTime({
+              issueId,
+              hours: Math.round(hours * 1000) / 1000, // Round to 0.001h
+              description: `Automatic time tracking session`,
+              date: new Date().toISOString(),
+            });
+          } catch (error) {
+            throw error;
+          }
+        })();
       }),
     },
   }
@@ -240,8 +247,8 @@ const loadTimersFromStorage = (): Map<number, any> => {
   try {
     const stored = localStorage.getItem(TIMER_STORAGE_KEY);
     if (stored) {
-      const timerArray = JSON.parse(stored);
-      const timers = new Map(timerArray);
+      const timerArray = JSON.parse(stored) as Array<[number, any]>;
+      const timers = new Map<number, any>(timerArray);
       console.log(`📁 Loaded ${timers.size} timers from localStorage`);
 
       // Restore running timers - adjust start times to account for time away
@@ -320,7 +327,13 @@ export const timerManagerMachine = createMachine(
   {
     actions: {
       handleStatusChange: assign(({ context, event }) => {
-        const { issueId, newStatus, estimate } = event;
+        // Only ever invoked from the ISSUE_STATUS_CHANGED transition
+        const { issueId, newStatus, estimate } = event as {
+          type: 'ISSUE_STATUS_CHANGED';
+          issueId: number;
+          newStatus: string;
+          estimate?: number;
+        };
         console.log(`⚙️ Timer Machine: Processing status change for issue ${issueId}: ${newStatus}, estimate: ${estimate}`);
         const existingTimer = context.activeTimers.get(issueId);
 
@@ -424,7 +437,8 @@ export const timerManagerMachine = createMachine(
       }),
 
       forceStopTimer: assign(({ context, event }) => {
-        const { issueId } = event;
+        // Only ever invoked from the FORCE_STOP_TIMER transition
+        const { issueId } = event as { type: 'FORCE_STOP_TIMER'; issueId: number };
         const timer = context.activeTimers.get(issueId);
         if (timer) {
           // Complete and log time

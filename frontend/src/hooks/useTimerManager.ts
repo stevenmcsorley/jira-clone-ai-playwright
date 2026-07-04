@@ -26,8 +26,11 @@ export const useTimerManager = () => {
             const { IssuesService } = await import('../services/api/issues.service');
             const issue = await IssuesService.getById(issueId);
 
-            // If issue is done but timer is still active, force complete it
-            if (issue && issue.status === 'done' && timer.status !== 'completed') {
+            // If issue is done but timer is still active, force complete it.
+            // (timer objects are mutated in place by the machine, so the status can
+            // legitimately change across the awaits above — widen to string so TS
+            // doesn't flag the comparison as impossible after narrowing)
+            if (issue && issue.status === 'done' && (timer.status as string) !== 'completed') {
               console.log(`🔄 Found stuck timer for completed issue ${issueId}, fixing...`);
               send({
                 type: 'ISSUE_STATUS_CHANGED',

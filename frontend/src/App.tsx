@@ -19,8 +19,6 @@ import { CumulativeFlowDiagram } from './components/Reports/CumulativeFlowDiagra
 import { SprintHistory } from './pages/SprintHistory'
 import { Components } from './pages/Components/Components'
 import { Releases } from './pages/Releases/Releases'
-// import { XStateDemo } from './components/XStateDemo/XStateDemo'
-import { SimpleXStateDemo } from './components/SimpleXStateDemo/SimpleXStateDemo'
 import { Login } from './pages/Login'
 import { Users } from './pages/Users'
 import { McpSetup } from './pages/McpSetup'
@@ -211,22 +209,6 @@ const AppRoutes = () => {
           element={
             <Layout>
               <Releases />
-            </Layout>
-          }
-        />
-        {/* <Route
-          path="/xstate-demo"
-          element={
-            <Layout>
-              <XStateDemo />
-            </Layout>
-          }
-        /> */}
-        <Route
-          path="/simple-xstate-demo"
-          element={
-            <Layout>
-              <SimpleXStateDemo />
             </Layout>
           }
         />

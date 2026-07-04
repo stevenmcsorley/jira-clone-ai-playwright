@@ -18,6 +18,7 @@ import {
   Legend,
   Filler
 } from 'chart.js'
+import type { ChartOptions } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 
 // Register Chart.js components
@@ -127,7 +128,7 @@ export const CumulativeFlowDiagram = () => {
     ]
   }
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {

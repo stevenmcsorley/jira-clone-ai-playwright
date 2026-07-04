@@ -18,6 +18,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+import type { ChartOptions } from 'chart.js'
 import { Bar } from 'react-chartjs-2'
 
 // Register Chart.js components
@@ -176,7 +177,7 @@ export const VelocityReport = () => {
     ]
   }
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {

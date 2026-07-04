@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchEffect } from '../../hooks/useSearchEffect';
+import { useSearch } from '../../hooks/useSearch';
 
 interface GlobalSearchProps {
   onNavigate?: (path: string) => void;
@@ -45,10 +45,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const { search, query, isLoading, results } = useSearchEffect({
-    debounceMs: 200,
-    enableBackground: false,
-  });
+  const { search, query, isLoading, results } = useSearch();
 
   // Global keyboard shortcut (Ctrl+K / Cmd+K)
   useEffect(() => {

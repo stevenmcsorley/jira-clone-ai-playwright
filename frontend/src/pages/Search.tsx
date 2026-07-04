@@ -8,11 +8,11 @@
 import React, { useState } from 'react';
 import { JQLSearch, QueryBuilder } from '../components/Search';
 import { SavedFilters } from '../components/Dashboard';
-import { useSearchEffect } from '../hooks/useSearchEffect';
+import { useSearch } from '../hooks/useSearch';
 
 export const Search: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'search' | 'builder' | 'filters' | 'dashboard'>('search');
-  const { search, query, results, isLoading, clearSearch } = useSearchEffect();
+  const { search, query, results, isLoading, clearSearch } = useSearch();
 
   const handleResultSelect = (result: any) => {
     console.log('Selected result:', result);

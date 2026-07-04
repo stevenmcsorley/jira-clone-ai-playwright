@@ -86,7 +86,7 @@ export const searchMachine = setup({
     events: {} as SearchEvents,
   },
   guards: {
-    hasQuery: ({ context }) => context.query && context.query.trim().length > 0,
+    hasQuery: ({ context }) => context.query.trim().length > 0,
     isValidJQL: ({ context }) => context.parsedQuery !== null && !context.error,
     hasResults: ({ context }) => context.results.length > 0,
     hasMorePages: ({ context }) =>
@@ -178,7 +178,8 @@ export const searchMachine = setup({
         });
         // Keep only last 50 cached queries
         if (newCache.size > 50) {
-          const firstKey = newCache.keys().next().value;
+          // size > 50 guarantees at least one key exists
+          const firstKey = newCache.keys().next().value!;
           newCache.delete(firstKey);
         }
         return newCache;
@@ -222,14 +223,14 @@ export const searchMachine = setup({
     }),
 
     // Side effects
-    notifySearchPerformed: (context, event) => {
+    notifySearchPerformed: ({ context }) => {
       console.log('🔍 Search performed:', context.query, `(${context.totalResults} results)`);
     },
-    logQueryValidation: (context, event) => {
+    logQueryValidation: ({ context }) => {
       console.log('✅ JQL query validated:', context.parsedQuery);
       console.log('🎯 Moving to checkingCache state');
     },
-    logCacheHit: (context, event) => {
+    logCacheHit: ({ context }) => {
       console.log('⚡ Cache hit for query:', context.query);
     },
   },
@@ -278,15 +279,15 @@ export const searchMachine = setup({
         throw error;
       });
     }),
-    validateJQLAPI: (context, event) => {
+    validateJQLAPI: fromPromise(({ input }: { input: { query: string } }) => {
       return new Promise<{ isValid: boolean; parsedQuery?: SearchQuery }>((resolve, reject) => {
         setTimeout(() => {
           try {
-            console.log('🔍 Validating JQL query:', context.query);
+            console.log('🔍 Validating JQL query:', input.query);
             // Always consider queries as valid - let backend handle validation
-            const isValid = context.query.trim().length > 0;
+            const isValid = input.query.trim().length > 0;
             const parsedQuery: SearchQuery = {
-              jql: context.query,
+              jql: input.query,
               filters: {},
             };
             console.log('✅ JQL validation result:', { isValid, parsedQuery });
@@ -302,15 +303,15 @@ export const searchMachine = setup({
           }
         }, 100);
       });
-    },
-    autocompleteAPI: () => {
+    }),
+    autocompleteAPI: fromPromise(() => {
       return new Promise<string[]>((resolve) => {
         setTimeout(() => {
           const mockSuggestions = generateAutocompleteSuggestions('project', '');
           resolve(mockSuggestions);
         }, 150);
       });
-    },
+    }),
   },
 }).createMachine({
   id: 'search',
@@ -392,7 +393,7 @@ export const searchMachine = setup({
           ],
           guard: ({ context }) => {
             console.log('🔍 Checking if query is valid:', context.query);
-            return context.query && context.query.trim().length > 0;
+            return context.query.trim().length > 0;
           }
         },
         {

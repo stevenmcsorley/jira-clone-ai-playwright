@@ -6,8 +6,22 @@
  */
 
 import React, { useState } from 'react';
-import type { SavedFilter } from '../../machines/dashboard.machine';
 import type { SearchQuery } from '../../machines/search.machine';
+
+export interface SavedFilter {
+  id: number;
+  name: string;
+  description?: string;
+  jql: string;
+  query: SearchQuery;
+  isPublic: boolean;
+  isFavorite: boolean;
+  createdBy: number;
+  createdAt: Date;
+  updatedAt: Date;
+  category?: string;
+  color?: string;
+}
 
 interface SavedFiltersProps {
   filters: SavedFilter[];

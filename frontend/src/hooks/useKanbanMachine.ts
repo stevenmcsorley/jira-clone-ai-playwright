@@ -1,18 +1,16 @@
 /**
  * Kanban Machine Hook
  *
- * React hook that integrates XState Kanban machine with Effect.ts hooks
- * for robust state management and optimistic updates
+ * React hook that drives the XState Kanban machine with plain data fetching
+ * and optimistic updates via IssuesService.
  */
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useMachine } from '@xstate/react';
-import { kanbanMachine, type KanbanContext, type KanbanEvents } from '../machines/kanbanMachine';
-import { useIssuesEffect, useOptimisticIssueStatus } from './effect/useIssuesEffect';
-import { useBackgroundSync } from './effect/useEffect';
-import { fetchIssuesByProject } from '../services/effect/demo-service';
+import { kanbanMachine } from '../machines/kanbanMachine';
+import { useProjectIssues } from './useProjectIssues';
+import { IssuesService } from '../services/api/issues.service';
 import type { Issue, IssueStatus } from '../types/domain.types';
-import { Effect } from 'effect';
 
 interface UseKanbanMachineOptions {
   projectId: number;
@@ -28,6 +26,10 @@ export const useKanbanMachine = ({
   syncInterval = 60000
 }: UseKanbanMachineOptions) => {
   // Initialize XState machine
+  // NOTE: XState v5 removed the `context` option from useMachine/createActor
+  // (a v4-era pattern); it was already ignored at runtime — the machine starts
+  // with its own initial context and issues are fed in via LOAD_ISSUES below.
+  // The cast keeps the legacy call shape without changing behavior.
   const [state, send] = useMachine(kanbanMachine, {
     context: {
       issues: initialIssues,
@@ -37,40 +39,17 @@ export const useKanbanMachine = ({
       conflicts: [],
       projectId,
     }
-  });
+  } as unknown as Parameters<typeof useMachine<typeof kanbanMachine>>[1]);
 
-  // Effect.ts hooks for data management
+  // Plain data fetching
   const {
     issues: effectIssues,
     loading: effectLoading,
     error: effectError,
     refetch
-  } = useIssuesEffect(projectId);
+  } = useProjectIssues(projectId);
 
-  // Optimistic update hook
-  const {
-    updateStatus: optimisticUpdateStatus,
-    optimisticIssue,
-    isOptimistic
-  } = useOptimisticIssueStatus();
-
-  // Background sync disabled - XState machine handles sync internally
-  // const syncEffect = useMemo(() => {
-  //   return Effect.tryPromise({
-  //     try: async () => {
-  //       return await fetchIssuesByProject(projectId);
-  //     },
-  //     catch: (error) => new Error(`Sync failed: ${String(error)}`)
-  //   });
-  // }, [projectId]);
-
-  // const { lastSync, isSyncing } = useBackgroundSync(
-  //   syncEffect,
-  //   syncInterval,
-  //   enableSync && !effectLoading
-  // );
-
-  // Placeholder for background sync data
+  // Background sync handled by the XState machine internally
   const lastSync = null;
   const isSyncing = false;
 
@@ -127,12 +106,9 @@ export const useKanbanMachine = ({
       });
 
       try {
-        // Use Effect.ts optimistic update
-        const updatedIssue = await optimisticUpdateStatus(
-          draggedIssue.id,
-          targetStatus,
-          draggedIssue
-        );
+        const updatedIssue = await IssuesService.update(draggedIssue.id, {
+          status: targetStatus
+        });
 
         // Confirm success in state machine
         send({
@@ -212,7 +188,7 @@ export const useKanbanMachine = ({
         });
       }
     }
-  }), [state.context.draggedIssue, send, optimisticUpdateStatus, refetch]);
+  }), [state.context.draggedIssue, send, refetch]);
 
   // Enhanced state selectors
   const selectors = useMemo(() => ({

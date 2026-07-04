@@ -27,6 +27,6 @@ export class IssuesService extends BaseApiService {
   }
 
   static async delete(id: number): Promise<void> {
-    return this.delete<void>(`/issues/${id}`)
+    return this.deleteRequest<void>(`/issues/${id}`)
   }
 }

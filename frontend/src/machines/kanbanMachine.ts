@@ -6,9 +6,7 @@
  */
 
 import { setup, assign, fromPromise } from 'xstate';
-import { Effect } from 'effect';
 import type { Issue, IssueStatus } from '../types/domain.types';
-import { useOptimisticIssueStatus } from '../hooks/effect/useIssuesEffect';
 import { IssuesService } from '../services/api/issues.service';
 
 // Kanban-specific context
@@ -194,52 +192,31 @@ export const kanbanMachine = setup({
     updateIssueActor: fromPromise(async ({ input }: {
       input: { issueId: number; updates: Partial<Issue> }
     }) => {
-      const effect = Effect.tryPromise({
-        try: async () => {
-          return await IssuesService.update(input.issueId, input.updates);
-        },
-        catch: (error) => new Error(`Failed to update issue: ${String(error)}`)
-      });
-
-      return Effect.runPromise(effect);
+      return IssuesService.update(input.issueId, input.updates);
     }),
 
     // Sync with server
     syncIssuesActor: fromPromise(async ({ input }: {
       input: { projectId: number }
     }) => {
-      const effect = Effect.tryPromise({
-        try: async () => {
-          return await IssuesService.getByProject(input.projectId);
-        },
-        catch: (error) => new Error(`Failed to sync issues: ${String(error)}`)
-      });
-
-      return Effect.runPromise(effect);
+      return IssuesService.getByProject(input.projectId);
     }),
 
     // Bulk reorder issues
     reorderIssuesActor: fromPromise(async ({ input }: {
       input: { positionUpdates: Array<{ id: number; position: number; status: IssueStatus }> }
     }) => {
-      const effect = Effect.tryPromise({
-        try: async () => {
-          const response = await fetch('/api/issues/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input.positionUpdates)
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          return response.json();
-        },
-        catch: (error) => new Error(`Failed to reorder issues: ${String(error)}`)
+      const response = await fetch('/api/issues/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input.positionUpdates)
       });
 
-      return Effect.runPromise(effect);
+      if (!response.ok) {
+        throw new Error(`Failed to reorder issues: HTTP ${response.status}`);
+      }
+
+      return response.json();
     }),
   },
 }).createMachine({
@@ -291,7 +268,9 @@ export const kanbanMachine = setup({
                 issueId: context.draggedIssue?.id || 0,
                 updates: {
                   status: event.targetStatus,
-                  updatedAt: new Date().toISOString()
+                  // Issue.updatedAt is typed as Date, but the API layer works with
+                  // ISO strings at runtime; keep the string to preserve behavior.
+                  updatedAt: new Date().toISOString() as unknown as Date
                 }
               })
             },
@@ -457,6 +436,9 @@ export const kanbanMachine = setup({
 
 // Utility functions for working with the machine
 export const createKanbanActor = (initialIssues: Issue[] = [], projectId: number = 1) => {
+  // NOTE: XState v5's `provide()` does not support a `context` override (a v4-era
+  // pattern); it is ignored at runtime. The cast keeps the legacy call shape without
+  // changing behavior — the machine still starts with its own initial context.
   return kanbanMachine.provide({
     context: {
       issues: initialIssues,
@@ -466,7 +448,7 @@ export const createKanbanActor = (initialIssues: Issue[] = [], projectId: number
       conflicts: [],
       projectId,
     }
-  });
+  } as unknown as Parameters<typeof kanbanMachine.provide>[0]);
 };
 
 export type KanbanActor = ReturnType<typeof createKanbanActor>;

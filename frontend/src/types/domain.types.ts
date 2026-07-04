@@ -15,6 +15,7 @@ export interface Project {
   description?: string
   leadId: number
   lead?: User
+  issues?: Issue[] // Populated by GET /api/projects (findAll/findOne load the 'issues' relation)
   createdAt: Date
   updatedAt: Date
 }

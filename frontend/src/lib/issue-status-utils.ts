@@ -5,7 +5,7 @@
  * transitions, and business rules.
  */
 
-import { IssueStatus, Issue, IssueType } from '../types/domain.types';
+import type { IssueStatus, Issue, IssueType } from '../types/domain.types';
 
 // Status transition rules - defines which transitions are allowed
 export const STATUS_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {

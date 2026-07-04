@@ -69,6 +69,6 @@ export class SubtasksService extends BaseApiService {
   }
 
   static async deleteSubtask(id: number): Promise<void> {
-    return this.delete<void>(`/subtasks/${id}`)
+    return this.deleteRequest<void>(`/subtasks/${id}`)
   }
 }

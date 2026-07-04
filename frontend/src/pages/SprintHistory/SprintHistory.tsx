@@ -74,7 +74,7 @@ export const SprintHistory = () => {
     fetchSprintHistory()
   }, [projectId])
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | Date | null | undefined) => {
     if (!dateString) return 'Not set'
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -83,7 +83,10 @@ export const SprintHistory = () => {
     })
   }
 
-  const getSprintDuration = (startDate: string | null, endDate: string | null) => {
+  const getSprintDuration = (
+    startDate: string | Date | null | undefined,
+    endDate: string | Date | null | undefined
+  ) => {
     if (!startDate || !endDate) return 'N/A'
     const start = new Date(startDate)
     const end = new Date(endDate)

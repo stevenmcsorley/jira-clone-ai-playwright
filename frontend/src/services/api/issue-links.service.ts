@@ -40,7 +40,7 @@ export class IssueLinksService extends BaseApiService {
   }
 
   static async delete(id: number): Promise<void> {
-    return this.delete<void>(`/issue-links/${id}`)
+    return this.deleteRequest<void>(`/issue-links/${id}`)
   }
 
   static async searchIssues(query: string, projectId?: number): Promise<Issue[]> {

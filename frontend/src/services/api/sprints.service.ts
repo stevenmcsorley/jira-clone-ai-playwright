@@ -56,7 +56,7 @@ export class SprintsService extends BaseApiService {
   }
 
   static async delete(id: number): Promise<void> {
-    return this.delete<void>(`/sprints/${id}`)
+    return this.deleteRequest<void>(`/sprints/${id}`)
   }
 
   static async startSprint(id: number, data: StartSprintRequest): Promise<Sprint> {

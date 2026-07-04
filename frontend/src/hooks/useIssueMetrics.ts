@@ -22,9 +22,11 @@ interface EpicProgress {
 interface IssueMetrics {
   subtaskProgress?: SubtaskProgress
   commentCount: number
-  attachmentCount: number
+  // Optional: not currently populated by the hook (only subtask progress,
+  // comments and time tracking are fetched).
+  attachmentCount?: number
   timeSpent: number
-  originalEstimate: number
+  originalEstimate?: number
   timeTrackingWarning?: TimeTrackingWarning
   epicProgress?: EpicProgress
   loading: boolean

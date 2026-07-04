@@ -26,6 +26,12 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
   showAdvancedMode = true,
 }) => {
   const [state, send] = useMachine(searchMachine);
+  // The search machine's state-value typings currently collapse to `never`
+  // (its config typing is being reworked separately), which breaks direct
+  // `state.matches('...')` calls. This helper keeps a single, contained cast
+  // that stays valid once the machine types are fixed.
+  const stateMatches = (value: 'results' | 'error') =>
+    state.matches(value as Parameters<typeof state.matches>[0]);
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [selectedResultIndex, setSelectedResultIndex] = useState(-1);
   const [showDropdownState, setShowDropdownState] = useState(false);
@@ -48,7 +54,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
 
   // Show dropdown when there are results or suggestions
   useEffect(() => {
-    const shouldShow = (state.matches('results') && state.context.results.length > 0) ||
+    const shouldShow = (stateMatches('results') && state.context.results.length > 0) ||
                       (state.context.query.trim().length === 0 && state.context.recentQueries.length > 0);
     setShowDropdownState(shouldShow);
   }, [state.value, state.context.results.length, state.context.query, state.context.recentQueries.length]);
@@ -141,7 +147,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
 
   // Render search results
   const renderResults = () => {
-    if (!state.matches('results') || state.context.results.length === 0) return null;
+    if (!stateMatches('results') || state.context.results.length === 0) return null;
 
     return (
       <div className="border-t border-gray-100 max-h-64 overflow-y-auto">
@@ -234,7 +240,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
               onChange={(e) => handleQueryChange(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => {
-                const shouldShow = (state.matches('results') && state.context.results.length > 0) ||
+                const shouldShow = (stateMatches('results') && state.context.results.length > 0) ||
                                   (state.context.query.trim().length === 0 && state.context.recentQueries.length > 0);
                 setShowDropdownState(shouldShow);
               }}
@@ -268,7 +274,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => {
-              const shouldShow = (state.matches('results') && state.context.results.length > 0) ||
+              const shouldShow = (stateMatches('results') && state.context.results.length > 0) ||
                                 (state.context.query.trim().length === 0 && state.context.recentQueries.length > 0);
               setShowDropdownState(shouldShow);
             }}
@@ -318,7 +324,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
       {state.context.error && (
         <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
           {state.context.error}
-          {state.matches('error') && (
+          {stateMatches('error') && (
             <button
               onClick={() => send({ type: 'RETRY' })}
               className="ml-2 text-red-600 hover:text-red-800 underline"
@@ -335,7 +341,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
           ref={resultsRef}
           className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden"
         >
-          {state.matches('results') && state.context.results.length > 0 ? (
+          {stateMatches('results') && state.context.results.length > 0 ? (
             renderResults()
           ) : state.context.query.trim().length === 0 ? (
             renderSuggestions()

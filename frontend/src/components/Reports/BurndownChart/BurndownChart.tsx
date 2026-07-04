@@ -18,8 +18,9 @@ import {
   Legend,
   Filler
 } from 'chart.js'
+import type { ChartOptions } from 'chart.js'
 import { Line } from 'react-chartjs-2'
-import { useBurndownDataEffect } from '../../../hooks/effect/useAnalyticsEffect'
+import { useBurndownData } from '../../../hooks/useBurndownData'
 
 // Register Chart.js components
 ChartJS.register(
@@ -60,7 +61,7 @@ export const BurndownChart = () => {
     loading: burndownLoading,
     error: burndownError,
     refetch: refetchBurndown
-  } = useBurndownDataEffect(selectedSprint?.id)
+  } = useBurndownData<BurndownData>(selectedSprint?.id)
 
   // Fetch sprints for project
   useEffect(() => {
@@ -119,7 +120,7 @@ export const BurndownChart = () => {
     ]
   }
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {

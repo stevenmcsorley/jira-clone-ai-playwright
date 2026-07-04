@@ -47,6 +47,6 @@ export class CommentsService extends BaseApiService {
   }
 
   static async deleteComment(id: number): Promise<void> {
-    return this.delete<void>(`/comments/${id}`)
+    return this.deleteRequest<void>(`/comments/${id}`)
   }
 }

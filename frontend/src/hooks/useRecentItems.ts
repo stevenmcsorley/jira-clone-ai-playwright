@@ -175,7 +175,7 @@ export const useRecentItems = (options: UseRecentItemsOptions = {}) => {
       return acc;
     }, {} as Record<string, number>);
 
-    const mostVisited = recentItems.reduce((most, item) =>
+    const mostVisited = recentItems.reduce<RecentItem | null>((most, item) =>
       item.visitCount > (most?.visitCount || 0) ? item : most
     , null);
 

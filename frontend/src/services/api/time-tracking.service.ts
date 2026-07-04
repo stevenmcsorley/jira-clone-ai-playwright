@@ -62,7 +62,7 @@ export class TimeTrackingService extends BaseApiService {
   }
 
   static async deleteTimeLog(id: number): Promise<void> {
-    return this.delete<void>(`/time-tracking/log/${id}`)
+    return this.deleteRequest<void>(`/time-tracking/log/${id}`)
   }
 
   static async parseTimeInput(timeStr: string): Promise<{ hours?: number; formatted?: string; error?: string }> {

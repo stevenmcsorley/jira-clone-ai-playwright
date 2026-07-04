@@ -4,7 +4,7 @@
  * Prevents timer errors from crashing the entire application
  */
 
-import React, { Component, ReactNode } from 'react';
+import React, { Component, type ReactNode } from 'react';
 
 interface TimerErrorBoundaryProps {
   children: ReactNode;

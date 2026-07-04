@@ -18,6 +18,7 @@ import {
   Legend,
   Filler
 } from 'chart.js'
+import type { ChartOptions } from 'chart.js'
 import { Line } from 'react-chartjs-2'
 
 // Register Chart.js components
@@ -53,6 +54,7 @@ export const BurnupReport = () => {
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [burnupData, setBurnupData] = useState<BurnupData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch sprints for project
   useEffect(() => {
@@ -89,6 +91,7 @@ export const BurnupReport = () => {
       if (!selectedSprint) return
 
       setLoading(true)
+      setError(null)
       try {
         // Get burndown data which has daily progression we can use for burnup
         const burndownResponse = await fetch(`/api/analytics/burndown/${selectedSprint.id}`)
@@ -161,7 +164,7 @@ export const BurnupReport = () => {
     ]
   }
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -238,6 +241,17 @@ export const BurnupReport = () => {
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         <span className="ml-3 text-gray-600">Loading burnup data...</span>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-600">
+          <p className="font-medium">Error loading burnup data</p>
+          <p className="text-sm">{error}</p>
+        </div>
       </div>
     )
   }

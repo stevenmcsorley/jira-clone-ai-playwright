@@ -19,6 +19,6 @@ export class ProjectsService extends BaseApiService {
   }
 
   static async delete(id: number): Promise<void> {
-    return this.delete<void>(`/projects/${id}`)
+    return this.deleteRequest<void>(`/projects/${id}`)
   }
 }

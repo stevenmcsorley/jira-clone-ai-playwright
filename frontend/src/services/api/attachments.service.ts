@@ -53,7 +53,7 @@ export class AttachmentsService extends BaseApiService {
   }
 
   static async deleteAttachment(id: number): Promise<void> {
-    return this.delete<void>(`/attachments/${id}`)
+    return this.deleteRequest<void>(`/attachments/${id}`)
   }
 
   static formatFileSize(bytes: number): string {

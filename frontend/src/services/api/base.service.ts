@@ -50,7 +50,11 @@ export class BaseApiService {
     })
   }
 
-  protected static async delete<T>(endpoint: string): Promise<T> {
+  // Named deleteRequest (not `delete`) so subclasses can expose their own
+  // public `static delete(id)` API without shadowing this method — shadowing
+  // caused incompatible static sides and made `this.delete(endpoint)` resolve
+  // to the subclass method itself.
+  protected static async deleteRequest<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' })
   }
 }
