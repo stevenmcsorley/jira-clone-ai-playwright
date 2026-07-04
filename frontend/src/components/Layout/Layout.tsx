@@ -189,6 +189,20 @@ export const Layout = ({ children }: LayoutProps) => {
               </svg>
             </Link>
 
+            <Link
+              to="/mcp"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+                location.pathname === '/mcp'
+                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+              </svg>
+              AI Agent
+            </Link>
+
             <div className="px-3 py-2">
               <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

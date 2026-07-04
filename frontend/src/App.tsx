@@ -23,6 +23,7 @@ import { Releases } from './pages/Releases/Releases'
 import { SimpleXStateDemo } from './components/SimpleXStateDemo/SimpleXStateDemo'
 import { Login } from './pages/Login'
 import { Users } from './pages/Users'
+import { McpSetup } from './pages/McpSetup'
 import { AuthProvider } from './contexts/AuthContext'
 import { RequireAuth } from './components/Auth/RequireAuth'
 
@@ -58,6 +59,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <Users />
+            </Layout>
+          }
+        />
+        <Route
+          path="/mcp"
+          element={
+            <Layout>
+              <McpSetup />
             </Layout>
           }
         />
