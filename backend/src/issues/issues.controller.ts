@@ -3,13 +3,15 @@ import { IssuesService } from './issues.service'
 import { CreateIssueDto } from './dto/create-issue.dto'
 import { EventsGateway } from '../events/events.gateway'
 import { WorkspaceScopeService } from '../workspaces/workspace-scope.service'
+import { NotificationsService } from '../notifications/notifications.service'
 
 @Controller('api/issues')
 export class IssuesController {
   constructor(
     private readonly issuesService: IssuesService,
     private readonly eventsGateway: EventsGateway,
-    private readonly workspaceScope: WorkspaceScopeService
+    private readonly workspaceScope: WorkspaceScopeService,
+    private readonly notificationsService: NotificationsService
   ) {}
 
   @Post()
@@ -42,13 +44,19 @@ export class IssuesController {
     return this.issuesService.findOne(+id)
   }
 
+  @Get(':id/history')
+  async history(@Param('id') id: string, @Req() req: any) {
+    await this.workspaceScope.assertIssue(+id, req.workspaceId)
+    return this.notificationsService.issueHistory(+id)
+  }
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateData: Partial<CreateIssueDto>, @Req() req: any) {
     await this.workspaceScope.assertIssue(+id, req.workspaceId)
     if (updateData.projectId) {
       await this.workspaceScope.assertProject(updateData.projectId, req.workspaceId)
     }
-    const issue = await this.issuesService.update(+id, updateData)
+    const issue = await this.issuesService.update(+id, updateData, req.user?.id ?? null)
     this.eventsGateway.emitIssueUpdated(issue)
     return issue
   }
@@ -101,6 +109,6 @@ export class IssuesController {
     for (const issueId of bulkUpdateData.issueIds) {
       await this.workspaceScope.assertIssue(issueId, req.workspaceId)
     }
-    return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation)
+    return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation, req.user?.id ?? null)
   }
 }

@@ -5,6 +5,19 @@ import { Issue } from './entities/issue.entity'
 import { CreateIssueDto } from './dto/create-issue.dto'
 import { Sprint } from '../sprints/entities/sprint.entity'
 import { TimeTrackingService } from './time-tracking.service'
+import { NotificationsService, IssueFieldChange } from '../notifications/notifications.service'
+
+// Fields tracked in the issue activity history (issue_events)
+const TRACKED_FIELDS = [
+  'status',
+  'assigneeId',
+  'title',
+  'priority',
+  'storyPoints',
+  'sprintId',
+  'estimate',
+  'epicId',
+] as const
 
 @Injectable()
 export class IssuesService {
@@ -12,6 +25,7 @@ export class IssuesService {
     @InjectRepository(Issue)
     private issuesRepository: Repository<Issue>,
     private timeTrackingService: TimeTrackingService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createIssueDto: CreateIssueDto): Promise<Issue> {
@@ -70,7 +84,14 @@ export class IssuesService {
     })
   }
 
-  async update(id: number, updateData: Partial<Issue>): Promise<Issue> {
+  async update(
+    id: number,
+    updateData: Partial<Issue>,
+    actorId: number | null = null,
+    options: { recordHistory?: boolean } = {},
+  ): Promise<Issue> {
+    const { recordHistory = true } = options
+
     // Get the current issue to check for status changes
     const currentIssue = await this.findOne(id)
     if (!currentIssue) {
@@ -80,8 +101,20 @@ export class IssuesService {
     // Check if status is changing from in_progress to done
     const isStatusChangeToDone = currentIssue.status === 'in_progress' && updateData.status === 'done'
 
+    // Diff tracked fields before applying the update
+    const changes = recordHistory ? this.diffTrackedFields(currentIssue, updateData) : []
+
     // Update the issue
     await this.issuesRepository.update(id, updateData)
+
+    // Activity history: one event per changed field (never fail the update)
+    if (changes.length > 0) {
+      try {
+        await this.notificationsService.recordIssueEvents(id, actorId, changes)
+      } catch (error) {
+        console.warn('Failed to record issue events for issue', id, error)
+      }
+    }
 
     // Auto time tracking: log time when moving from in_progress to done
     if (isStatusChangeToDone && currentIssue.assigneeId) {
@@ -109,7 +142,44 @@ export class IssuesService {
       }
     }
 
-    return this.findOne(id)
+    const updatedIssue = await this.findOne(id)
+
+    // Assignment notification: assignee changed to a real user who isn't the actor
+    const assigneeChanged =
+      'assigneeId' in updateData && updateData.assigneeId !== currentIssue.assigneeId
+    if (assigneeChanged && updatedIssue?.assigneeId && updatedIssue.assigneeId !== actorId) {
+      try {
+        await this.notificationsService.createForAssignment(updatedIssue, actorId)
+      } catch (error) {
+        console.warn('Failed to create assignment notification for issue', id, error)
+      }
+    }
+
+    return updatedIssue
+  }
+
+  /** Diff the tracked fields present in the update payload against the current issue. */
+  private diffTrackedFields(currentIssue: Issue, updateData: Partial<Issue>): IssueFieldChange[] {
+    const changes: IssueFieldChange[] = []
+
+    for (const field of TRACKED_FIELDS) {
+      if (!(field in updateData)) continue
+      const oldValue = (currentIssue as any)[field]
+      const newValue = (updateData as any)[field]
+      // String-coerced comparison: DB decimals/varchars may come back as strings
+      const oldStr = oldValue === null || oldValue === undefined ? null : String(oldValue)
+      const newStr = newValue === null || newValue === undefined ? null : String(newValue)
+      if (oldStr !== newStr) {
+        changes.push({ field, oldValue: oldStr, newValue: newStr })
+      }
+    }
+
+    // Description diffs are too noisy to store verbatim — just record that it changed
+    if ('description' in updateData && updateData.description !== currentIssue.description) {
+      changes.push({ field: 'description', oldValue: null, newValue: 'updated' })
+    }
+
+    return changes
   }
 
   private calculateTimeSpent(lastUpdated: Date): number {
@@ -131,11 +201,12 @@ export class IssuesService {
 
   async updatePositions(updates: { id: number; position: number; status: string }[]): Promise<void> {
     for (const update of updates) {
-      // Use the main update method to ensure auto time tracking works
+      // Use the main update method to ensure auto time tracking works.
+      // recordHistory: false — board reorders don't need activity events.
       await this.update(update.id, {
         position: update.position,
         status: update.status as any
-      })
+      }, null, { recordHistory: false })
     }
   }
 
@@ -266,7 +337,8 @@ export class IssuesService {
       type: 'assign' | 'status' | 'labels' | 'priority' | 'sprint' | 'estimate' | 'component' | 'version';
       field: string;
       value: any;
-    }
+    },
+    actorId: number | null = null
   ): Promise<{ successCount: number; failureCount: number; errors: Array<{ issueId: number; error: string }> }> {
     const errors: Array<{ issueId: number; error: string }> = [];
     let successCount = 0;
@@ -320,8 +392,10 @@ export class IssuesService {
             throw new Error(`Unsupported operation type: ${operation.type}`);
         }
 
-        // Use the main update method to ensure auto time tracking works
-        await this.update(issueId, updateData);
+        // Use the main update method to ensure auto time tracking works.
+        // This also records activity events per issue (cheap: same diff path
+        // as a single update) and fires assignment notifications.
+        await this.update(issueId, updateData, actorId);
         successCount++;
 
       } catch (error) {

@@ -39,6 +39,7 @@ Exposes the Ossicone project tracker as MCP tools so Claude (or any MCP client) 
 | Projects | `list_projects`, `create_project`, `list_users` |
 | Board | `get_board`, `get_backlog`, `list_issues`, `search_issues` |
 | Issues | `get_issue`, `create_issue`, `update_issue`, `add_comment`, `log_time` |
+| Subtasks & links | `add_subtask`, `list_subtasks`, `complete_subtask`, `link_issues`, `list_links`, `get_epic` |
 | Sprints | `list_sprints`, `create_sprint`, `plan_sprint`, `remove_from_sprint`, `start_sprint`, `complete_sprint` |
 | Reports | `sprint_report`, `project_dashboard` |
 

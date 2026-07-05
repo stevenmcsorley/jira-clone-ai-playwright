@@ -262,16 +262,6 @@ export const Backlog = () => {
     setDraggedIssue(null)
   }
 
-  const getIssueTypeIcon = (type: string) => {
-    switch (type) {
-      case 'story': return '📖'
-      case 'task': return '✓'
-      case 'bug': return '🐛'
-      case 'epic': return '⚡'
-      default: return '📝'
-    }
-  }
-
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
       case 'low': return '↓'

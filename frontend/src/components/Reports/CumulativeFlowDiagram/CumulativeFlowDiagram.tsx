@@ -37,6 +37,7 @@ interface CFDData {
   date: string
   todo: number
   inProgress: number
+  codeReview: number
   done: number
   total: number
 }
@@ -85,7 +86,10 @@ export const CumulativeFlowDiagram = () => {
     fetchCFDData()
   }, [projectId, timeRange])
 
-  // Chart configuration - simple CFD with each status as its own line
+  // Chart configuration - stacked cumulative areas, one band per status.
+  // Done sits at the bottom of the stack (dataset 0, fill to origin); each
+  // subsequent band fills down to the previous dataset ('-1') and the y axis
+  // is stacked so the top edge of "To Do" is the total issue count.
   const chartData = {
     labels: cfdData.map(d => {
       const date = new Date(d.date)
@@ -93,13 +97,24 @@ export const CumulativeFlowDiagram = () => {
     }),
     datasets: [
       {
-        label: 'To Do',
-        data: cfdData.map(d => d.todo),
-        backgroundColor: 'rgba(156, 163, 175, 0.3)',
-        borderColor: 'rgb(156, 163, 175)',
+        label: 'Done',
+        data: cfdData.map(d => d.done),
+        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+        borderColor: 'rgb(34, 197, 94)',
         borderWidth: 2,
-        fill: 'origin',
-        tension: 0.4,
+        fill: 'origin' as const,
+        tension: 0.3,
+        pointRadius: 2,
+        pointHoverRadius: 4
+      },
+      {
+        label: 'Code Review',
+        data: cfdData.map(d => d.codeReview),
+        backgroundColor: 'rgba(168, 85, 247, 0.5)',
+        borderColor: 'rgb(168, 85, 247)',
+        borderWidth: 2,
+        fill: '-1' as const,
+        tension: 0.3,
         pointRadius: 2,
         pointHoverRadius: 4
       },
@@ -109,19 +124,19 @@ export const CumulativeFlowDiagram = () => {
         backgroundColor: 'rgba(251, 191, 36, 0.5)',
         borderColor: 'rgb(251, 191, 36)',
         borderWidth: 2,
-        fill: 'origin',
-        tension: 0.4,
+        fill: '-1' as const,
+        tension: 0.3,
         pointRadius: 2,
         pointHoverRadius: 4
       },
       {
-        label: 'Done',
-        data: cfdData.map(d => d.done),
-        backgroundColor: 'rgba(34, 197, 94, 0.7)',
-        borderColor: 'rgb(34, 197, 94)',
+        label: 'To Do',
+        data: cfdData.map(d => d.todo),
+        backgroundColor: 'rgba(156, 163, 175, 0.4)',
+        borderColor: 'rgb(156, 163, 175)',
         borderWidth: 2,
-        fill: 'origin',
-        tension: 0.4,
+        fill: '-1' as const,
+        tension: 0.3,
         pointRadius: 2,
         pointHoverRadius: 4
       }
@@ -160,7 +175,11 @@ export const CumulativeFlowDiagram = () => {
     },
     scales: {
       y: {
+        stacked: true,
         beginAtZero: true,
+        ticks: {
+          precision: 0
+        },
         title: {
           display: true,
           text: 'Number of Issues'
@@ -248,7 +267,7 @@ export const CumulativeFlowDiagram = () => {
           <div className="bg-white p-4 rounded-lg border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Current WIP</div>
             <div className="text-2xl font-bold text-yellow-600">{metrics.currentWIP}</div>
-            <div className="text-sm text-gray-500">in progress</div>
+            <div className="text-sm text-gray-500">in progress + review</div>
           </div>
 
           <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -266,9 +285,18 @@ export const CumulativeFlowDiagram = () => {
 
       {/* Chart */}
       <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <div style={{ height: '500px' }}>
-          <Line data={chartData} options={chartOptions} />
-        </div>
+        {cfdData.length === 0 || cfdData.every(d => d.total === 0) ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <p className="font-medium text-gray-900">No issue activity in this time range</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Create issues or pick a wider time range to see the cumulative flow of work.
+            </p>
+          </div>
+        ) : (
+          <div style={{ height: '500px' }}>
+            <Line data={chartData} options={chartOptions} />
+          </div>
+        )}
       </div>
 
       {/* Insights */}

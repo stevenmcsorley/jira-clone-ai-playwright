@@ -7,6 +7,8 @@ export const KanbanBoard = ({
   onIssueUpdate,
   loading = false,
   className,
+  filters,
+  onFiltersChange,
 }: KanbanBoardProps) => {
   if (loading) {
     return (
@@ -26,6 +28,8 @@ export const KanbanBoard = ({
         project={project}
         initialIssues={issues}
         onIssueUpdate={onIssueUpdate}
+        filters={filters}
+        onFiltersChange={onFiltersChange}
       />
     </div>
   )

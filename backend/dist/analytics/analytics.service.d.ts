@@ -2,6 +2,7 @@ import { Repository } from 'typeorm';
 import { Issue } from '../issues/entities/issue.entity';
 import { Sprint } from '../sprints/entities/sprint.entity';
 import { TimeLog } from '../issues/entities/time-log.entity';
+import { IssueEvent } from '../notifications/entities/issue-event.entity';
 import { VelocityService } from './velocity.service';
 export interface BurndownData {
     date: string;
@@ -9,6 +10,29 @@ export interface BurndownData {
     idealRemaining: number;
     actualCompleted: number;
     idealCompleted: number;
+}
+export interface CycleTimeDatapoint {
+    issueId: number;
+    title: string;
+    type: string;
+    priority: string;
+    completedAt: string;
+    cycleTimeDays: number;
+    source: 'events' | 'timestamps';
+}
+export interface CycleTimeReport {
+    datapoints: CycleTimeDatapoint[];
+    stats: {
+        count: number;
+        averageDays: number;
+        medianDays: number;
+        p85Days: number;
+    };
+    trend: Array<{
+        period: string;
+        averageDays: number;
+        count: number;
+    }>;
 }
 export interface CycleTimeMetrics {
     averageCycleTime: number;
@@ -42,10 +66,15 @@ export declare class AnalyticsService {
     private issuesRepository;
     private sprintsRepository;
     private timeLogRepository;
+    private issueEventsRepository;
     private velocityService;
-    constructor(issuesRepository: Repository<Issue>, sprintsRepository: Repository<Sprint>, timeLogRepository: Repository<TimeLog>, velocityService: VelocityService);
+    constructor(issuesRepository: Repository<Issue>, sprintsRepository: Repository<Sprint>, timeLogRepository: Repository<TimeLog>, issueEventsRepository: Repository<IssueEvent>, velocityService: VelocityService);
     generateBurndownData(sprintId: number): Promise<BurndownData[]>;
     calculateCycleTimeMetrics(projectId: number, sprintCount?: number): Promise<CycleTimeMetrics>;
+    getCycleTimeReport(projectId: number, days?: number): Promise<CycleTimeReport>;
+    private getStatusEventsByIssue;
+    private resolveCycleWindow;
+    private calculatePercentile;
     calculateThroughputMetrics(projectId: number, sprintCount?: number): Promise<ThroughputMetrics>;
     getSprintScopeData(sprintId: number): Promise<{
         totalScope: number;
@@ -74,6 +103,7 @@ export declare class AnalyticsService {
             date: string;
             todo: number;
             inProgress: number;
+            codeReview: number;
             done: number;
             total: number;
         }>;
@@ -85,5 +115,6 @@ export declare class AnalyticsService {
             wipTrend: 'increasing' | 'decreasing' | 'stable';
         };
     }>;
+    private statusAtDate;
     private calculateStoryPoints;
 }

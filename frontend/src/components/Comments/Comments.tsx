@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { CommentsService, type Comment, type CreateCommentRequest } from '../../services/api/comments.service'
 import { Button } from '../ui/Button'
+import { Markdown } from '../Markdown'
 
 interface CommentsProps {
   issueId: number
@@ -184,7 +185,7 @@ export const Comments = ({ issueId }: CommentsProps) => {
             </div>
           </div>
         ) : (
-          <div className="text-gray-700 whitespace-pre-wrap">{comment.content}</div>
+          <Markdown>{comment.content}</Markdown>
         )}
 
         {replyingTo === comment.id && (

@@ -19,15 +19,18 @@ const typeorm_2 = require("typeorm");
 const comment_entity_1 = require("./entities/comment.entity");
 const issue_entity_1 = require("./entities/issue.entity");
 const user_entity_1 = require("../users/entities/user.entity");
+const notifications_service_1 = require("../notifications/notifications.service");
 let CommentsService = class CommentsService {
-    constructor(commentsRepository, issuesRepository, usersRepository) {
+    constructor(commentsRepository, issuesRepository, usersRepository, notificationsService) {
         this.commentsRepository = commentsRepository;
         this.issuesRepository = issuesRepository;
         this.usersRepository = usersRepository;
+        this.notificationsService = notificationsService;
     }
     async create(createCommentDto, authorId) {
         const issue = await this.issuesRepository.findOne({
-            where: { id: createCommentDto.issueId }
+            where: { id: createCommentDto.issueId },
+            relations: ['project'],
         });
         if (!issue) {
             throw new common_1.NotFoundException('Issue not found');
@@ -56,7 +59,14 @@ let CommentsService = class CommentsService {
             authorId,
             parentId: createCommentDto.parentId,
         });
-        return this.commentsRepository.save(comment);
+        const saved = await this.commentsRepository.save(comment);
+        try {
+            await this.notificationsService.createForComment(issue, authorId);
+        }
+        catch (error) {
+            console.warn('Failed to create comment notifications for issue', issue.id, error);
+        }
+        return saved;
     }
     async findByIssue(issueId) {
         return this.commentsRepository.find({
@@ -103,6 +113,7 @@ exports.CommentsService = CommentsService = __decorate([
     __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        notifications_service_1.NotificationsService])
 ], CommentsService);
 //# sourceMappingURL=comments.service.js.map

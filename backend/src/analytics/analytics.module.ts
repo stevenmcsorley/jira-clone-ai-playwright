@@ -8,6 +8,7 @@ import { Sprint } from '../sprints/entities/sprint.entity'
 import { Project } from '../projects/entities/project.entity'
 import { User } from '../users/entities/user.entity'
 import { TimeLog } from '../issues/entities/time-log.entity'
+import { IssueEvent } from '../notifications/entities/issue-event.entity'
 import { WorkspacesModule } from '../workspaces/workspaces.module'
 
 @Module({
@@ -18,6 +19,7 @@ import { WorkspacesModule } from '../workspaces/workspaces.module'
       Project,
       User,
       TimeLog,
+      IssueEvent,
     ]),
     WorkspacesModule,
   ],

@@ -16,6 +16,7 @@ import { BurnupReport } from './components/Reports/BurnupReport/BurnupReport'
 import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
 import { VelocityReport } from './components/Reports/VelocityReport/VelocityReport'
 import { CumulativeFlowDiagram } from './components/Reports/CumulativeFlowDiagram/CumulativeFlowDiagram'
+import { CycleTimeReport } from './components/Reports/CycleTimeReport'
 import { SprintHistory } from './pages/SprintHistory'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
@@ -207,6 +208,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <CumulativeFlowDiagram />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/reports/cycle-time"
+          element={
+            <Layout>
+              <CycleTimeReport />
             </Layout>
           }
         />

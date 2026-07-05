@@ -11,7 +11,7 @@ export class Subtask {
   @Column()
   title: string;
 
-  @Column()
+  @Column({ default: false })
   completed: boolean;
 
   @ManyToOne(() => Issue, issue => issue.subtasks, { onDelete: 'CASCADE' })

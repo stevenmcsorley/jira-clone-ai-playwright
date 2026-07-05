@@ -18,10 +18,22 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const issue_entity_1 = require("./entities/issue.entity");
 const time_tracking_service_1 = require("./time-tracking.service");
+const notifications_service_1 = require("../notifications/notifications.service");
+const TRACKED_FIELDS = [
+    'status',
+    'assigneeId',
+    'title',
+    'priority',
+    'storyPoints',
+    'sprintId',
+    'estimate',
+    'epicId',
+];
 let IssuesService = class IssuesService {
-    constructor(issuesRepository, timeTrackingService) {
+    constructor(issuesRepository, timeTrackingService, notificationsService) {
         this.issuesRepository = issuesRepository;
         this.timeTrackingService = timeTrackingService;
+        this.notificationsService = notificationsService;
     }
     async create(createIssueDto) {
         const issue = this.issuesRepository.create(createIssueDto);
@@ -68,13 +80,23 @@ let IssuesService = class IssuesService {
             relations: ['project', 'assignee', 'reporter', 'epic', 'epicIssues', 'epicIssues.assignee'],
         });
     }
-    async update(id, updateData) {
+    async update(id, updateData, actorId = null, options = {}) {
+        const { recordHistory = true } = options;
         const currentIssue = await this.findOne(id);
         if (!currentIssue) {
             throw new Error('Issue not found');
         }
         const isStatusChangeToDone = currentIssue.status === 'in_progress' && updateData.status === 'done';
+        const changes = recordHistory ? this.diffTrackedFields(currentIssue, updateData) : [];
         await this.issuesRepository.update(id, updateData);
+        if (changes.length > 0) {
+            try {
+                await this.notificationsService.recordIssueEvents(id, actorId, changes);
+            }
+            catch (error) {
+                console.warn('Failed to record issue events for issue', id, error);
+            }
+        }
         if (isStatusChangeToDone && currentIssue.assigneeId) {
             try {
                 const timeSpentHours = this.calculateTimeSpent(currentIssue.updatedAt);
@@ -97,7 +119,35 @@ let IssuesService = class IssuesService {
                 console.warn('Failed to auto-log time for issue', id, error);
             }
         }
-        return this.findOne(id);
+        const updatedIssue = await this.findOne(id);
+        const assigneeChanged = 'assigneeId' in updateData && updateData.assigneeId !== currentIssue.assigneeId;
+        if (assigneeChanged && updatedIssue?.assigneeId && updatedIssue.assigneeId !== actorId) {
+            try {
+                await this.notificationsService.createForAssignment(updatedIssue, actorId);
+            }
+            catch (error) {
+                console.warn('Failed to create assignment notification for issue', id, error);
+            }
+        }
+        return updatedIssue;
+    }
+    diffTrackedFields(currentIssue, updateData) {
+        const changes = [];
+        for (const field of TRACKED_FIELDS) {
+            if (!(field in updateData))
+                continue;
+            const oldValue = currentIssue[field];
+            const newValue = updateData[field];
+            const oldStr = oldValue === null || oldValue === undefined ? null : String(oldValue);
+            const newStr = newValue === null || newValue === undefined ? null : String(newValue);
+            if (oldStr !== newStr) {
+                changes.push({ field, oldValue: oldStr, newValue: newStr });
+            }
+        }
+        if ('description' in updateData && updateData.description !== currentIssue.description) {
+            changes.push({ field: 'description', oldValue: null, newValue: 'updated' });
+        }
+        return changes;
     }
     calculateTimeSpent(lastUpdated) {
         const now = new Date();
@@ -114,7 +164,7 @@ let IssuesService = class IssuesService {
             await this.update(update.id, {
                 position: update.position,
                 status: update.status
-            });
+            }, null, { recordHistory: false });
         }
     }
     async remove(id) {
@@ -207,7 +257,7 @@ let IssuesService = class IssuesService {
         });
         return conditions;
     }
-    async bulkUpdate(issueIds, operation) {
+    async bulkUpdate(issueIds, operation, actorId = null) {
         const errors = [];
         let successCount = 0;
         let failureCount = 0;
@@ -252,7 +302,7 @@ let IssuesService = class IssuesService {
                     default:
                         throw new Error(`Unsupported operation type: ${operation.type}`);
                 }
-                await this.update(issueId, updateData);
+                await this.update(issueId, updateData, actorId);
                 successCount++;
             }
             catch (error) {
@@ -275,6 +325,7 @@ exports.IssuesService = IssuesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(issue_entity_1.Issue)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        time_tracking_service_1.TimeTrackingService])
+        time_tracking_service_1.TimeTrackingService,
+        notifications_service_1.NotificationsService])
 ], IssuesService);
 //# sourceMappingURL=issues.service.js.map

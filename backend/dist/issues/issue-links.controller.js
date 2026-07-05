@@ -24,7 +24,7 @@ let IssueLinksController = class IssueLinksController {
     async create(createIssueLinkDto, req) {
         await this.workspaceScope.assertIssue(createIssueLinkDto.sourceIssueId, req.workspaceId);
         await this.workspaceScope.assertIssue(createIssueLinkDto.targetIssueId, req.workspaceId);
-        return this.issueLinksService.create(createIssueLinkDto);
+        return this.issueLinksService.create({ ...createIssueLinkDto, createdById: req.user.id });
     }
     async findByIssueId(issueId, req) {
         await this.workspaceScope.assertIssue(+issueId, req.workspaceId);

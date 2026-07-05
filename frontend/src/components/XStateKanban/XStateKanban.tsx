@@ -5,13 +5,21 @@
  * Features optimistic updates, conflict resolution, and real-time synchronization.
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useKanbanMachine } from '../../hooks/useKanbanMachine';
 import { useIssueMetrics } from '../../hooks/useIssueMetrics';
 import { useTimerManager } from '../../hooks/useTimerManager';
 import { TimeTrackingService } from '../../services/api/time-tracking.service';
 import { TimeProgressIndicator } from '../TimeProgressBar';
+import { IssueTypeIcon } from '../IssueTypeIcon';
+import {
+  BoardFilterBar,
+  issueMatchesFilters,
+  hasActiveFilters,
+  EMPTY_BOARD_FILTERS,
+  type BoardFilters,
+} from './BoardFilterBar';
 import type { Issue, IssueStatus } from '../../types/domain.types';
 
 interface XStateKanbanProps {
@@ -20,6 +28,13 @@ interface XStateKanbanProps {
   initialIssues?: Issue[];
   onIssueUpdate?: (issueId: number, updates: any) => void;
   className?: string;
+  /**
+   * Board filters applied at render time only — machine state keeps the full
+   * issue set so positions and drag-drop stay intact while filters are active.
+   */
+  filters?: BoardFilters;
+  /** When provided, a filter bar is rendered above the columns (chips derived from the board's issues). */
+  onFiltersChange?: (filters: BoardFilters) => void;
 }
 
 // Enhanced Issue Card with XState integration
@@ -156,6 +171,9 @@ const XStateIssueCard = ({
       {/* Bottom row with priority, task ID, story points, and assignee */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {/* Issue type icon */}
+          <IssueTypeIcon type={issue.type} />
+
           {/* Priority indicator */}
           <div className={`w-4 h-4 flex items-center justify-center rounded ${priorityIcons[issue.priority].bg}`}>
             <span className={`text-xs font-bold ${priorityIcons[issue.priority].color}`}>
@@ -172,12 +190,12 @@ const XStateIssueCard = ({
         <div className="flex items-center gap-2">
           {/* Story Points */}
           {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-              📊 {issue.storyPoints}
+            <span title="Story points" className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+              {issue.storyPoints} pts
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
-              📊 ?
+            <span title="Story points not set" className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
+              ? pts
             </span>
           )}
 
@@ -226,10 +244,10 @@ const XStateColumn = ({
   const [dropIndex, setDropIndex] = React.useState<number | null>(null);
 
   const config = {
-    todo: { color: 'bg-gray-50', icon: '📋', borderColor: 'border-gray-300' },
-    in_progress: { color: 'bg-blue-50', icon: '🚧', borderColor: 'border-blue-300' },
-    code_review: { color: 'bg-purple-50', icon: '👁️', borderColor: 'border-purple-300' },
-    done: { color: 'bg-green-50', icon: '✅', borderColor: 'border-green-300' },
+    todo: { color: 'bg-gray-50', dot: 'bg-gray-400', borderColor: 'border-gray-300' },
+    in_progress: { color: 'bg-blue-50', dot: 'bg-blue-500', borderColor: 'border-blue-300' },
+    code_review: { color: 'bg-purple-50', dot: 'bg-purple-500', borderColor: 'border-purple-300' },
+    done: { color: 'bg-green-50', dot: 'bg-green-500', borderColor: 'border-green-300' },
   }[status];
 
   const handleDrop = useCallback((e: React.DragEvent, index?: number) => {
@@ -246,12 +264,13 @@ const XStateColumn = ({
   }, []);
 
   return (
-    <div className="flex-1" data-testid={`xstate-column-${status}`}>
+    <div className="flex-1 min-w-[80vw] sm:min-w-[45vw] snap-start md:min-w-0" data-testid={`xstate-column-${status}`}>
       {/* Column Header */}
       <div className="flex items-center justify-between mb-4 px-3">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-sm text-gray-600 uppercase tracking-wide">
-            {config.icon} {title}
+          <h2 className="flex items-center gap-2 font-semibold text-sm text-gray-600 uppercase tracking-wide">
+            <span className={`w-2 h-2 rounded-full ${config.dot}`} />
+            {title}
           </h2>
           <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-medium">
             {columnStats.count}
@@ -335,7 +354,7 @@ const XStateColumn = ({
         {issues.length === 0 && !isDragOver && (
           <div className="flex items-center justify-center h-32 text-gray-400">
             <div className="text-center">
-              <div className="text-2xl mb-2">{config.icon}</div>
+              <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${config.dot} opacity-40`} />
               <p className="text-sm">Drop issues here</p>
             </div>
           </div>
@@ -350,7 +369,9 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
   project,
   initialIssues = [],
   onIssueUpdate,
-  className = ''
+  className = '',
+  filters = EMPTY_BOARD_FILTERS,
+  onFiltersChange
 }) => {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
   const projectIdStr = urlProjectId || projectId.toString();
@@ -388,6 +409,16 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
   // Timer manager for automatic time tracking
   const { handleIssueStatusChange } = useTimerManager();
 
+  // Render-time filtering — machine state is never mutated by filters, so
+  // positions and drag-drop keep working against the full issue set.
+  const filtersActive = hasActiveFilters(filters);
+  const visibleIssuesByStatus = useMemo(() => ({
+    todo: issuesByStatus.todo.filter(issue => issueMatchesFilters(issue, filters)),
+    in_progress: issuesByStatus.in_progress.filter(issue => issueMatchesFilters(issue, filters)),
+    code_review: issuesByStatus.code_review.filter(issue => issueMatchesFilters(issue, filters)),
+    done: issuesByStatus.done.filter(issue => issueMatchesFilters(issue, filters)),
+  }), [issuesByStatus, filters]);
+
   // Enhanced drop function that integrates timer tracking
   const enhancedDropIssue = useCallback(async (targetStatus: IssueStatus, targetIndex?: number) => {
     const draggedIssue = machine.context.draggedIssue;
@@ -395,12 +426,28 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
 
     console.log(`🎯 XStateKanban: Dropping issue ${draggedIssue.id} to ${targetStatus}, estimate: ${draggedIssue.estimate}`);
 
+    // When filters hide cards, the drop index refers to the *visible* list —
+    // translate it to the position in the full column so hidden cards keep
+    // their relative order.
+    let mappedIndex = targetIndex;
+    if (filtersActive && targetIndex !== undefined) {
+      const fullColumn = issuesByStatus[targetStatus];
+      const visibleColumn = visibleIssuesByStatus[targetStatus];
+      if (targetIndex >= visibleColumn.length) {
+        mappedIndex = fullColumn.length;
+      } else {
+        const anchorId = visibleColumn[targetIndex].id;
+        const fullIndex = fullColumn.findIndex(issue => issue.id === anchorId);
+        mappedIndex = fullIndex >= 0 ? fullIndex : fullColumn.length;
+      }
+    }
+
     // Trigger timer status change
     handleIssueStatusChange(draggedIssue.id, targetStatus, draggedIssue.estimate);
 
     // Perform the actual drop operation
-    await dropIssue(targetStatus, targetIndex);
-  }, [dropIssue, handleIssueStatusChange, machine.context.draggedIssue]);
+    await dropIssue(targetStatus, mappedIndex);
+  }, [dropIssue, handleIssueStatusChange, machine.context.draggedIssue, filtersActive, issuesByStatus, visibleIssuesByStatus]);
 
   // Handle external issue updates (from props)
   useEffect(() => {
@@ -511,56 +558,70 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
         </div>
       )}
 
+      {/* Board Filters */}
+      {!isLoading && onFiltersChange && (
+        <BoardFilterBar
+          issues={[
+            ...issuesByStatus.todo,
+            ...issuesByStatus.in_progress,
+            ...issuesByStatus.code_review,
+            ...issuesByStatus.done,
+          ]}
+          filters={filters}
+          onChange={onFiltersChange}
+        />
+      )}
+
       {/* Kanban Board */}
       {!isLoading && (
-        <div className="grid grid-cols-4 gap-6" data-testid="xstate-kanban-columns">
+        <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:snap-none gap-6" data-testid="xstate-kanban-columns">
           <XStateColumn
             title="To Do"
             status="todo"
-            issues={issuesByStatus.todo}
+            issues={visibleIssuesByStatus.todo}
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
-            columnStats={columnStats.todo}
+            columnStats={{ count: visibleIssuesByStatus.todo.length, optimistic: columnStats.todo.optimistic }}
           />
           <XStateColumn
             title="In Progress"
             status="in_progress"
-            issues={issuesByStatus.in_progress}
+            issues={visibleIssuesByStatus.in_progress}
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
-            columnStats={columnStats.in_progress}
+            columnStats={{ count: visibleIssuesByStatus.in_progress.length, optimistic: columnStats.in_progress.optimistic }}
           />
           <XStateColumn
             title="Code Review"
             status="code_review"
-            issues={issuesByStatus.code_review}
+            issues={visibleIssuesByStatus.code_review}
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
-            columnStats={columnStats.code_review}
+            columnStats={{ count: visibleIssuesByStatus.code_review.length, optimistic: columnStats.code_review.optimistic }}
           />
           <XStateColumn
             title="Done"
             status="done"
-            issues={issuesByStatus.done}
+            issues={visibleIssuesByStatus.done}
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
-            columnStats={columnStats.done}
+            columnStats={{ count: visibleIssuesByStatus.done.length, optimistic: columnStats.done.optimistic }}
           />
         </div>
       )}

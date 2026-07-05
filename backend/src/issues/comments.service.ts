@@ -5,6 +5,7 @@ import { Comment } from './entities/comment.entity'
 import { Issue } from './entities/issue.entity'
 import { User } from '../users/entities/user.entity'
 import { CreateCommentDto, UpdateCommentDto } from './dto/comment.dto'
+import { NotificationsService } from '../notifications/notifications.service'
 
 @Injectable()
 export class CommentsService {
@@ -15,11 +16,14 @@ export class CommentsService {
     private issuesRepository: Repository<Issue>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(createCommentDto: CreateCommentDto, authorId: number): Promise<Comment> {
+    // 'project' relation is needed by the notification (workspaceId resolution)
     const issue = await this.issuesRepository.findOne({
-      where: { id: createCommentDto.issueId }
+      where: { id: createCommentDto.issueId },
+      relations: ['project'],
     })
     if (!issue) {
       throw new NotFoundException('Issue not found')
@@ -52,7 +56,16 @@ export class CommentsService {
       parentId: createCommentDto.parentId,
     })
 
-    return this.commentsRepository.save(comment)
+    const saved = await this.commentsRepository.save(comment)
+
+    // Notify assignee + reporter (minus the commenter) — never fail the comment
+    try {
+      await this.notificationsService.createForComment(issue, authorId)
+    } catch (error) {
+      console.warn('Failed to create comment notifications for issue', issue.id, error)
+    }
+
+    return saved
   }
 
   async findByIssue(issueId: number): Promise<Comment[]> {

@@ -61,9 +61,9 @@ let AnalyticsController = class AnalyticsController {
         await this.assertSprint(+sprintId, req.workspaceId);
         return this.analyticsService.generateBurndownData(sprintId);
     }
-    async getCycleTimeMetrics(projectId, req, sprintCount = 6) {
+    async getCycleTimeMetrics(projectId, req, days = 180) {
         await this.workspaceScope.assertProject(+projectId, req.workspaceId);
-        return this.analyticsService.calculateCycleTimeMetrics(projectId, sprintCount);
+        return this.analyticsService.getCycleTimeReport(+projectId, +days || 180);
     }
     async getThroughputMetrics(projectId, req, sprintCount = 6) {
         await this.workspaceScope.assertProject(+projectId, req.workspaceId);
@@ -139,7 +139,7 @@ __decorate([
     (0, common_1.Get)('cycle-time/:projectId'),
     __param(0, (0, common_1.Param)('projectId')),
     __param(1, (0, common_1.Req)()),
-    __param(2, (0, common_1.Query)('sprintCount')),
+    __param(2, (0, common_1.Query)('days')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object, Number]),
     __metadata("design:returntype", Promise)

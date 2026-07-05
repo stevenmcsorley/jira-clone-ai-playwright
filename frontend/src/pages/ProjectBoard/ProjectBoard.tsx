@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { KanbanBoard } from '../../components/KanbanBoard'
+import {
+  EMPTY_BOARD_FILTERS,
+  isRecentLocalMutation,
+  markLocalMutation,
+  type BoardFilters,
+} from '../../components/XStateKanban'
 import { Button } from '../../components/ui/Button'
+import { useAuth } from '../../contexts/AuthContext'
 import { useProjects } from '../../hooks/useProjects'
 import { SprintsService, type Sprint } from '../../services/api/sprints.service'
 import { IssuesService } from '../../services/api/issues.service'
@@ -11,15 +18,37 @@ export const ProjectBoard = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const { projects, loading: projectsLoading } = useProjects()
+  const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
+  const [quickFiltersOpen, setQuickFiltersOpen] = useState(false)
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSprint, setActiveSprint] = useState<Sprint | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [boardFilters, setBoardFilters] = useState<BoardFilters>(EMPTY_BOARD_FILTERS)
 
   // Find the current project
   const currentProject = projects.find(p => p.id === Number(projectId))
+
+  // Quick filters (dropdown) fold into the shared boardFilters state so they
+  // combine with the assignee/label chips rather than being a parallel system.
+  const onlyMyIssuesActive = !!user && boardFilters.assignees.includes(user.id)
+  const quickFiltersActive = onlyMyIssuesActive || boardFilters.recentlyUpdated
+
+  const toggleOnlyMyIssues = () => {
+    if (!user) return
+    setBoardFilters(prev => ({
+      ...prev,
+      assignees: prev.assignees.includes(user.id)
+        ? prev.assignees.filter(a => a !== user.id)
+        : [...prev.assignees, user.id],
+    }))
+  }
+
+  const toggleRecentlyUpdated = () => {
+    setBoardFilters(prev => ({ ...prev, recentlyUpdated: !prev.recentlyUpdated }))
+  }
 
   const fetchData = async (showLoadingState = true) => {
     if (!projectId) return
@@ -59,7 +88,18 @@ export const ProjectBoard = () => {
     const handleRefresh = (event: CustomEvent) => {
       const { type } = event.detail
       if (type === 'issues' || type === 'sprints') {
-        console.log('🔄 Real-time update detected, refreshing board data...')
+        // If WE just mutated an issue (e.g. dropped a card), this event is the
+        // websocket echo of our own write. The board machine already holds the
+        // confirmed state, so a remount (refreshKey bump) would only cause a
+        // loading spinner, scroll reset and card flicker. Refresh the sprint
+        // metadata silently instead; other users' changes (outside the echo
+        // window) still get the full refresh below.
+        const isOwnEcho = isRecentLocalMutation()
+        console.log(
+          isOwnEcho
+            ? '🔄 Local mutation echo — refreshing sprint data silently (no board remount)'
+            : '🔄 Real-time update detected, refreshing board data...'
+        )
         if (projectId) {
           // Directly call the fetch logic here to ensure it runs
           SprintsService.getByProject(parseInt(projectId)).then(sprintsData => {
@@ -71,7 +111,9 @@ export const ProjectBoard = () => {
             } else {
               setIssues([])
             }
-            setRefreshKey(prev => prev + 1) // Force re-render
+            if (!isOwnEcho) {
+              setRefreshKey(prev => prev + 1) // Force re-render
+            }
             console.log('✅ Board data refreshed successfully', activeSprintData?.issues?.length, 'issues')
           }).catch(error => {
             console.error('Error refreshing board data:', error)
@@ -91,7 +133,9 @@ export const ProjectBoard = () => {
 
   const handleIssueUpdate = async (issueId: number, updates: UpdateIssueRequest) => {
     try {
+      markLocalMutation()
       const updatedIssue = await IssuesService.update(issueId, updates)
+      markLocalMutation() // echo arrives after the PUT resolves
       setIssues(prev => prev.map(issue =>
         issue.id === issueId ? updatedIssue : issue
       ))
@@ -232,16 +276,77 @@ export const ProjectBoard = () => {
             />
           </form>
 
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-md">
+          <div className="relative flex items-center gap-2">
+            <button
+              onClick={() => setQuickFiltersOpen(prev => !prev)}
+              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md ${
+                quickFiltersActive
+                  ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+              data-testid="quick-filters-button"
+              aria-haspopup="menu"
+              aria-expanded={quickFiltersOpen}
+            >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
               </svg>
               Quick Filters
+              {quickFiltersActive && (
+                <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold">
+                  {(onlyMyIssuesActive ? 1 : 0) + (boardFilters.recentlyUpdated ? 1 : 0)}
+                </span>
+              )}
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </button>
+
+            {quickFiltersOpen && (
+              <>
+                {/* Click-away backdrop */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setQuickFiltersOpen(false)}
+                  data-testid="quick-filters-backdrop"
+                />
+                <div
+                  className="absolute left-0 top-full mt-1 z-20 w-56 bg-white border border-gray-200 rounded-md shadow-lg py-1"
+                  role="menu"
+                  data-testid="quick-filters-menu"
+                >
+                  <button
+                    onClick={toggleOnlyMyIssues}
+                    disabled={!user}
+                    className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    role="menuitemcheckbox"
+                    aria-checked={onlyMyIssuesActive}
+                    data-testid="quick-filter-only-my-issues"
+                  >
+                    Only My Issues
+                    {onlyMyIssuesActive && (
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleRecentlyUpdated}
+                    className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    role="menuitemcheckbox"
+                    aria-checked={boardFilters.recentlyUpdated}
+                    data-testid="quick-filter-recently-updated"
+                  >
+                    Recently Updated
+                    {boardFilters.recentlyUpdated && (
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -259,6 +364,8 @@ export const ProjectBoard = () => {
               onIssueCreate={handleIssueCreate}
               onIssueEdit={handleIssueEdit}
               onIssueDelete={handleIssueDelete}
+              filters={boardFilters}
+              onFiltersChange={setBoardFilters}
             />
           </div>
         ) : (

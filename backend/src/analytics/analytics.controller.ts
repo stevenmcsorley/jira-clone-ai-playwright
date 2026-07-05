@@ -83,15 +83,15 @@ export class AnalyticsController {
     return this.analyticsService.generateBurndownData(sprintId)
   }
 
-  // Cycle time metrics
+  // Cycle time report (per-issue datapoints + aggregates, see CycleTimeReport)
   @Get('cycle-time/:projectId')
   async getCycleTimeMetrics(
     @Param('projectId') projectId: number,
     @Req() req: any,
-    @Query('sprintCount') sprintCount: number = 6
+    @Query('days') days: number = 180
   ) {
     await this.workspaceScope.assertProject(+projectId, req.workspaceId)
-    return this.analyticsService.calculateCycleTimeMetrics(projectId, sprintCount)
+    return this.analyticsService.getCycleTimeReport(+projectId, +days || 180)
   }
 
   // Throughput metrics

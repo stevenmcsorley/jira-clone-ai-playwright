@@ -87,7 +87,7 @@ const slimIssue = (issue) => ({
   epicId: issue.epicId ?? null,
 })
 
-const server = new McpServer({ name: 'ossicone', version: '0.2.0' })
+const server = new McpServer({ name: 'ossicone', version: '0.3.0' })
 
 const ISSUE_STATUSES = ['todo', 'in_progress', 'code_review', 'done']
 const ISSUE_TYPES = ['story', 'task', 'bug', 'epic']
@@ -336,6 +336,104 @@ server.registerTool(
   run(async ({ query, projectId }) => {
     const { results, totalResults } = await api('/issues/search', { method: 'POST', body: { query, projectId } })
     return { totalResults, results: results.map(slimIssue) }
+  })
+)
+
+// ---------- Subtasks, links & epics ----------
+
+server.registerTool(
+  'add_subtask',
+  {
+    description: 'Add a subtask (checklist item) to an issue.',
+    inputSchema: { issueId: z.number(), title: z.string(), description: z.string().optional() },
+  },
+  run(({ issueId, title, description }) =>
+    api('/subtasks', { method: 'POST', body: { issueId, title, description } })
+  )
+)
+
+server.registerTool(
+  'list_subtasks',
+  {
+    description: 'List an issue\'s subtasks with completion progress.',
+    inputSchema: { issueId: z.number() },
+  },
+  run(async ({ issueId }) => {
+    const [subtasks, progress] = await Promise.all([
+      api(`/subtasks/issue/${issueId}`),
+      api(`/subtasks/issue/${issueId}/progress`).catch(() => null),
+    ])
+    return {
+      progress,
+      subtasks: subtasks.map(s => ({ id: s.id, title: s.title, status: s.status, completed: s.completed })),
+    }
+  })
+)
+
+server.registerTool(
+  'complete_subtask',
+  {
+    description: 'Mark a subtask done (or reopen it).',
+    inputSchema: { subtaskId: z.number(), completed: z.boolean().default(true) },
+  },
+  run(({ subtaskId, completed }) =>
+    api(`/subtasks/${subtaskId}`, {
+      method: 'PATCH',
+      body: { completed, status: completed ? 'done' : 'todo' },
+    })
+  )
+)
+
+server.registerTool(
+  'link_issues',
+  {
+    description: 'Link two issues (e.g. "blocks", "relates_to", "duplicates").',
+    inputSchema: {
+      sourceIssueId: z.number(),
+      targetIssueId: z.number(),
+      linkType: z.enum(['blocks', 'blocked_by', 'duplicates', 'duplicated_by', 'relates_to', 'causes', 'caused_by', 'clones', 'cloned_by', 'child_of', 'parent_of']),
+    },
+  },
+  run(({ sourceIssueId, targetIssueId, linkType }) =>
+    api('/issue-links', { method: 'POST', body: { sourceIssueId, targetIssueId, linkType } })
+  )
+)
+
+server.registerTool(
+  'list_links',
+  {
+    description: 'List the links of an issue (what it blocks, relates to, duplicates…).',
+    inputSchema: { issueId: z.number() },
+  },
+  run(async ({ issueId }) => {
+    const links = await api(`/issue-links/issue/${issueId}`)
+    return links.map(l => ({
+      id: l.id,
+      linkType: l.linkType,
+      source: l.sourceIssue ? { id: l.sourceIssue.id, title: l.sourceIssue.title } : { id: l.sourceIssueId },
+      target: l.targetIssue ? { id: l.targetIssue.id, title: l.targetIssue.title } : { id: l.targetIssueId },
+    }))
+  })
+)
+
+server.registerTool(
+  'get_epic',
+  {
+    description: 'An epic with its child issues and completion progress.',
+    inputSchema: { epicId: z.number().describe('Issue id of the epic') },
+  },
+  run(async ({ epicId }) => {
+    const epic = await api(`/issues/${epicId}`)
+    if (epic.type !== 'epic') throw new Error(`Issue ${epicId} is a ${epic.type}, not an epic`)
+    const all = await api(`/issues?projectId=${epic.projectId}`)
+    const children = all.filter(i => i.epicId === epicId)
+    const done = children.filter(i => i.status === 'done').length
+    return {
+      epic: slimIssue(epic),
+      description: epic.description,
+      progress: { total: children.length, done, percent: children.length ? Math.round((done / children.length) * 100) : 0 },
+      children: children.map(slimIssue),
+    }
   })
 )
 

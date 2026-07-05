@@ -93,31 +93,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         score: result.score,
       }));
 
-      // Add command suggestions if query matches
-      if (query.toLowerCase().includes('create')) {
-        searchItems.unshift({
-          id: 'cmd-create-issue',
-          type: 'command',
-          title: 'Create Issue',
-          description: 'Create a new issue in the current project',
-          path: '/issues/create',
-          icon: '➕',
-          score: 1,
-        });
-      }
-
-      if (query.toLowerCase().includes('dashboard')) {
-        searchItems.unshift({
-          id: 'cmd-dashboard',
-          type: 'command',
-          title: 'Go to Dashboard',
-          description: 'View your personalized dashboard',
-          path: '/dashboard',
-          icon: '📊',
-          score: 1,
-        });
-      }
-
       setSearchResults(searchItems);
       setSelectedIndex(0);
     } else {
@@ -302,9 +277,6 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <span>Search...</span>
-        <kbd className="hidden sm:inline-block px-2 py-1 text-xs bg-white border border-gray-300 rounded">
-          ⌘K
-        </kbd>
       </button>
     );
   }

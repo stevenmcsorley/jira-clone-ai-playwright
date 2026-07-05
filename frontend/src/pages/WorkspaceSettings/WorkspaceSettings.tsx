@@ -234,6 +234,7 @@ export const WorkspaceSettings = () => {
           <h2 className="text-lg font-semibold text-gray-900">Members</h2>
           {memberError && <p className="text-sm text-red-600 mt-1">{memberError}</p>}
         </div>
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -293,6 +294,7 @@ export const WorkspaceSettings = () => {
             })}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* Invites */}
@@ -349,6 +351,7 @@ export const WorkspaceSettings = () => {
           {invites.length > 0 && (
             <div className="mt-5">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Pending invites</h3>
+              <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <tbody className="divide-y divide-gray-100">
                   {invites.map(invite => (
@@ -370,6 +373,7 @@ export const WorkspaceSettings = () => {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </section>

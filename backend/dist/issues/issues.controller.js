@@ -18,11 +18,13 @@ const issues_service_1 = require("./issues.service");
 const create_issue_dto_1 = require("./dto/create-issue.dto");
 const events_gateway_1 = require("../events/events.gateway");
 const workspace_scope_service_1 = require("../workspaces/workspace-scope.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 let IssuesController = class IssuesController {
-    constructor(issuesService, eventsGateway, workspaceScope) {
+    constructor(issuesService, eventsGateway, workspaceScope, notificationsService) {
         this.issuesService = issuesService;
         this.eventsGateway = eventsGateway;
         this.workspaceScope = workspaceScope;
+        this.notificationsService = notificationsService;
     }
     async create(createIssueDto, req) {
         await this.workspaceScope.assertProject(createIssueDto.projectId, req.workspaceId);
@@ -46,12 +48,16 @@ let IssuesController = class IssuesController {
         await this.workspaceScope.assertIssue(+id, req.workspaceId);
         return this.issuesService.findOne(+id);
     }
+    async history(id, req) {
+        await this.workspaceScope.assertIssue(+id, req.workspaceId);
+        return this.notificationsService.issueHistory(+id);
+    }
     async update(id, updateData, req) {
         await this.workspaceScope.assertIssue(+id, req.workspaceId);
         if (updateData.projectId) {
             await this.workspaceScope.assertProject(updateData.projectId, req.workspaceId);
         }
-        const issue = await this.issuesService.update(+id, updateData);
+        const issue = await this.issuesService.update(+id, updateData, req.user?.id ?? null);
         this.eventsGateway.emitIssueUpdated(issue);
         return issue;
     }
@@ -87,7 +93,7 @@ let IssuesController = class IssuesController {
         for (const issueId of bulkUpdateData.issueIds) {
             await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         }
-        return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation);
+        return this.issuesService.bulkUpdate(bulkUpdateData.issueIds, bulkUpdateData.operation, req.user?.id ?? null);
     }
 };
 exports.IssuesController = IssuesController;
@@ -116,6 +122,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], IssuesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)(':id/history'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], IssuesController.prototype, "history", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -161,6 +175,7 @@ exports.IssuesController = IssuesController = __decorate([
     (0, common_1.Controller)('api/issues'),
     __metadata("design:paramtypes", [issues_service_1.IssuesService,
         events_gateway_1.EventsGateway,
-        workspace_scope_service_1.WorkspaceScopeService])
+        workspace_scope_service_1.WorkspaceScopeService,
+        notifications_service_1.NotificationsService])
 ], IssuesController);
 //# sourceMappingURL=issues.controller.js.map

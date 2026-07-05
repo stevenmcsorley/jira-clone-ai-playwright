@@ -135,6 +135,14 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     void this.emitToWorkspace('issue:deleted', { id: issueId }, projectId)
   }
 
+  // Notification events — the workspace is already known, so target the room
+  // directly. Every member of the workspace receives it; clients filter by
+  // their own userId (acceptable within a workspace).
+  emitNotification(workspaceId: number, notification: any) {
+    if (!workspaceId) return
+    this.server.to(`ws:${workspaceId}`).emit('notification:new', notification)
+  }
+
   // Sprint events
   emitSprintCreated(sprint: any) {
     void this.emitToWorkspace('sprint:created', sprint, sprint?.projectId)

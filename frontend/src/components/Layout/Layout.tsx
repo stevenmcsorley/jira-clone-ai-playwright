@@ -7,6 +7,7 @@ import { ActiveTimerDisplay } from '../ActiveTimerDisplay'
 import { QuickActions } from '../QuickActions'
 import { Breadcrumb } from '../Breadcrumb'
 import { GlobalSearch } from '../Search/GlobalSearch'
+import { NotificationBell } from '../Notifications'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -18,14 +19,32 @@ export const Layout = ({ children }: LayoutProps) => {
   const { projects } = useProjects()
   const { user, logout, workspaces, currentWorkspace, switchWorkspace } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const currentProject = projects.find(p => p.id === Number(projectId))
   const isProjectBoard = location.pathname.includes('/projects/') && projectId
 
+  const closeSidebar = () => setSidebarOpen(false)
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+          data-testid="sidebar-backdrop"
+        />
+      )}
+
       {/* Left Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out md:static md:z-auto md:translate-x-0 md:transition-none ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        data-testid="app-sidebar"
+      >
         {/* Project Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -48,6 +67,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="space-y-1">
                         <Link
               to="/projects"
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/projects'
                   ? 'bg-gray-100 text-gray-900'
@@ -62,6 +82,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to="/search"
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/search'
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -76,6 +97,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/backlog` : '#'}
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.includes('/backlog')
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -90,6 +112,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}` : '#'}
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues')
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -104,6 +127,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/reports` : '#'}
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.includes('/reports')
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -119,6 +143,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/history` : '#'}
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.includes('/history')
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -133,6 +158,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/issues` : '#'}
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname.includes('/issues') && !location.pathname.includes('/board')
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -146,23 +172,8 @@ export const Layout = ({ children }: LayoutProps) => {
             </Link>
 
             <Link
-              to={`https://github.com/stevenmcsorley/jira-clone-ai-playwright`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-              Repository
-              <svg className="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-1a1 1 0 10-2 0v1H5V7h1a1 1 0 000-2H5z" />
-              </svg>
-            </Link>
-
-            <Link
               to="/mcp"
+              onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/mcp'
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -177,6 +188,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to={isProjectBoard ? `/projects/${projectId}/settings` : '#'}
+              onClick={closeSidebar}
               className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -194,16 +206,27 @@ export const Layout = ({ children }: LayoutProps) => {
         <ActiveTimerDisplay />
 
         {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Mobile menu toggle */}
+              <button
+                onClick={() => setSidebarOpen(open => !open)}
+                className="md:hidden w-8 h-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+                aria-label="Toggle navigation menu"
+                data-testid="sidebar-toggle"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
               <Link to="/projects" className="text-xl font-bold text-blue-600">
                 Ossicone
               </Link>
             </div>
 
             {/* Global Search */}
-            <div className="flex-1 max-w-md mx-8">
+            <div className="hidden sm:block flex-1 max-w-md mx-4 md:mx-8">
               <GlobalSearch
                 onNavigate={(path) => window.location.href = path}
                 className="w-full"
@@ -217,12 +240,14 @@ export const Layout = ({ children }: LayoutProps) => {
                     variant="secondary"
                     data-testid="create-project-button"
                   >
-                    Create Project
+                    <span className="hidden sm:inline">Create Project</span>
+                    <span className="sm:hidden">Create</span>
                   </Button>
                 </Link>
               )}
               {/* Quick Actions in Header */}
               <QuickActions />
+              <NotificationBell />
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(open => !open)}

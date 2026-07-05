@@ -20,6 +20,8 @@ export function getWorkspaceId(): string | null {
 
 export function setWorkspaceId(id: number | string): void {
   localStorage.setItem(WORKSPACE_KEY, String(id))
+  // Let the websocket singleton (re)join the right workspace room
+  window.dispatchEvent(new CustomEvent('ossicone-workspace-changed'))
 }
 
 export function clearWorkspaceId(): void {

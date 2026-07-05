@@ -10,6 +10,7 @@ import { useMachine } from '@xstate/react';
 import { kanbanMachine } from '../machines/kanbanMachine';
 import { useProjectIssues } from './useProjectIssues';
 import { IssuesService } from '../services/api/issues.service';
+import { markLocalMutation } from '../components/XStateKanban/localMutation';
 import type { Issue, IssueStatus } from '../types/domain.types';
 
 interface UseKanbanMachineOptions {
@@ -98,6 +99,10 @@ export const useKanbanMachine = ({
       const draggedIssue = state.context.draggedIssue;
       if (!draggedIssue) return;
 
+      // Flag this as a local mutation so the websocket echo of our own PUT
+      // doesn't trigger a disruptive board refetch/remount (see ProjectBoard).
+      markLocalMutation();
+
       // Send drop event to state machine (handles optimistic update)
       send({
         type: 'DROP_ISSUE',
@@ -109,6 +114,9 @@ export const useKanbanMachine = ({
         const updatedIssue = await IssuesService.update(draggedIssue.id, {
           status: targetStatus
         });
+
+        // Re-mark after the PUT resolves — the echo arrives after this point.
+        markLocalMutation();
 
         // Confirm success in state machine
         send({

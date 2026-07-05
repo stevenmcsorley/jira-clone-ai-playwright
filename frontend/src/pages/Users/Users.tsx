@@ -54,7 +54,7 @@ export const Users = () => {
     <div className="p-6 max-w-4xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">People</h1>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-8">
+      <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto mb-8">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

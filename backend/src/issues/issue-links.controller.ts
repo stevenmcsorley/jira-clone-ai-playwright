@@ -21,7 +21,7 @@ export class IssueLinksController {
   async create(@Body() createIssueLinkDto: CreateIssueLinkDto, @Req() req: any) {
     await this.workspaceScope.assertIssue(createIssueLinkDto.sourceIssueId, req.workspaceId)
     await this.workspaceScope.assertIssue(createIssueLinkDto.targetIssueId, req.workspaceId)
-    return this.issueLinksService.create(createIssueLinkDto)
+    return this.issueLinksService.create({ ...createIssueLinkDto, createdById: req.user.id })
   }
 
   @Get('issue/:issueId')

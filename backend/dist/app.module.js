@@ -19,6 +19,7 @@ const workspaces_module_1 = require("./workspaces/workspaces.module");
 const estimation_module_1 = require("./estimation/estimation.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const events_module_1 = require("./events/events.module");
+const notifications_module_1 = require("./notifications/notifications.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -46,6 +47,7 @@ exports.AppModule = AppModule = __decorate([
             estimation_module_1.EstimationModule,
             analytics_module_1.AnalyticsModule,
             events_module_1.EventsModule,
+            notifications_module_1.NotificationsModule,
         ],
     })
 ], AppModule);

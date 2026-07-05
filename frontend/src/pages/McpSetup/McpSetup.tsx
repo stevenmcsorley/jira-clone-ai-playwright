@@ -33,6 +33,24 @@ const TOOL_GROUPS: { title: string; tools: [string, string][] }[] = [
     ],
   },
   {
+    title: 'Subtasks, links & epics',
+    tools: [
+      ['add_subtask', 'Add a checklist item to an issue'],
+      ['list_subtasks', 'Subtasks with completion progress'],
+      ['complete_subtask', 'Tick a subtask off'],
+      ['link_issues', 'Link issues (blocks, relates to, duplicates…)'],
+      ['list_links', 'An issue\'s links'],
+      ['get_epic', 'Epic with children and % complete'],
+    ],
+  },
+  {
+    title: 'Workspace',
+    tools: [
+      ['get_workspace', 'Current workspace, your role, members'],
+      ['list_workspaces', 'All workspaces you belong to'],
+    ],
+  },
+  {
     title: 'Sprints',
     tools: [
       ['list_sprints', 'Sprints with status and dates'],
@@ -188,6 +206,7 @@ export const McpSetup = () => {
         {tokens.length > 0 && (
           <div className="mt-5">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Your tokens</h3>
+            <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <tbody className="divide-y divide-gray-100">
                 {tokens.map(t => (
@@ -216,6 +235,7 @@ export const McpSetup = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </section>

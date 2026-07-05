@@ -2,16 +2,21 @@ import { Repository } from 'typeorm';
 import { Issue } from './entities/issue.entity';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { TimeTrackingService } from './time-tracking.service';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class IssuesService {
     private issuesRepository;
     private timeTrackingService;
-    constructor(issuesRepository: Repository<Issue>, timeTrackingService: TimeTrackingService);
+    private notificationsService;
+    constructor(issuesRepository: Repository<Issue>, timeTrackingService: TimeTrackingService, notificationsService: NotificationsService);
     create(createIssueDto: CreateIssueDto): Promise<Issue>;
     findAll(): Promise<Issue[]>;
     findByProject(projectId: number): Promise<Issue[]>;
     findForBoard(projectId: number): Promise<Issue[]>;
     findOne(id: number): Promise<Issue>;
-    update(id: number, updateData: Partial<Issue>): Promise<Issue>;
+    update(id: number, updateData: Partial<Issue>, actorId?: number | null, options?: {
+        recordHistory?: boolean;
+    }): Promise<Issue>;
+    private diffTrackedFields;
     private calculateTimeSpent;
     updatePositions(updates: {
         id: number;
@@ -28,7 +33,7 @@ export declare class IssuesService {
         type: 'assign' | 'status' | 'labels' | 'priority' | 'sprint' | 'estimate' | 'component' | 'version';
         field: string;
         value: any;
-    }): Promise<{
+    }, actorId?: number | null): Promise<{
         successCount: number;
         failureCount: number;
         errors: Array<{

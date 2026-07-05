@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm'
 import { Issue } from '../issues/entities/issue.entity'
+import { IssueStatus } from '../issues/enums/issue-status.enum'
 import { Sprint } from '../sprints/entities/sprint.entity'
 import { TimeLog } from '../issues/entities/time-log.entity'
+import { IssueEvent } from '../notifications/entities/issue-event.entity'
 import { VelocityService } from './velocity.service'
 
 export interface BurndownData {
@@ -12,6 +14,39 @@ export interface BurndownData {
   idealRemaining: number
   actualCompleted: number
   idealCompleted: number
+}
+
+/**
+ * Response shape of GET /api/analytics/cycle-time/:projectId
+ *
+ * Cycle time here is measured per DONE issue. Where the issue_events table
+ * has 'status' events for the issue we use them: start = first transition
+ * into in_progress (or code_review if in_progress was skipped), end = last
+ * transition into done. Issues without recorded status events fall back to
+ * the createdAt -> updatedAt window as a reasonable approximation (true
+ * in-progress -> done timing needs issue_events, which only exist for
+ * changes made after activity tracking was introduced).
+ */
+export interface CycleTimeDatapoint {
+  issueId: number
+  title: string
+  type: string
+  priority: string
+  completedAt: string // ISO date of the (approximated) done transition
+  cycleTimeDays: number
+  source: 'events' | 'timestamps' // 'events' = derived from issue_events
+}
+
+export interface CycleTimeReport {
+  datapoints: CycleTimeDatapoint[] // sorted by completedAt ascending
+  stats: {
+    count: number
+    averageDays: number
+    medianDays: number
+    p85Days: number
+  }
+  // Monthly trend of average cycle time, oldest first (period = 'YYYY-MM')
+  trend: Array<{ period: string; averageDays: number; count: number }>
 }
 
 export interface CycleTimeMetrics {
@@ -54,6 +89,8 @@ export class AnalyticsService {
     private sprintsRepository: Repository<Sprint>,
     @InjectRepository(TimeLog)
     private timeLogRepository: Repository<TimeLog>,
+    @InjectRepository(IssueEvent)
+    private issueEventsRepository: Repository<IssueEvent>,
     private velocityService: VelocityService,
   ) {}
 
@@ -220,6 +257,130 @@ export class AnalyticsService {
       cycleTimeByPriority,
       cycleTimeTrend,
     }
+  }
+
+  /**
+   * Real cycle time report for GET /api/analytics/cycle-time/:projectId.
+   *
+   * Uses issue_events ('status' field) where they exist to time the
+   * in_progress -> done window; falls back to createdAt -> updatedAt for
+   * issues completed before activity tracking recorded any status events.
+   * See CycleTimeReport for the documented response shape.
+   */
+  async getCycleTimeReport(projectId: number, days: number = 180): Promise<CycleTimeReport> {
+    const since = new Date()
+    since.setDate(since.getDate() - days)
+
+    const doneIssues = await this.issuesRepository
+      .createQueryBuilder('issue')
+      .where('issue.projectId = :projectId', { projectId })
+      .andWhere('issue.status = :status', { status: IssueStatus.DONE })
+      .orderBy('issue.updatedAt', 'ASC')
+      .getMany()
+
+    const eventsByIssue = await this.getStatusEventsByIssue(doneIssues.map(i => i.id))
+
+    const datapoints: CycleTimeDatapoint[] = []
+    for (const issue of doneIssues) {
+      const window = this.resolveCycleWindow(issue, eventsByIssue.get(issue.id) || [])
+      if (!window) continue
+      // Only include issues completed within the requested window
+      if (window.completedAt < since) continue
+
+      const elapsedDays = (window.completedAt.getTime() - window.startedAt.getTime()) / (1000 * 60 * 60 * 24)
+      datapoints.push({
+        issueId: issue.id,
+        title: issue.title,
+        type: issue.type,
+        priority: issue.priority,
+        completedAt: window.completedAt.toISOString(),
+        cycleTimeDays: Math.round(Math.max(elapsedDays, 0) * 100) / 100,
+        source: window.source,
+      })
+    }
+
+    datapoints.sort((a, b) => a.completedAt.localeCompare(b.completedAt))
+
+    const times = datapoints.map(d => d.cycleTimeDays)
+    const averageDays = times.length > 0 ? times.reduce((sum, t) => sum + t, 0) / times.length : 0
+
+    // Monthly trend (period = 'YYYY-MM'), oldest first
+    const byMonth = new Map<string, number[]>()
+    for (const d of datapoints) {
+      const period = d.completedAt.slice(0, 7)
+      const bucket = byMonth.get(period) || []
+      bucket.push(d.cycleTimeDays)
+      byMonth.set(period, bucket)
+    }
+    const trend = [...byMonth.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([period, values]) => ({
+        period,
+        averageDays: Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * 100) / 100,
+        count: values.length,
+      }))
+
+    return {
+      datapoints,
+      stats: {
+        count: datapoints.length,
+        averageDays: Math.round(averageDays * 100) / 100,
+        medianDays: Math.round(this.calculateMedian(times) * 100) / 100,
+        p85Days: Math.round(this.calculatePercentile(times, 85) * 100) / 100,
+      },
+      trend,
+    }
+  }
+
+  /** Status-change events for the given issues, grouped per issue, oldest first. */
+  private async getStatusEventsByIssue(issueIds: number[]): Promise<Map<number, IssueEvent[]>> {
+    const map = new Map<number, IssueEvent[]>()
+    if (issueIds.length === 0) return map
+
+    const events = await this.issueEventsRepository.find({
+      where: { issueId: In(issueIds), field: 'status' },
+      order: { createdAt: 'ASC', id: 'ASC' },
+    })
+    for (const event of events) {
+      const bucket = map.get(event.issueId) || []
+      bucket.push(event)
+      map.set(event.issueId, bucket)
+    }
+    return map
+  }
+
+  /**
+   * Work out when an issue started active work and when it was completed.
+   * Prefers issue_events; falls back to createdAt -> updatedAt otherwise.
+   */
+  private resolveCycleWindow(
+    issue: Issue,
+    statusEvents: IssueEvent[],
+  ): { startedAt: Date; completedAt: Date; source: 'events' | 'timestamps' } | null {
+    const doneEvents = statusEvents.filter(e => e.newValue === IssueStatus.DONE)
+    if (doneEvents.length > 0) {
+      const completedAt = new Date(doneEvents[doneEvents.length - 1].createdAt)
+      const startEvent = statusEvents.find(
+        e => e.newValue === IssueStatus.IN_PROGRESS || e.newValue === IssueStatus.CODE_REVIEW,
+      )
+      const startedAt = startEvent ? new Date(startEvent.createdAt) : new Date(issue.createdAt)
+      return { startedAt, completedAt, source: 'events' }
+    }
+
+    // No recorded done transition: approximate with createdAt -> updatedAt
+    if (issue.status !== IssueStatus.DONE) return null
+    return {
+      startedAt: new Date(issue.createdAt),
+      completedAt: new Date(issue.updatedAt),
+      source: 'timestamps',
+    }
+  }
+
+  private calculatePercentile(values: number[], percentile: number): number {
+    if (values.length === 0) return 0
+    const sorted = [...values].sort((a, b) => a - b)
+    const index = Math.min(sorted.length - 1, Math.ceil((percentile / 100) * sorted.length) - 1)
+    return sorted[Math.max(0, index)]
   }
 
   // Calculate throughput metrics
@@ -517,12 +678,20 @@ export class AnalyticsService {
     return scopeForDate - scopeReduced
   }
 
-  // Generate cumulative flow diagram data
+  // Generate cumulative flow diagram data.
+  //
+  // Each day's counts are reconstructed from real issue statuses: where the
+  // issue_events table has 'status' events we replay them to know the exact
+  // status on a given day; issues without recorded status events fall back
+  // to a createdAt -> updatedAt approximation (created in todo; if currently
+  // done, treated as done from updatedAt onwards; otherwise assumed to have
+  // held their current status since creation).
   async generateCumulativeFlowData(projectId: number, days: number = 30): Promise<{
     chartData: Array<{
       date: string
       todo: number
       inProgress: number
+      codeReview: number
       done: number
       total: number
     }>
@@ -538,92 +707,97 @@ export class AnalyticsService {
     const startDate = new Date()
     startDate.setDate(endDate.getDate() - days)
 
-    const chartData = []
-    const wipData = [] // For trend analysis
+    const issues = await this.issuesRepository
+      .createQueryBuilder('issue')
+      .where('issue.projectId = :projectId', { projectId })
+      .getMany()
 
-    // Generate data for each day
+    const eventsByIssue = await this.getStatusEventsByIssue(issues.map(i => i.id))
+
+    const chartData: Array<{
+      date: string
+      todo: number
+      inProgress: number
+      codeReview: number
+      done: number
+      total: number
+    }> = []
+    const wipData: number[] = [] // in_progress + code_review, for trend analysis
+
     for (let day = 0; day <= days; day++) {
       const currentDate = new Date(startDate)
       currentDate.setDate(startDate.getDate() + day)
       currentDate.setHours(23, 59, 59, 999) // End of day
 
-      // Simplified CFD: Get cumulative counts based on creation and completion dates
+      const counts: Record<IssueStatus, number> = {
+        [IssueStatus.TODO]: 0,
+        [IssueStatus.IN_PROGRESS]: 0,
+        [IssueStatus.CODE_REVIEW]: 0,
+        [IssueStatus.DONE]: 0,
+      }
 
-      // Issues created by this date
-      const issuesCreated = await this.issuesRepository
-        .createQueryBuilder('issue')
-        .where('issue.projectId = :projectId', { projectId })
-        .andWhere('issue.createdAt <= :date', { date: currentDate })
-        .getCount()
+      for (const issue of issues) {
+        const status = this.statusAtDate(issue, eventsByIssue.get(issue.id) || [], currentDate)
+        if (status) counts[status]++
+      }
 
-      // Issues completed by this date (status = done and updated by this date)
-      const issuesCompleted = await this.issuesRepository
-        .createQueryBuilder('issue')
-        .where('issue.projectId = :projectId', { projectId })
-        .andWhere('issue.createdAt <= :date', { date: currentDate })
-        .andWhere('issue.status = :status', { status: 'done' })
-        .andWhere('issue.updatedAt <= :date', { date: currentDate })
-        .getCount()
-
-      // Simulate work in progress (issues created but not completed yet)
-      // For demonstration: assume 10-20% of non-completed work is in progress
-      const remainingWork = issuesCreated - issuesCompleted
-      const inProgressRatio = 0.15 // 15% of remaining work is typically in progress
-      const inProgressIssues = Math.round(remainingWork * inProgressRatio)
-      const todoIssues = remainingWork - inProgressIssues
-      const doneIssues = issuesCompleted
-
-      const total = todoIssues + inProgressIssues + doneIssues
+      const total =
+        counts[IssueStatus.TODO] +
+        counts[IssueStatus.IN_PROGRESS] +
+        counts[IssueStatus.CODE_REVIEW] +
+        counts[IssueStatus.DONE]
 
       chartData.push({
         date: currentDate.toISOString().split('T')[0],
-        todo: todoIssues,
-        inProgress: inProgressIssues,
-        done: doneIssues,
-        total
+        todo: counts[IssueStatus.TODO],
+        inProgress: counts[IssueStatus.IN_PROGRESS],
+        codeReview: counts[IssueStatus.CODE_REVIEW],
+        done: counts[IssueStatus.DONE],
+        total,
       })
 
-      wipData.push(inProgressIssues)
+      wipData.push(counts[IssueStatus.IN_PROGRESS] + counts[IssueStatus.CODE_REVIEW])
     }
 
     // Calculate metrics
-    const currentWIP = chartData[chartData.length - 1]?.inProgress || 0
+    const lastDay = chartData[chartData.length - 1]
+    const currentWIP = lastDay ? lastDay.inProgress + lastDay.codeReview : 0
 
-    // Calculate average cycle time (simplified - time from creation to done)
-    const recentCompletedIssues = await this.issuesRepository
-      .createQueryBuilder('issue')
-      .where('issue.projectId = :projectId', { projectId })
-      .andWhere('issue.status = :status', { status: 'done' })
-      .andWhere('issue.updatedAt >= :startDate', { startDate })
-      .getMany()
-
-    const cycleTimes = recentCompletedIssues.map(issue => {
-      const created = new Date(issue.createdAt)
-      const completed = new Date(issue.updatedAt)
-      return Math.ceil((completed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
-    })
+    // Average cycle time over issues completed within the window (events-based
+    // where possible, createdAt -> updatedAt fallback otherwise)
+    const cycleTimes: number[] = []
+    let completedInPeriod = 0
+    for (const issue of issues) {
+      const window = this.resolveCycleWindow(issue, eventsByIssue.get(issue.id) || [])
+      if (!window || window.completedAt < startDate) continue
+      completedInPeriod++
+      cycleTimes.push((window.completedAt.getTime() - window.startedAt.getTime()) / (1000 * 60 * 60 * 24))
+    }
 
     const avgCycleTime = cycleTimes.length > 0
-      ? Math.round(cycleTimes.reduce((sum, time) => sum + time, 0) / cycleTimes.length)
+      ? Math.round((cycleTimes.reduce((sum, time) => sum + time, 0) / cycleTimes.length) * 10) / 10
       : 0
 
     // Calculate average throughput (issues completed per week)
     const weeksInPeriod = days / 7
     const avgThroughput = weeksInPeriod > 0
-      ? Math.round((recentCompletedIssues.length / weeksInPeriod) * 10) / 10
+      ? Math.round((completedInPeriod / weeksInPeriod) * 10) / 10
       : 0
 
     // Detect bottlenecks by finding status with highest accumulation
     const lastWeekData = chartData.slice(-7)
     const statusAccumulation = {
-      todo: lastWeekData.reduce((sum, d) => sum + d.todo, 0) / lastWeekData.length,
-      inProgress: lastWeekData.reduce((sum, d) => sum + d.inProgress, 0) / lastWeekData.length
+      todo: lastWeekData.reduce((sum, d) => sum + d.todo, 0) / Math.max(lastWeekData.length, 1),
+      inProgress: lastWeekData.reduce((sum, d) => sum + d.inProgress, 0) / Math.max(lastWeekData.length, 1),
+      codeReview: lastWeekData.reduce((sum, d) => sum + d.codeReview, 0) / Math.max(lastWeekData.length, 1),
     }
 
     let bottleneckStatus: string | null = null
-    if (statusAccumulation.inProgress > statusAccumulation.todo * 1.5) {
+    if (statusAccumulation.codeReview > Math.max(statusAccumulation.inProgress, 1) * 1.5) {
+      bottleneckStatus = 'code_review'
+    } else if (statusAccumulation.inProgress > Math.max(statusAccumulation.todo, 1) * 1.5) {
       bottleneckStatus = 'in_progress'
-    } else if (statusAccumulation.todo > statusAccumulation.inProgress * 2) {
+    } else if (statusAccumulation.todo > Math.max(statusAccumulation.inProgress + statusAccumulation.codeReview, 1) * 2) {
       bottleneckStatus = 'todo'
     }
 
@@ -651,6 +825,37 @@ export class AnalyticsService {
         wipTrend
       }
     }
+  }
+
+  /**
+   * The status an issue held at the end of a given day, or null if the issue
+   * did not exist yet. Replays issue_events 'status' events where available;
+   * otherwise approximates from createdAt/updatedAt (see CFD doc comment).
+   */
+  private statusAtDate(issue: Issue, statusEvents: IssueEvent[], date: Date): IssueStatus | null {
+    if (new Date(issue.createdAt) > date) return null
+
+    const validStatuses = new Set<string>(Object.values(IssueStatus))
+    const toStatus = (value: string | null): IssueStatus =>
+      value && validStatuses.has(value) ? (value as IssueStatus) : IssueStatus.TODO
+
+    if (statusEvents.length > 0) {
+      let lastBefore: IssueEvent | null = null
+      for (const event of statusEvents) {
+        if (new Date(event.createdAt) <= date) lastBefore = event
+        else break
+      }
+      if (lastBefore) return toStatus(lastBefore.newValue)
+      // Before the first recorded transition: the issue held its initial status
+      return toStatus(statusEvents[0].oldValue)
+    }
+
+    // No recorded status events: fall back to timestamps. Issues start in
+    // todo; if currently done, treat updatedAt as the done transition.
+    if (issue.status === IssueStatus.DONE) {
+      return new Date(issue.updatedAt) <= date ? IssueStatus.DONE : IssueStatus.TODO
+    }
+    return issue.status
   }
 
   // Helper method to calculate story points from issue array

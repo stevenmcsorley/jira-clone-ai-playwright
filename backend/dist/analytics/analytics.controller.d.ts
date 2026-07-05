@@ -23,7 +23,7 @@ export declare class AnalyticsController {
     getVelocityForecast(projectId: number, req: any, remainingStoryPoints?: number, targetDate?: string): Promise<import("./velocity.service").VelocityForecast>;
     getTeamVelocityComparison(projectId: number, req: any, sprintCount?: number): Promise<import("./velocity.service").TeamVelocityComparison[]>;
     getBurndownChart(sprintId: number, req: any): Promise<import("./analytics.service").BurndownData[]>;
-    getCycleTimeMetrics(projectId: number, req: any, sprintCount?: number): Promise<import("./analytics.service").CycleTimeMetrics>;
+    getCycleTimeMetrics(projectId: number, req: any, days?: number): Promise<import("./analytics.service").CycleTimeReport>;
     getThroughputMetrics(projectId: number, req: any, sprintCount?: number): Promise<import("./analytics.service").ThroughputMetrics>;
     getSprintScopeData(sprintId: number, req: any): Promise<{
         totalScope: number;
@@ -40,6 +40,7 @@ export declare class AnalyticsController {
             date: string;
             todo: number;
             inProgress: number;
+            codeReview: number;
             done: number;
             total: number;
         }>;

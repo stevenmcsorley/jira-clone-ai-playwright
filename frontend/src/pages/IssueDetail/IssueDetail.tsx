@@ -7,6 +7,8 @@ import { Subtasks } from '../../components/Subtasks/Subtasks'
 import { TimeTracking } from '../../components/TimeTracking/TimeTracking'
 import { EpicIssues } from '../../components/EpicIssues/EpicIssues'
 import { IssueLinks } from '../../components/IssueLinks/IssueLinks'
+import { Markdown } from '../../components/Markdown'
+import { ActivitySection } from './ActivitySection'
 import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
 import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
 import { useProjects } from '../../hooks/useProjects'
@@ -180,9 +182,11 @@ export const IssueDetail = () => {
             {/* Description */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Description</h3>
-              <div className="text-gray-700 whitespace-pre-wrap">
-                {issue.description || 'No description provided.'}
-              </div>
+              {issue.description ? (
+                <Markdown>{issue.description}</Markdown>
+              ) : (
+                <div className="text-gray-700">No description provided.</div>
+              )}
             </div>
 
             {/* Labels */}
@@ -219,6 +223,9 @@ export const IssueDetail = () => {
 
             {/* Comments & Activity */}
             <Comments issueId={issue.id} />
+
+            {/* Change History */}
+            <ActivitySection issueId={issue.id} />
           </div>
 
           {/* Sidebar */}

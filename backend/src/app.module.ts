@@ -10,6 +10,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module'
 import { EstimationModule } from './estimation/estimation.module'
 import { AnalyticsModule } from './analytics/analytics.module'
 import { EventsModule } from './events/events.module'
+import { NotificationsModule } from './notifications/notifications.module'
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EventsModule } from './events/events.module'
     EstimationModule,
     AnalyticsModule,
     EventsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
