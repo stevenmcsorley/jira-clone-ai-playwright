@@ -51,7 +51,7 @@ export const Users = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">People</h1>
 
       <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto mb-8">

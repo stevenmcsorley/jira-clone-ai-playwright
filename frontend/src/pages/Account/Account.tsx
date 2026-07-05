@@ -64,7 +64,8 @@ export const Account = () => {
   const inputClass = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="p-6 max-w-xl space-y-8">
+    <div className="p-6 space-y-8">
+      <div className="max-w-2xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Account</h1>
         <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
@@ -113,6 +114,7 @@ export const Account = () => {
           </button>
         </form>
       </section>
+      </div>
     </div>
   )
 }

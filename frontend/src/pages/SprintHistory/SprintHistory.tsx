@@ -332,7 +332,7 @@ export const SprintHistory = () => {
             </Link>
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {sprints.map(sprint => (
               <SprintCard key={sprint.id} sprint={sprint} projectId={projectId ?? ''} />
             ))}

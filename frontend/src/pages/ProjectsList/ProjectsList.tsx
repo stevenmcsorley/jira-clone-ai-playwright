@@ -18,7 +18,7 @@ export const ProjectsList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="px-6 py-8 mx-auto max-w-7xl">
+      <main className="flex-1 px-6 py-6">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>

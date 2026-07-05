@@ -333,7 +333,7 @@ export const Backlog = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-6 py-6">
         <div className="max-w-full mx-auto space-y-6">
 
           {/* Create Sprint Form */}

@@ -197,7 +197,7 @@ export const WorkspaceSettings = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl space-y-8">
+    <div className="p-6 space-y-8">
       {/* Header / rename */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
