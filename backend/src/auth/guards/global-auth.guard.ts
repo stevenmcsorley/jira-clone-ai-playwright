@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common'
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, ForbiddenException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator'
 import { JwtAuthGuard } from './jwt-auth.guard'
@@ -31,7 +31,9 @@ export class GlobalAuthGuard implements CanActivate {
 
     try {
       return await this.apiTokenGuard.canActivate(context)
-    } catch {
+    } catch (error) {
+      // A valid token lacking a scope is forbidden, not unauthenticated
+      if (error instanceof ForbiddenException) throw error
       throw new UnauthorizedException('Authentication required')
     }
   }

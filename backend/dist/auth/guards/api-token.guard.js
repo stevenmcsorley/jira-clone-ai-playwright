@@ -41,6 +41,13 @@ let ApiTokenGuard = class ApiTokenGuard {
         if (apiToken.expiresAt && apiToken.expiresAt < new Date()) {
             throw new common_1.UnauthorizedException('API token expired');
         }
+        const scopes = apiToken.scopes || [];
+        if (scopes.length > 0) {
+            const needed = ['GET', 'HEAD', 'OPTIONS'].includes(request.method) ? 'read' : 'write';
+            if (!scopes.includes(needed)) {
+                throw new common_1.ForbiddenException(`This API token does not have the '${needed}' scope`);
+            }
+        }
         await this.apiTokenRepository.update(apiToken.id, {
             lastUsedAt: new Date()
         });

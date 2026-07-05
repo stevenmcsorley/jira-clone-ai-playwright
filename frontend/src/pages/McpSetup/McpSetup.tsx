@@ -63,6 +63,7 @@ const EXAMPLE_PROMPTS = [
 export const McpSetup = () => {
   const [tokens, setTokens] = useState<TokenInfo[]>([])
   const [tokenName, setTokenName] = useState('claude')
+  const [tokenAccess, setTokenAccess] = useState<'full' | 'readonly'>('full')
   const [newToken, setNewToken] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +97,11 @@ export const McpSetup = () => {
       const response = await fetch('/api/tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: tokenName.trim() || 'claude', description: 'MCP access token' }),
+        body: JSON.stringify({
+          name: tokenName.trim() || 'claude',
+          description: 'MCP access token',
+          scopes: tokenAccess === 'readonly' ? ['read'] : ['read', 'write'],
+        }),
       })
       if (!response.ok) throw new Error('Failed to create token')
       const data = await response.json()
@@ -142,6 +147,14 @@ export const McpSetup = () => {
             placeholder="Token name"
             className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-56"
           />
+          <select
+            value={tokenAccess}
+            onChange={e => setTokenAccess(e.target.value as 'full' | 'readonly')}
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="full">Full access (read + write)</option>
+            <option value="readonly">Read-only (observe, never change)</option>
+          </select>
           <button
             onClick={handleCreateToken}
             disabled={creating}

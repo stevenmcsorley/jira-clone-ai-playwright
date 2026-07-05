@@ -17,13 +17,12 @@ import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
 import { VelocityReport } from './components/Reports/VelocityReport/VelocityReport'
 import { CumulativeFlowDiagram } from './components/Reports/CumulativeFlowDiagram/CumulativeFlowDiagram'
 import { SprintHistory } from './pages/SprintHistory'
-import { Components } from './pages/Components/Components'
-import { Releases } from './pages/Releases/Releases'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { InviteAccept } from './pages/InviteAccept'
 import { WorkspaceSettings } from './pages/WorkspaceSettings'
 import { Users } from './pages/Users'
+import { Account } from './pages/Account'
 import { McpSetup } from './pages/McpSetup'
 import { AuthProvider } from './contexts/AuthContext'
 import { RequireAuth } from './components/Auth/RequireAuth'
@@ -68,6 +67,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <Users />
+            </Layout>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <Layout>
+              <Account />
             </Layout>
           }
         />
@@ -214,22 +221,6 @@ const AppRoutes = () => {
         <Route
           path="/projects/:projectId/settings"
           element={<ProjectSettings />}
-        />
-        <Route
-          path="/projects/:projectId/components"
-          element={
-            <Layout>
-              <Components />
-            </Layout>
-          }
-        />
-        <Route
-          path="/projects/:projectId/releases"
-          element={
-            <Layout>
-              <Releases />
-            </Layout>
-          }
         />
         {/* Redirect to projects list for any unmatched routes */}
         <Route path="*" element={<Navigate to="/projects" replace />} />

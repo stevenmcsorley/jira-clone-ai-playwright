@@ -45,6 +45,21 @@ export class AuthService {
     return process.env.OPEN_SIGNUP === 'true'
   }
 
+  async changePassword(userId: number, currentPassword: string, newPassword: string) {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.id = :userId', { userId })
+      .getOne()
+    if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
+      throw new UnauthorizedException('Current password is incorrect')
+    }
+    await this.userRepository.update(userId, {
+      password: await bcrypt.hash(newPassword, 10),
+    })
+    return { changed: true }
+  }
+
   /** Self-service signup: create the account and a personal workspace, sign in. */
   async register(email: string, name: string, password: string) {
     if (!AuthService.openSignup) {

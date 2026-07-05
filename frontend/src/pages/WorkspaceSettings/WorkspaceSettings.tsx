@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { clearWorkspaceId } from '../../lib/auth'
 import type { WorkspaceRole } from '../../types/domain.types'
 
 interface WorkspaceMember {
@@ -27,6 +28,9 @@ interface WorkspaceInvite {
 export const WorkspaceSettings = () => {
   const { user, currentWorkspace, refreshWorkspaces, switchWorkspace } = useAuth()
   const myRole = currentWorkspace?.role
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const canManage = myRole === 'owner' || myRole === 'admin'
   const isOwner = myRole === 'owner'
 
@@ -395,6 +399,45 @@ export const WorkspaceSettings = () => {
         </form>
         {createError && <p className="text-sm text-red-600 mt-3">{createError}</p>}
       </section>
+
+      {/* Danger zone */}
+      {isOwner && (
+        <section className="bg-white rounded-lg shadow p-6 border border-red-200">
+          <h2 className="text-lg font-semibold text-red-700 mb-1">Danger zone</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Deleting this workspace permanently removes all of its projects, issues, sprints and history.
+            Type <span className="font-mono font-medium">{currentWorkspace?.name}</span> to confirm.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              placeholder="Workspace name"
+              value={deleteConfirm}
+              onChange={e => setDeleteConfirm(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 w-64"
+            />
+            <button
+              disabled={deleting || deleteConfirm !== currentWorkspace?.name}
+              onClick={async () => {
+                setDeleting(true)
+                setDeleteError(null)
+                try {
+                  const response = await fetch('/api/workspaces/current', { method: 'DELETE' })
+                  if (!response.ok) throw new Error('Delete failed')
+                  clearWorkspaceId()
+                  window.location.assign('/projects')
+                } catch (err) {
+                  setDeleteError(err instanceof Error ? err.message : 'Delete failed')
+                  setDeleting(false)
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white font-medium rounded-md px-4 py-2 text-sm"
+            >
+              {deleting ? 'Deleting…' : 'Delete workspace'}
+            </button>
+          </div>
+          {deleteError && <p className="text-sm text-red-600 mt-3">{deleteError}</p>}
+        </section>
+      )}
     </div>
   )
 }

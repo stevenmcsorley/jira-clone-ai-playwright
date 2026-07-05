@@ -50,6 +50,12 @@ export class WorkspacesService {
     return this.workspaceRepository.findOne({ where: { id: workspaceId } })
   }
 
+  /** Deletes the workspace after its projects have been removed by the caller. */
+  async deleteWorkspace(workspaceId: number): Promise<void> {
+    // members and invites cascade at the DB level
+    await this.workspaceRepository.delete(workspaceId)
+  }
+
   async listMembers(workspaceId: number) {
     const members = await this.memberRepository.find({
       where: { workspaceId },

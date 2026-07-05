@@ -5,6 +5,7 @@ import {
 import { IsEmail, IsIn, IsString, MinLength } from 'class-validator'
 import { WorkspacesService } from './workspaces.service'
 import { UsersService } from '../users/users.service'
+import { ProjectsService } from '../projects/projects.service'
 import { Public } from '../auth/decorators/public.decorator'
 import { AuthService } from '../auth/services/auth.service'
 import { rateLimit } from '../auth/rate-limit'
@@ -41,6 +42,7 @@ export class WorkspacesController {
     private readonly workspacesService: WorkspacesService,
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
+    private readonly projectsService: ProjectsService,
   ) {}
 
   @Get()
@@ -65,6 +67,20 @@ export class WorkspacesController {
   rename(@Body() dto: CreateWorkspaceDto, @Req() req: any) {
     requireManager(req)
     return this.workspacesService.rename(req.workspaceId, dto.name)
+  }
+
+  @Delete('current')
+  @HttpCode(204)
+  async deleteWorkspace(@Req() req: any) {
+    if (req.workspaceRole !== 'owner') {
+      throw new ForbiddenException('Only an owner can delete a workspace')
+    }
+    // Remove projects through the service so all issue children go with them
+    const projects = await this.projectsService.findAll(req.workspaceId)
+    for (const project of projects) {
+      await this.projectsService.remove(project.id, req.workspaceId)
+    }
+    await this.workspacesService.deleteWorkspace(req.workspaceId)
   }
 
   @Get('current/members')

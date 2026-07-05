@@ -11,12 +11,14 @@ import { WorkspaceScopeService } from './workspace-scope.service'
 import { WorkspacesController, InvitesController } from './workspaces.controller'
 import { UsersModule } from '../users/users.module'
 import { AuthModule } from '../auth/auth.module'
+import { ProjectsModule } from '../projects/projects.module'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Workspace, WorkspaceMember, WorkspaceInvite, User, Project, Issue]),
     UsersModule,
     AuthModule,
+    ProjectsModule,
   ],
   controllers: [WorkspacesController, InvitesController],
   providers: [WorkspacesService, WorkspaceScopeService],

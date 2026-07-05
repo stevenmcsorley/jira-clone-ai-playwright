@@ -26,6 +26,16 @@ class RegisterDto {
   password: string
 }
 
+class ChangePasswordDto {
+  @IsString()
+  @MinLength(1)
+  currentPassword: string
+
+  @IsString()
+  @MinLength(6)
+  newPassword: string
+}
+
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -56,5 +66,12 @@ export class AuthController {
   me(@Req() req: any) {
     const { password, ...user } = req.user ?? {}
     return user
+  }
+
+  @Post('change-password')
+  @HttpCode(200)
+  changePassword(@Body() dto: ChangePasswordDto, @Req() req: any) {
+    rateLimit('change-password', req.ip)
+    return this.authService.changePassword(req.user.id, dto.currentPassword, dto.newPassword)
   }
 }

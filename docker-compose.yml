@@ -30,19 +30,6 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - miniodata:/data
-    restart: unless-stopped
-
   backend:
     build:
       context: ./backend
@@ -51,20 +38,18 @@ services:
     environment:
       DATABASE_URL: postgres://ossicone:secret@postgres:5432/ossicone
       REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
       NODE_ENV: development
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       OPEN_SIGNUP: "true"
+      # Poll for file changes - native FS events do not cross the Windows bind mount
+      TSC_WATCHFILE: DynamicPriorityPolling
+      CHOKIDAR_USEPOLLING: "true"
       PORT: 4000
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_started
     ports:
       - "4000:4000"
     volumes:
@@ -81,6 +66,8 @@ services:
     environment:
       VITE_API_URL: /api
       VITE_WS_URL: ws://localhost:4000
+      # Poll for file changes - native FS events do not cross the Windows bind mount
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       - "5173:5173"
     volumes:
@@ -95,6 +82,5 @@ services:
 volumes:
   pgdata:
   redisdata:
-  miniodata:
   frontend_node_modules:
   backend_node_modules:
