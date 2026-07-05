@@ -31,7 +31,6 @@ export const ReportsNavigation: React.FC<ReportsNavigationProps> = ({ projectId 
     { id: 'velocity', name: 'Velocity report', path: `/projects/${projectId}/reports/velocity` },
     { id: 'cumulative', name: 'Cumulative flow', path: `/projects/${projectId}/reports/cumulative-flow` },
     { id: 'cycle-time', name: 'Cycle time report', path: `/projects/${projectId}/reports/cycle-time` },
-    { id: 'deployment', name: 'Deployment frequency report', path: `/projects/${projectId}/reports/deployment-frequency` },
   ]
 
   return (

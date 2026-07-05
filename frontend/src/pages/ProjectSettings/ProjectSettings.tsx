@@ -3,14 +3,19 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
+import { useAuth } from '../../contexts/AuthContext'
 import { ProjectsService } from '../../services/api/projects.service'
-import type { Project } from '../../types/domain.types'
+import { GitService, isRepoConnected } from '../../services/api/git.service'
+import type { Project, RepoConfig } from '../../types/domain.types'
 
 export const ProjectSettings = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const { projects, loading: projectsLoading } = useProjects()
   const { users } = useUsers()
+  const { currentWorkspace } = useAuth()
+  const canManageRepo =
+    currentWorkspace?.role === 'owner' || currentWorkspace?.role === 'admin'
 
   const [project, setProject] = useState<Project | null>(null)
   const [saving, setSaving] = useState(false)
@@ -23,6 +28,17 @@ export const ProjectSettings = () => {
   const [description, setDescription] = useState('')
   const [leadId, setLeadId] = useState<number>(1)
 
+  // Repository (git integration) state
+  const [repo, setRepo] = useState<RepoConfig | null>(null)
+  const [repoProvider, setRepoProvider] = useState('github')
+  const [repoOwner, setRepoOwner] = useState('')
+  const [repoName, setRepoName] = useState('')
+  const [repoBranch, setRepoBranch] = useState('')
+  const [repoToken, setRepoToken] = useState('')
+  const [repoSaving, setRepoSaving] = useState(false)
+  const [repoError, setRepoError] = useState<string | null>(null)
+  const [repoMessage, setRepoMessage] = useState<string | null>(null)
+
   useEffect(() => {
     const currentProject = projects.find(p => p.id === Number(projectId))
     if (currentProject) {
@@ -33,6 +49,70 @@ export const ProjectSettings = () => {
       setLeadId(currentProject.leadId)
     }
   }, [projects, projectId])
+
+  useEffect(() => {
+    if (!projectId) return
+    GitService.getConfig(Number(projectId))
+      .then(result => {
+        if (isRepoConnected(result)) {
+          setRepo(result)
+          setRepoProvider(result.provider)
+          setRepoOwner(result.owner)
+          setRepoName(result.repo)
+          setRepoBranch(result.defaultBranch || '')
+        } else {
+          setRepo(null)
+        }
+      })
+      .catch(() => setRepo(null))
+  }, [projectId])
+
+  const handleRepoSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!project) return
+    try {
+      setRepoSaving(true)
+      setRepoError(null)
+      setRepoMessage(null)
+      const updated = await GitService.setConfig(project.id, {
+        provider: repoProvider,
+        owner: repoOwner.trim(),
+        repo: repoName.trim(),
+        // Omit token entirely when left blank on an already-connected repo so
+        // the server keeps the stored one; send it (even empty) otherwise.
+        ...(repoToken !== '' || !repo ? { token: repoToken } : {}),
+        defaultBranch: repoBranch.trim() || undefined,
+      })
+      setRepo(updated)
+      setRepoToken('')
+      setRepoMessage('Repository connection saved.')
+    } catch (err) {
+      setRepoError(err instanceof Error ? err.message : 'Failed to save repository')
+    } finally {
+      setRepoSaving(false)
+    }
+  }
+
+  const handleRepoDisconnect = async () => {
+    if (!project) return
+    if (!window.confirm('Disconnect this repository from the project?')) return
+    try {
+      setRepoSaving(true)
+      setRepoError(null)
+      setRepoMessage(null)
+      await GitService.deleteConfig(project.id)
+      setRepo(null)
+      setRepoOwner('')
+      setRepoName('')
+      setRepoBranch('')
+      setRepoToken('')
+      setRepoMessage('Repository disconnected.')
+    } catch (err) {
+      setRepoError(err instanceof Error ? err.message : 'Failed to disconnect repository')
+    } finally {
+      setRepoSaving(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -251,6 +331,153 @@ export const ProjectSettings = () => {
             </div>
           </div>
         </form>
+
+        {/* Repository */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-900">Repository</h2>
+            {repo ? (
+              <span className="inline-flex items-center gap-1.5 text-sm text-green-700">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                Connected{repo.hasToken ? ' (token set)' : ' (public read)'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                <span className="w-2 h-2 rounded-full bg-gray-300" />
+                Not connected
+              </span>
+            )}
+          </div>
+
+          <p className="text-sm text-gray-600 mb-4">
+            Link a Git repository to view commits, branches and pull requests on the{' '}
+            <Link
+              to={`/projects/${projectId}/repository`}
+              className="text-blue-600 hover:underline"
+            >
+              Repository page
+            </Link>
+            .
+          </p>
+
+          {repoError && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-red-600">{repoError}</p>
+            </div>
+          )}
+          {repoMessage && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-green-600">{repoMessage}</p>
+            </div>
+          )}
+
+          {!canManageRepo && (
+            <p className="text-sm text-gray-500 italic mb-4">
+              Only workspace owners and admins can change the repository connection.
+            </p>
+          )}
+
+          <form onSubmit={handleRepoSave} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Provider
+                </label>
+                <select
+                  value={repoProvider}
+                  onChange={e => setRepoProvider(e.target.value)}
+                  disabled={!canManageRepo}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                >
+                  <option value="github">GitHub</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default branch
+                </label>
+                <input
+                  type="text"
+                  value={repoBranch}
+                  onChange={e => setRepoBranch(e.target.value)}
+                  disabled={!canManageRepo}
+                  placeholder="main"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Owner *
+                </label>
+                <input
+                  type="text"
+                  value={repoOwner}
+                  onChange={e => setRepoOwner(e.target.value)}
+                  disabled={!canManageRepo}
+                  placeholder="e.g. stevenmcsorley"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Repository *
+                </label>
+                <input
+                  type="text"
+                  value={repoName}
+                  onChange={e => setRepoName(e.target.value)}
+                  disabled={!canManageRepo}
+                  placeholder="e.g. jira-clone-ai-playwright"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Personal Access Token
+              </label>
+              <input
+                type="password"
+                value={repoToken}
+                onChange={e => setRepoToken(e.target.value)}
+                disabled={!canManageRepo}
+                placeholder={
+                  repo?.hasToken
+                    ? 'connected — leave blank to keep'
+                    : 'optional for public repos'
+                }
+                autoComplete="new-password"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Stored securely server-side and never returned by the API. Public repos
+                can be read without a token (subject to rate limits).
+              </p>
+            </div>
+
+            {canManageRepo && (
+              <div className="flex items-center gap-3">
+                <Button
+                  type="submit"
+                  disabled={repoSaving || !repoOwner.trim() || !repoName.trim()}
+                >
+                  {repoSaving ? 'Saving...' : repo ? 'Update Connection' : 'Connect Repository'}
+                </Button>
+                {repo && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleRepoDisconnect}
+                    disabled={repoSaving}
+                  >
+                    Disconnect
+                  </Button>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
 
         {/* Danger Zone */}
         <div className="bg-white rounded-lg border border-red-200 p-6">

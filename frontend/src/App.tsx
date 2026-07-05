@@ -11,6 +11,7 @@ import { IssuesList } from './pages/IssuesList'
 import { SearchResults } from './pages/SearchResults'
 import { Search } from './pages/Search'
 import { ProjectSettings } from './pages/ProjectSettings'
+import { Repository } from './pages/Repository'
 import { Reports } from './pages/Reports'
 import { BurnupReport } from './components/Reports/BurnupReport/BurnupReport'
 import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
@@ -216,6 +217,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <CycleTimeReport />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/repository"
+          element={
+            <Layout>
+              <Repository />
             </Layout>
           }
         />

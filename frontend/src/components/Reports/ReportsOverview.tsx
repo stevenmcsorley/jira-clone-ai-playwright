@@ -109,21 +109,6 @@ const CycleTimeMockChart = () => (
   </div>
 )
 
-const DeploymentMockChart = () => (
-  <div className="h-24 bg-gray-50 rounded flex flex-col p-2">
-    <div className="flex items-end space-x-1 flex-1">
-      <div className="h-6 w-3 bg-gray-400 rounded-sm"></div>
-      <div className="h-8 w-3 bg-gray-400 rounded-sm"></div>
-      <div className="h-4 w-3 bg-gray-400 rounded-sm"></div>
-      <div className="h-10 w-3 bg-gray-400 rounded-sm"></div>
-      <div className="h-12 w-3 bg-green-400 rounded-sm"></div>
-    </div>
-    <svg className="w-full h-8">
-      <path d="M 2 6 Q 8 4 14 5 T 26 3 L 32 6" stroke="#3b82f6" strokeWidth="2" fill="none" />
-      <circle cx="6" cy="5" r="2" fill="#3b82f6" />
-    </svg>
-  </div>
-)
 
 export const ReportsOverview: React.FC<ReportsOverviewProps> = ({ projectId }) => {
   const reports: ReportCard[] = [
@@ -166,14 +151,6 @@ export const ReportsOverview: React.FC<ReportsOverviewProps> = ({ projectId }) =
       icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
       path: `/projects/${projectId}/reports/cycle-time`,
       mockChart: <CycleTimeMockChart />
-    },
-    {
-      id: 'deployment-frequency',
-      title: 'Deployment frequency report',
-      description: 'Understand your deployment frequency to understand risk and how often you are shipping value to your customers.',
-      icon: <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>,
-      path: `/projects/${projectId}/reports/deployment-frequency`,
-      mockChart: <DeploymentMockChart />
     }
   ]
 

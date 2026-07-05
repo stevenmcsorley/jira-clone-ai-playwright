@@ -20,6 +20,7 @@ const estimation_module_1 = require("./estimation/estimation.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const events_module_1 = require("./events/events.module");
 const notifications_module_1 = require("./notifications/notifications.module");
+const git_module_1 = require("./git/git.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -48,6 +49,7 @@ exports.AppModule = AppModule = __decorate([
             analytics_module_1.AnalyticsModule,
             events_module_1.EventsModule,
             notifications_module_1.NotificationsModule,
+            git_module_1.GitModule,
         ],
     })
 ], AppModule);

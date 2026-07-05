@@ -160,6 +160,52 @@ export interface CreateIssueRequest {
   epicId?: number
 }
 
+// --- Git integration ---
+
+export interface RepoConfig {
+  projectId: number
+  provider: string
+  owner: string
+  repo: string
+  defaultBranch: string | null
+  hasToken: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SetRepoRequest {
+  provider: string
+  owner: string
+  repo: string
+  token?: string
+  defaultBranch?: string
+}
+
+export interface RepoCommit {
+  sha: string
+  shortSha: string
+  message: string
+  author: string
+  authorAvatar: string | null
+  date: string
+  url: string
+}
+
+export interface RepoBranch {
+  name: string
+  protected: boolean
+}
+
+export interface RepoPullRequest {
+  number: number
+  title: string
+  state: string
+  author: string
+  url: string
+  createdAt: string
+  branch: string
+}
+
 export interface UpdateIssueRequest {
   title?: string
   description?: string

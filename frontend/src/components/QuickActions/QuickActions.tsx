@@ -6,7 +6,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from '../ui/Button';
 
 interface QuickAction {
   id: string;
@@ -91,40 +90,6 @@ export const QuickActions: React.FC = () => {
         setIsOpen(false);
       },
       shortcut: '⌘ P'
-    },
-    {
-      id: 'create-component',
-      label: 'Create Component',
-      description: 'Add a new component to organize issues',
-      icon: (
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
-      ),
-      action: () => {
-        if (projectId) {
-          navigate(`/projects/${projectId}/components?create=true`);
-        }
-        setIsOpen(false);
-      },
-      shortcut: '⌘ C'
-    },
-    {
-      id: 'create-version',
-      label: 'Create Version',
-      description: 'Plan a new release version',
-      icon: (
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.934 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.179-4.456A1 1 0 0112 2z" clipRule="evenodd" />
-        </svg>
-      ),
-      action: () => {
-        if (projectId) {
-          navigate(`/projects/${projectId}/releases?create=true`);
-        }
-        setIsOpen(false);
-      },
-      shortcut: '⌘ V'
     }
   ];
 
@@ -166,26 +131,24 @@ export const QuickActions: React.FC = () => {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Plus Button */}
-      <Button
-        variant="primary"
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-8 h-8 p-0 rounded-full flex items-center justify-center"
-        title="Quick actions (+ )"
+        className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+        title="Quick actions"
+        aria-label="Quick actions"
+        aria-expanded={isOpen}
       >
         <svg
-          className={`w-4 h-4 transition-transform duration-200 ${
-            isOpen ? 'rotate-45' : ''
-          }`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          viewBox="0 0 24 24"
         >
-          <path
-            fillRule="evenodd"
-            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-            clipRule="evenodd"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
         </svg>
-      </Button>
+      </button>
 
       {/* Dropdown Menu */}
       {isOpen && (

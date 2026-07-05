@@ -26,6 +26,34 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const closeSidebar = () => setSidebarOpen(false)
 
+  // Project-only nav items: a real link inside a project, disabled otherwise.
+  const ProjectNavItem = ({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) => {
+    if (!isProjectBoard) {
+      return (
+        <div
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 opacity-60 cursor-not-allowed"
+          aria-disabled="true"
+          title="Open a project to use this"
+        >
+          {children}
+        </div>
+      )
+    }
+    return (
+      <Link
+        to={to}
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
+          active
+            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+        }`}
+      >
+        {children}
+      </Link>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar backdrop */}
@@ -95,81 +123,48 @@ export const Layout = ({ children }: LayoutProps) => {
               Advanced Search
             </Link>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}/backlog` : '#'}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname.includes('/backlog')
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
+            <ProjectNavItem to={`/projects/${projectId}/backlog`} active={location.pathname.includes('/backlog')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Backlog
-            </Link>
+            </ProjectNavItem>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}` : '#'}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues')
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
+            <ProjectNavItem to={`/projects/${projectId}`} active={!!isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues') && !location.pathname.includes('/reports') && !location.pathname.includes('/history') && !location.pathname.includes('/repository') && !location.pathname.includes('/settings')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
               </svg>
               Board
-            </Link>
+            </ProjectNavItem>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}/reports` : '#'}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname.includes('/reports')
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
+            <ProjectNavItem to={`/projects/${projectId}/repository`} active={location.pathname.includes('/repository')}>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2h6v10l-3-2-3 2V4z" clipRule="evenodd" />
+              </svg>
+              Repository
+            </ProjectNavItem>
+
+            <ProjectNavItem to={`/projects/${projectId}/reports`} active={location.pathname.includes('/reports')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                 <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.707 4.293a1 1 0 00-1.414 1.414L7.586 13a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L9 10.172 6.707 9.707z" clipRule="evenodd" />
               </svg>
               Reports
-            </Link>
+            </ProjectNavItem>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}/history` : '#'}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname.includes('/history')
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
+            <ProjectNavItem to={`/projects/${projectId}/history`} active={location.pathname.includes('/history')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
               </svg>
               Sprint History
-            </Link>
+            </ProjectNavItem>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}/issues` : '#'}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname.includes('/issues') && !location.pathname.includes('/board')
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
+            <ProjectNavItem to={`/projects/${projectId}/issues`} active={location.pathname.includes('/issues') && !location.pathname.includes('/board')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               Issues
-            </Link>
+            </ProjectNavItem>
 
             <Link
               to="/mcp"
@@ -186,16 +181,12 @@ export const Layout = ({ children }: LayoutProps) => {
               AI Agent
             </Link>
 
-            <Link
-              to={isProjectBoard ? `/projects/${projectId}/settings` : '#'}
-              onClick={closeSidebar}
-              className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-            >
+            <ProjectNavItem to={`/projects/${projectId}/settings`} active={location.pathname.includes('/settings')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
               </svg>
               Settings
-            </Link>
+            </ProjectNavItem>
           </div>
         </nav>
       </div>

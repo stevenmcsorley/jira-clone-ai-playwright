@@ -27,6 +27,7 @@ export const ProjectBoard = () => {
   const [activeSprint, setActiveSprint] = useState<Sprint | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [boardFilters, setBoardFilters] = useState<BoardFilters>(EMPTY_BOARD_FILTERS)
+  const [boardMenuOpen, setBoardMenuOpen] = useState(false)
 
   // Find the current project
   const currentProject = projects.find(p => p.id === Number(projectId))
@@ -241,10 +242,46 @@ export const ProjectBoard = () => {
                 Create Issue
               </Button>
             </Link>
-            <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-              <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-              </svg>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setBoardMenuOpen(open => !open)}
+                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                title="Board actions"
+                aria-label="Board actions"
+                aria-expanded={boardMenuOpen}
+              >
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
+              {boardMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setBoardMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 w-52 bg-white border border-gray-200 rounded-md shadow-lg py-1">
+                    {activeSprint && (
+                      <button
+                        onClick={() => { setBoardMenuOpen(false); handleCompleteSprint() }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Complete sprint
+                      </button>
+                    )}
+                    <Link to={`/projects/${projectId}/backlog`} onClick={() => setBoardMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Backlog
+                    </Link>
+                    <Link to={`/projects/${projectId}/reports`} onClick={() => setBoardMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Reports
+                    </Link>
+                    <Link to={`/projects/${projectId}/history`} onClick={() => setBoardMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Sprint history
+                    </Link>
+                    <Link to={`/projects/${projectId}/settings`} onClick={() => setBoardMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Project settings
+                    </Link>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
