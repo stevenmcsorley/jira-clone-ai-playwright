@@ -10,6 +10,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { IssueTypeIcon } from '../IssueTypeIcon';
+import { formatRelativeTime } from '../../utils/relativeTime';
+import type { IssueType } from '../../types/domain.types';
 
 interface GlobalSearchProps {
   onNavigate?: (path: string) => void;
@@ -19,6 +22,7 @@ interface GlobalSearchProps {
 interface SearchItem {
   id: string;
   type: 'issue' | 'project' | 'user' | 'command';
+  issueType?: IssueType;
   title: string;
   subtitle?: string;
   description?: string;
@@ -32,6 +36,7 @@ interface SearchItem {
 interface RecentItem {
   id: string;
   type: 'issue' | 'project';
+  issueType?: IssueType;
   title: string;
   key?: string;
   path: string;
@@ -136,10 +141,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         const items: SearchItem[] = (data.results ?? []).map((issue: any) => {
           const projectId: number | undefined =
             issue.projectId ?? issue.project?.id;
-          const key = issue.key ?? `ISSUE-${issue.id}`;
+          const key = issue.key ?? (issue.project?.key ? `${issue.project.key}-${issue.id}` : `#${issue.id}`);
           return {
             id: String(issue.id),
             type: 'issue' as const,
+            issueType: issue.type as IssueType,
             title: issue.title,
             subtitle: key,
             description: issue.description,
@@ -205,6 +211,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       addToRecentItems({
         id: item.id,
         type: item.type,
+        issueType: 'issueType' in item ? item.issueType : undefined,
         title: item.title,
         key: 'key' in item ? item.key : undefined,
         path,
@@ -253,94 +260,56 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     }
   };
 
-  const getItemIcon = (type: string): string => {
-    switch (type) {
-      case 'issue': return '🎫';
-      case 'project': return '📁';
-      case 'user': return '👤';
-      case 'command': return '⚡';
-      default: return '📄';
+  const TypeIcon = ({ item }: { item: SearchItem | RecentItem }) => {
+    if (item.type === 'issue') {
+      return <IssueTypeIcon type={('issueType' in item && item.issueType) || 'task'} />;
     }
-  };
-
-  const renderSearchResult = (item: SearchItem, index: number) => {
-    return (
-      <div
-        key={item.id}
-        onClick={() => handleItemSelect(item)}
-        className={`
-          p-3 cursor-pointer transition-colors border-l-4
-          ${index === selectedIndex
-            ? 'bg-blue-50 border-blue-500'
-            : 'border-transparent hover:bg-gray-50'
-          }
-        `}
-      >
-        <div className="flex items-center space-x-3">
-          <span className="text-lg">{item.icon || getItemIcon(item.type)}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-medium text-gray-900 truncate">
-                {item.title}
-              </h4>
-              {item.key && (
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                  {item.key}
-                </span>
-              )}
-              <span className="text-xs text-gray-500 capitalize">
-                {item.type}
-              </span>
-            </div>
-            {item.description && (
-              <p className="text-xs text-gray-500 mt-1 truncate">
-                {item.description}
-              </p>
-            )}
-          </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    if (item.type === 'project') {
+      return (
+        <span className="w-5 h-5 rounded-[4px] bg-indigo-500 text-white inline-flex items-center justify-center shrink-0">
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
           </svg>
-        </div>
-      </div>
+        </span>
+      );
+    }
+    return (
+      <span className="w-5 h-5 rounded-full bg-gray-400 text-white inline-flex items-center justify-center shrink-0">
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+        </svg>
+      </span>
     );
   };
 
-  const renderRecentItem = (item: RecentItem, index: number) => {
+  const ResultRow = ({ item, index, meta }: { item: SearchItem | RecentItem; index: number; meta?: string }) => {
+    const selected = index === selectedIndex;
     return (
-      <div
-        key={item.id}
+      <button
+        type="button"
         onClick={() => handleItemSelect(item)}
-        className={`
-          p-3 cursor-pointer transition-colors border-l-4
-          ${index === selectedIndex
-            ? 'bg-blue-50 border-blue-500'
-            : 'border-transparent hover:bg-gray-50'
-          }
-        `}
+        onMouseEnter={() => setSelectedIndex(index)}
+        className={`w-full flex items-center gap-3 px-3 py-2 mx-0 rounded-md text-left transition-colors ${
+          selected ? 'bg-blue-50' : 'hover:bg-gray-50'
+        }`}
       >
-        <div className="flex items-center space-x-3">
-          <span className="text-lg">{getItemIcon(item.type)}</span>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-medium text-gray-900 truncate">
-                {item.title}
-              </h4>
-              {item.key && (
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                  {item.key}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              {new Date(item.lastVisited).toLocaleDateString()}
-            </p>
+        <TypeIcon item={item} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            {item.key && (
+              <span className="text-xs font-medium text-gray-400 shrink-0">{item.key}</span>
+            )}
+            <span className="text-sm text-gray-900 truncate">{item.title}</span>
           </div>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          {meta && <p className="text-xs text-gray-400 truncate mt-0.5">{meta}</p>}
         </div>
-      </div>
+        <svg
+          className={`w-4 h-4 shrink-0 ${selected ? 'text-blue-400' : 'text-transparent'}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     );
   };
 
@@ -361,7 +330,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
           className="block w-full pl-9 pr-3 py-2 text-sm bg-gray-100 rounded-md placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
-          placeholder="Search issues, projects, or type a command..."
+          placeholder="Search issues, projects, people…"
           autoComplete="off"
         />
         {isLoading && (
@@ -380,69 +349,41 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           {query ? (
             // Search Results
             searchResults.length > 0 ? (
-              <div>
-                <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
-                  Search Results
+              <div className="p-2">
+                <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                  Results
                 </div>
-                {searchResults.map((item, index) => renderSearchResult(item, index))}
-              </div>
-            ) : query.length > 0 && !isLoading ? (
-              <div className="p-8 text-center">
-                <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <h3 className="text-sm font-medium text-gray-900 mb-1">No results found</h3>
-                <p className="text-xs text-gray-500">Try searching for issues, projects, or users</p>
-              </div>
-            ) : null
-          ) : (
-            // Recent Items + Quick Actions
-            <div>
-              {recentItems.length > 0 && (
-                <>
-                  <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50">
-                    Recent Items
-                  </div>
-                  {recentItems.map((item, index) => renderRecentItem(item, index))}
-                </>
-              )}
-
-              {/* Quick Actions */}
-              <div className="px-4 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-t">
-                Quick Actions
-              </div>
-              <div className="space-y-1">
-                {[
-                  { id: 'create', title: 'Create Issue', icon: '➕', path: '/issues/create' },
-                  { id: 'dashboard', title: 'Dashboard', icon: '📊', path: '/dashboard' },
-                  { id: 'projects', title: 'All Projects', icon: '📁', path: '/projects' },
-                  { id: 'settings', title: 'Settings', icon: '⚙️', path: '/settings' },
-                ].map((action, index) => (
-                  <div
-                    key={action.id}
-                    onClick={() => handleItemSelect({
-                      id: action.id,
-                      type: 'command' as const,
-                      title: action.title,
-                      path: action.path,
-                      score: 1,
-                      icon: action.icon,
-                    })}
-                    className={`
-                      p-3 cursor-pointer transition-colors border-l-4
-                      ${index + recentItems.length === selectedIndex
-                        ? 'bg-blue-50 border-blue-500'
-                        : 'border-transparent hover:bg-gray-50'
-                      }
-                    `}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <span className="text-lg">{action.icon}</span>
-                      <span className="text-sm font-medium text-gray-900">{action.title}</span>
-                    </div>
-                  </div>
+                {searchResults.map((item, index) => (
+                  <ResultRow key={item.id} item={item} index={index} meta={item.description || undefined} />
                 ))}
               </div>
+            ) : query.length > 0 && !isLoading ? (
+              <div className="px-6 py-10 text-center">
+                <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <h3 className="text-sm font-medium text-gray-900">No results for “{query}”</h3>
+                <p className="text-xs text-gray-400 mt-1">Search across issues, projects and people</p>
+              </div>
+            ) : null
+          ) : recentItems.length > 0 ? (
+            // Recent Items
+            <div className="p-2">
+              <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                Recent
+              </div>
+              {recentItems.map((item, index) => (
+                <ResultRow key={item.id} item={item} index={index} meta={formatRelativeTime(item.lastVisited)} />
+              ))}
+            </div>
+          ) : (
+            // Empty prompt
+            <div className="px-6 py-10 text-center">
+              <svg className="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <p className="text-sm text-gray-500">Search issues, projects and people</p>
+              <p className="text-xs text-gray-400 mt-1">Start typing to see results</p>
             </div>
           )}
 
