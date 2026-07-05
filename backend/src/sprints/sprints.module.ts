@@ -5,9 +5,10 @@ import { Issue } from '../issues/entities/issue.entity'
 import { SprintsService } from './sprints.service'
 import { SprintsController } from './sprints.controller'
 import { EventsModule } from '../events/events.module'
+import { WorkspacesModule } from '../workspaces/workspaces.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sprint, Issue]), EventsModule],
+  imports: [TypeOrmModule.forFeature([Sprint, Issue]), EventsModule, WorkspacesModule],
   providers: [SprintsService],
   controllers: [SprintsController],
   exports: [SprintsService],

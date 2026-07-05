@@ -39,6 +39,7 @@ export class ApiTokensController {
     const result = await this.apiTokenService.createToken({
       ...createTokenDto,
       userId: req.user.id,
+      workspaceId: req.workspaceId,
       expiresAt: createTokenDto.expiresAt ? new Date(createTokenDto.expiresAt) : undefined
     })
 

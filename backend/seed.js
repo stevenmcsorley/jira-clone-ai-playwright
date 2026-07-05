@@ -24,11 +24,26 @@ async function seed() {
     )
     const adminId = adminResult.rows[0].id
 
+    // Default workspace with the admin as owner
+    let wsResult = await client.query(`SELECT id FROM workspaces ORDER BY id LIMIT 1`)
+    if (wsResult.rows.length === 0) {
+      wsResult = await client.query(
+        `INSERT INTO workspaces (name) VALUES ('halfagiraf') RETURNING id`
+      )
+    }
+    const workspaceId = wsResult.rows[0].id
     await client.query(
-      `INSERT INTO projects (name, key, description, "leadId") VALUES
-       ('Ossicone', 'OSS', 'Improve and extend the Ossicone project tracker', $1)
+      `INSERT INTO workspace_members ("workspaceId", "userId", role)
+       VALUES ($1, $2, 'owner')
+       ON CONFLICT ("workspaceId", "userId") DO UPDATE SET role = 'owner'`,
+      [workspaceId, adminId]
+    )
+
+    await client.query(
+      `INSERT INTO projects (name, key, description, "leadId", "workspaceId") VALUES
+       ('Ossicone', 'OSS', 'Improve and extend the Ossicone project tracker', $1, $2)
        ON CONFLICT (key) DO NOTHING`,
-      [adminId]
+      [adminId, workspaceId]
     )
 
     const projectResult = await client.query(`SELECT id FROM projects WHERE key = 'OSS'`)

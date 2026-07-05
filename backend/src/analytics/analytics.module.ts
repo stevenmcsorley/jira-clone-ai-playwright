@@ -8,6 +8,7 @@ import { Sprint } from '../sprints/entities/sprint.entity'
 import { Project } from '../projects/entities/project.entity'
 import { User } from '../users/entities/user.entity'
 import { TimeLog } from '../issues/entities/time-log.entity'
+import { WorkspacesModule } from '../workspaces/workspaces.module'
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { TimeLog } from '../issues/entities/time-log.entity'
       User,
       TimeLog,
     ]),
+    WorkspacesModule,
   ],
   controllers: [AnalyticsController],
   providers: [AnalyticsService, VelocityService],

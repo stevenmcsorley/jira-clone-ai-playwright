@@ -20,6 +20,9 @@ import { SprintHistory } from './pages/SprintHistory'
 import { Components } from './pages/Components/Components'
 import { Releases } from './pages/Releases/Releases'
 import { Login } from './pages/Login'
+import { Register } from './pages/Register'
+import { InviteAccept } from './pages/InviteAccept'
+import { WorkspaceSettings } from './pages/WorkspaceSettings'
 import { Users } from './pages/Users'
 import { McpSetup } from './pages/McpSetup'
 import { AuthProvider } from './contexts/AuthContext'
@@ -47,6 +50,14 @@ const AppRoutes = () => {
           path="/login"
           element={<Login />}
         />
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+        <Route
+          path="/invite/:token"
+          element={<InviteAccept />}
+        />
         <Route element={<RequireAuth />}>
         <Route
           path="/"
@@ -57,6 +68,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <Users />
+            </Layout>
+          }
+        />
+        <Route
+          path="/workspace"
+          element={
+            <Layout>
+              <WorkspaceSettings />
             </Layout>
           }
         />

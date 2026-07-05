@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { IssueLink, IssueLinkType } from './entities/issue-link.entity'
@@ -64,6 +64,14 @@ export class IssueLinksService {
       ],
       relations: ['sourceIssue', 'targetIssue', 'createdBy'],
     })
+  }
+
+  async findOne(id: number): Promise<IssueLink> {
+    const link = await this.issueLinksRepository.findOne({ where: { id } })
+    if (!link) {
+      throw new NotFoundException('Issue link not found')
+    }
+    return link
   }
 
   async remove(id: number): Promise<void> {

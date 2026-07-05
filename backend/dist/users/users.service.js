@@ -17,23 +17,36 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const user_entity_1 = require("./entities/user.entity");
+const workspace_member_entity_1 = require("../workspaces/entities/workspace-member.entity");
 const bcrypt = require("bcrypt");
 let UsersService = class UsersService {
-    constructor(usersRepository) {
+    constructor(usersRepository, membersRepository) {
         this.usersRepository = usersRepository;
+        this.membersRepository = membersRepository;
     }
-    async create(createUserDto) {
+    async create(createUserDto, workspaceId) {
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
         const user = this.usersRepository.create({
             ...createUserDto,
             password: hashedPassword,
         });
         const saved = await this.usersRepository.save(user);
+        if (workspaceId) {
+            await this.membersRepository.save(this.membersRepository.create({ workspaceId, userId: saved.id, role: 'member' }));
+        }
         delete saved.password;
         return saved;
     }
     async findAll() {
         return this.usersRepository.find();
+    }
+    async findByWorkspace(workspaceId) {
+        const memberships = await this.membersRepository.find({
+            where: { workspaceId },
+            relations: ['user'],
+            order: { id: 'ASC' },
+        });
+        return memberships.map(m => m.user);
     }
     async findOne(id) {
         return this.usersRepository.findOne({ where: { id } });
@@ -56,6 +69,8 @@ exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(workspace_member_entity_1.WorkspaceMember)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

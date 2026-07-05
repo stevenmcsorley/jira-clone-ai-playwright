@@ -8,6 +8,14 @@ export interface User {
   updatedAt: Date
 }
 
+export type WorkspaceRole = 'owner' | 'admin' | 'member'
+
+export interface Workspace {
+  id: number
+  name: string
+  role: WorkspaceRole
+}
+
 export interface Project {
   id: number
   name: string

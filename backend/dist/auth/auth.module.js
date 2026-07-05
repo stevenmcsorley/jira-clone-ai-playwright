@@ -21,16 +21,19 @@ const api_token_guard_1 = require("./guards/api-token.guard");
 const optional_api_token_guard_1 = require("./guards/optional-api-token.guard");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 const global_auth_guard_1 = require("./guards/global-auth.guard");
+const workspace_context_guard_1 = require("./guards/workspace-context.guard");
 const admin_guard_1 = require("./guards/admin.guard");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const user_entity_1 = require("../users/entities/user.entity");
+const workspace_entity_1 = require("../workspaces/entities/workspace.entity");
+const workspace_member_entity_1 = require("../workspaces/entities/workspace-member.entity");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
 exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([api_token_entity_1.ApiToken, user_entity_1.User]),
+            typeorm_1.TypeOrmModule.forFeature([api_token_entity_1.ApiToken, user_entity_1.User, workspace_entity_1.Workspace, workspace_member_entity_1.WorkspaceMember]),
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
@@ -50,8 +53,12 @@ exports.AuthModule = AuthModule = __decorate([
                 provide: core_1.APP_GUARD,
                 useClass: global_auth_guard_1.GlobalAuthGuard,
             },
+            {
+                provide: core_1.APP_GUARD,
+                useClass: workspace_context_guard_1.WorkspaceContextGuard,
+            },
         ],
-        exports: [api_token_service_1.ApiTokenService, api_token_guard_1.ApiTokenGuard, optional_api_token_guard_1.OptionalApiTokenGuard, jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard],
+        exports: [api_token_service_1.ApiTokenService, api_token_guard_1.ApiTokenGuard, optional_api_token_guard_1.OptionalApiTokenGuard, jwt_auth_guard_1.JwtAuthGuard, admin_guard_1.AdminGuard, auth_service_1.AuthService],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

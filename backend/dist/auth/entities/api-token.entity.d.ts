@@ -10,6 +10,7 @@ export declare class ApiToken {
     scopes: string[];
     user: User;
     userId: number;
+    workspaceId: number;
     createdAt: Date;
     updatedAt: Date;
 }

@@ -20,11 +20,15 @@ import { CreateAttachmentDto } from './dto/attachment.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { Response as ExpressResponse } from 'express'
 import { createReadStream, existsSync } from 'fs'
+import { WorkspaceScopeService } from '../workspaces/workspace-scope.service'
 
 @Controller('api/attachments')
 // @UseGuards(JwtAuthGuard) // Temporarily disabled for development
 export class AttachmentsController {
-  constructor(private readonly attachmentsService: AttachmentsService) {}
+  constructor(
+    private readonly attachmentsService: AttachmentsService,
+    private readonly workspaceScope: WorkspaceScopeService,
+  ) {}
 
   @Post('upload/:issueId')
   @UseInterceptors(
@@ -47,6 +51,8 @@ export class AttachmentsController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req
   ) {
+    await this.workspaceScope.assertIssue(issueId, req.workspaceId)
+
     if (!file) {
       throw new NotFoundException('No file uploaded')
     }
@@ -66,18 +72,22 @@ export class AttachmentsController {
   }
 
   @Get('issue/:issueId')
-  findByIssue(@Param('issueId', ParseIntPipe) issueId: number) {
+  async findByIssue(@Param('issueId', ParseIntPipe) issueId: number, @Request() req) {
+    await this.workspaceScope.assertIssue(issueId, req.workspaceId)
     return this.attachmentsService.findByIssue(issueId)
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.attachmentsService.findOne(id)
+  async findOne(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const attachment = await this.attachmentsService.findOne(id)
+    await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId)
+    return attachment
   }
 
   @Get('download/:id')
-  async downloadFile(@Param('id', ParseIntPipe) id: number, @Response() res: ExpressResponse) {
+  async downloadFile(@Param('id', ParseIntPipe) id: number, @Response() res: ExpressResponse, @Request() req) {
     const attachment = await this.attachmentsService.findOne(id)
+    await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId)
 
     if (!existsSync(attachment.path)) {
       throw new NotFoundException('File not found on disk')
@@ -91,7 +101,9 @@ export class AttachmentsController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+  async remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
+    const attachment = await this.attachmentsService.findOne(id)
+    await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId)
     // Use default user ID for development
     const userId = req.user?.id || 1
     return this.attachmentsService.remove(id, userId)

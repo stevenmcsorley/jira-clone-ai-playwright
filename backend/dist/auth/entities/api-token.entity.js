@@ -56,6 +56,10 @@ __decorate([
     __metadata("design:type", Number)
 ], ApiToken.prototype, "userId", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], ApiToken.prototype, "workspaceId", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], ApiToken.prototype, "createdAt", void 0);

@@ -11,6 +11,7 @@ import { Issue } from '../issues/entities/issue.entity'
 import { User } from '../users/entities/user.entity'
 import { Project } from '../projects/entities/project.entity'
 import { Sprint } from '../sprints/entities/sprint.entity'
+import { WorkspacesModule } from '../workspaces/workspaces.module'
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Sprint } from '../sprints/entities/sprint.entity'
       Project,
       Sprint,
     ]),
+    WorkspacesModule,
   ],
   controllers: [EstimationController],
   providers: [EstimationService, EstimationScalesService],

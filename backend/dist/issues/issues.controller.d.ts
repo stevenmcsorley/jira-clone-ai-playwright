@@ -1,26 +1,28 @@
 import { IssuesService } from './issues.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
 import { EventsGateway } from '../events/events.gateway';
+import { WorkspaceScopeService } from '../workspaces/workspace-scope.service';
 export declare class IssuesController {
     private readonly issuesService;
     private readonly eventsGateway;
-    constructor(issuesService: IssuesService, eventsGateway: EventsGateway);
-    create(createIssueDto: CreateIssueDto): Promise<import("./entities/issue.entity").Issue>;
-    findAll(projectId?: string, boardView?: string): Promise<import("./entities/issue.entity").Issue[]>;
-    findOne(id: string): Promise<import("./entities/issue.entity").Issue>;
-    update(id: string, updateData: Partial<CreateIssueDto>): Promise<import("./entities/issue.entity").Issue>;
+    private readonly workspaceScope;
+    constructor(issuesService: IssuesService, eventsGateway: EventsGateway, workspaceScope: WorkspaceScopeService);
+    create(createIssueDto: CreateIssueDto, req: any): Promise<import("./entities/issue.entity").Issue>;
+    findAll(req: any, projectId?: string, boardView?: string): Promise<import("./entities/issue.entity").Issue[]>;
+    findOne(id: string, req: any): Promise<import("./entities/issue.entity").Issue>;
+    update(id: string, updateData: Partial<CreateIssueDto>, req: any): Promise<import("./entities/issue.entity").Issue>;
     updatePositions(updates: {
         id: number;
         position: number;
         status: string;
-    }[]): Promise<void>;
-    remove(id: string): Promise<{
+    }[], req: any): Promise<void>;
+    remove(id: string, req: any): Promise<{
         message: string;
     }>;
     search(searchData: {
         query: string;
         projectId?: number;
-    }): Promise<{
+    }, req: any): Promise<{
         results: import("./entities/issue.entity").Issue[];
         totalResults: number;
     }>;
@@ -31,7 +33,7 @@ export declare class IssuesController {
             field: string;
             value: any;
         };
-    }): Promise<{
+    }, req: any): Promise<{
         successCount: number;
         failureCount: number;
         errors: Array<{

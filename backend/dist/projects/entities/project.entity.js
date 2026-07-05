@@ -14,6 +14,7 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
 const issue_entity_1 = require("../../issues/entities/issue.entity");
 const sprint_entity_1 = require("../../sprints/entities/sprint.entity");
+const workspace_entity_1 = require("../../workspaces/entities/workspace.entity");
 let Project = class Project {
 };
 exports.Project = Project;
@@ -33,6 +34,15 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Project.prototype, "description", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Project.prototype, "workspaceId", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => workspace_entity_1.Workspace, workspace => workspace.projects, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'workspaceId' }),
+    __metadata("design:type", workspace_entity_1.Workspace)
+], Project.prototype, "workspace", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)

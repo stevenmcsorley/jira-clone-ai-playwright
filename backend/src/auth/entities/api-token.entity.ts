@@ -33,6 +33,12 @@ export class ApiToken {
   @Column()
   userId: number
 
+  // Workspace this token is bound to; agents using it (e.g. the MCP server)
+  // only see that workspace. Nullable for pre-workspace tokens — the context
+  // guard falls back to the owner's first workspace.
+  @Column({ nullable: true })
+  workspaceId: number
+
   @CreateDateColumn()
   createdAt: Date
 

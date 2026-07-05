@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 export const Login = () => {
@@ -9,6 +9,14 @@ export const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [openSignup, setOpenSignup] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then(res => (res.ok ? res.json() : { openSignup: false }))
+      .then(config => setOpenSignup(Boolean(config?.openSignup)))
+      .catch(() => setOpenSignup(false))
+  }, [])
 
   if (user) {
     return <Navigate to="/projects" replace />
@@ -79,6 +87,15 @@ export const Login = () => {
           >
             {submitting ? 'Signing in…' : 'Sign in'}
           </button>
+
+          {openSignup && (
+            <p className="text-center text-sm text-gray-500">
+              New here?{' '}
+              <Link to="/register" className="text-blue-600 hover:text-blue-800">
+                Create an account
+              </Link>
+            </p>
+          )}
         </form>
       </div>
     </div>

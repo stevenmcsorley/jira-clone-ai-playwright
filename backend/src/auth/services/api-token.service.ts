@@ -9,6 +9,7 @@ interface CreateApiTokenDto {
   name: string
   description?: string
   userId: number
+  workspaceId?: number
   scopes?: string[]
   expiresAt?: Date
 }

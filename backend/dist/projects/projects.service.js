@@ -39,22 +39,28 @@ let ProjectsService = class ProjectsService {
         const project = this.projectsRepository.create(createProjectDto);
         return this.projectsRepository.save(project);
     }
-    async findAll() {
+    async findAll(workspaceId) {
         return this.projectsRepository.find({
+            where: { workspaceId },
             relations: ['lead', 'issues'],
         });
     }
-    async findOne(id) {
-        return this.projectsRepository.findOne({
-            where: { id },
+    async findOne(id, workspaceId) {
+        const project = await this.projectsRepository.findOne({
+            where: { id, workspaceId },
             relations: ['lead', 'issues', 'issues.assignee', 'issues.reporter'],
         });
+        if (!project)
+            throw new common_1.NotFoundException('Project not found');
+        return project;
     }
-    async update(id, updateData) {
+    async update(id, updateData, workspaceId) {
+        await this.findOne(id, workspaceId);
         await this.projectsRepository.update(id, updateData);
-        return this.findOne(id);
+        return this.findOne(id, workspaceId);
     }
-    async remove(id) {
+    async remove(id, workspaceId) {
+        await this.findOne(id, workspaceId);
         const issues = await this.issuesRepository.find({
             where: { projectId: id },
             select: ['id']

@@ -35,6 +35,7 @@ Exposes the Ossicone project tracker as MCP tools so Claude (or any MCP client) 
 
 | Area | Tools |
 |---|---|
+| Workspace | `get_workspace`, `list_workspaces` |
 | Projects | `list_projects`, `create_project`, `list_users` |
 | Board | `get_board`, `get_backlog`, `list_issues`, `search_issues` |
 | Issues | `get_issue`, `create_issue`, `update_issue`, `add_comment`, `log_time` |
@@ -42,5 +43,7 @@ Exposes the Ossicone project tracker as MCP tools so Claude (or any MCP client) 
 | Reports | `sprint_report`, `project_dashboard` |
 
 Actions are attributed to the user who owns the API token (reporter on issues, author on comments, time logs).
+
+**Workspaces:** every token is bound to the workspace it was created in, and all tools are scoped to it server-side — an agent can never see another workspace's data. To let Claude work in a second workspace, create a token there and register another MCP server entry (e.g. `ossicone-teamx`).
 
 Typical agent flow: `create_project` → `create_issue` (epics + stories) → `create_sprint` → `plan_sprint` → `start_sprint` → work: `update_issue` (status moves) + `add_comment` + `log_time` → `complete_sprint` → `sprint_report`.

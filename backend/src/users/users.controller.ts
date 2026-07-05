@@ -10,13 +10,14 @@ export class UsersController {
 
   @Post()
   @UseGuards(AdminGuard)
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto)
+  create(@Body() createUserDto: CreateUserDto, @Req() req: any) {
+    // New users are added to the creator's current workspace
+    return this.usersService.create(createUserDto, req.workspaceId)
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll()
+  findAll(@Req() req: any) {
+    return this.usersService.findByWorkspace(req.workspaceId)
   }
 
   @Get(':id')

@@ -60,6 +60,13 @@ let IssueLinksService = class IssueLinksService {
             relations: ['sourceIssue', 'targetIssue', 'createdBy'],
         });
     }
+    async findOne(id) {
+        const link = await this.issueLinksRepository.findOne({ where: { id } });
+        if (!link) {
+            throw new common_1.NotFoundException('Issue link not found');
+        }
+        return link;
+    }
     async remove(id) {
         await this.issueLinksRepository.delete(id);
     }

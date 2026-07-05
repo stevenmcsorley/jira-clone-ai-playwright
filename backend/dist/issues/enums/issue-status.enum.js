@@ -5,6 +5,7 @@ var IssueStatus;
 (function (IssueStatus) {
     IssueStatus["TODO"] = "todo";
     IssueStatus["IN_PROGRESS"] = "in_progress";
+    IssueStatus["CODE_REVIEW"] = "code_review";
     IssueStatus["DONE"] = "done";
 })(IssueStatus || (exports.IssueStatus = IssueStatus = {}));
 //# sourceMappingURL=issue-status.enum.js.map

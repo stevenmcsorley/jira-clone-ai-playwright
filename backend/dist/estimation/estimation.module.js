@@ -20,6 +20,7 @@ const issue_entity_1 = require("../issues/entities/issue.entity");
 const user_entity_1 = require("../users/entities/user.entity");
 const project_entity_1 = require("../projects/entities/project.entity");
 const sprint_entity_1 = require("../sprints/entities/sprint.entity");
+const workspaces_module_1 = require("../workspaces/workspaces.module");
 let EstimationModule = class EstimationModule {
 };
 exports.EstimationModule = EstimationModule;
@@ -36,6 +37,7 @@ exports.EstimationModule = EstimationModule = __decorate([
                 project_entity_1.Project,
                 sprint_entity_1.Sprint,
             ]),
+            workspaces_module_1.WorkspacesModule,
         ],
         controllers: [estimation_controller_1.EstimationController],
         providers: [estimation_service_1.EstimationService, estimation_scales_service_1.EstimationScalesService],

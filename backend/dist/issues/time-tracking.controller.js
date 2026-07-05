@@ -16,28 +16,39 @@ exports.TimeTrackingController = void 0;
 const common_1 = require("@nestjs/common");
 const time_tracking_service_1 = require("./time-tracking.service");
 const time_log_dto_1 = require("./dto/time-log.dto");
+const workspace_scope_service_1 = require("../workspaces/workspace-scope.service");
 let TimeTrackingController = class TimeTrackingController {
-    constructor(timeTrackingService) {
+    constructor(timeTrackingService, workspaceScope) {
         this.timeTrackingService = timeTrackingService;
+        this.workspaceScope = workspaceScope;
     }
-    logTime(createTimeLogDto, req) {
+    async logTime(createTimeLogDto, req) {
+        await this.workspaceScope.assertIssue(createTimeLogDto.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.timeTrackingService.logTime(createTimeLogDto, userId);
     }
-    getTimeLogsByIssue(issueId) {
+    async getTimeLogsByIssue(issueId, req) {
+        await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         return this.timeTrackingService.getTimeLogsByIssue(issueId);
     }
-    getTimeTrackingSummary(issueId) {
+    async getTimeTrackingSummary(issueId, req) {
+        await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         return this.timeTrackingService.getTimeTrackingSummary(issueId);
     }
-    findOne(id) {
-        return this.timeTrackingService.findOne(id);
+    async findOne(id, req) {
+        const timeLog = await this.timeTrackingService.findOne(id);
+        await this.workspaceScope.assertIssue(timeLog.issueId, req.workspaceId);
+        return timeLog;
     }
-    updateTimeLog(id, updateTimeLogDto, req) {
+    async updateTimeLog(id, updateTimeLogDto, req) {
+        const timeLog = await this.timeTrackingService.findOne(id);
+        await this.workspaceScope.assertIssue(timeLog.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.timeTrackingService.updateTimeLog(id, updateTimeLogDto, userId);
     }
-    deleteTimeLog(id, req) {
+    async deleteTimeLog(id, req) {
+        const timeLog = await this.timeTrackingService.findOne(id);
+        await this.workspaceScope.assertIssue(timeLog.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.timeTrackingService.deleteTimeLog(id, userId);
     }
@@ -58,28 +69,31 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [time_log_dto_1.CreateTimeLogDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "logTime", null);
 __decorate([
     (0, common_1.Get)('issue/:issueId'),
     __param(0, (0, common_1.Param)('issueId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "getTimeLogsByIssue", null);
 __decorate([
     (0, common_1.Get)('issue/:issueId/summary'),
     __param(0, (0, common_1.Param)('issueId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "getTimeTrackingSummary", null);
 __decorate([
     (0, common_1.Get)('log/:id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)('log/:id'),
@@ -88,7 +102,7 @@ __decorate([
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, time_log_dto_1.UpdateTimeLogDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "updateTimeLog", null);
 __decorate([
     (0, common_1.Delete)('log/:id'),
@@ -96,7 +110,7 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], TimeTrackingController.prototype, "deleteTimeLog", null);
 __decorate([
     (0, common_1.Post)('parse-time'),
@@ -107,6 +121,7 @@ __decorate([
 ], TimeTrackingController.prototype, "parseTimeInput", null);
 exports.TimeTrackingController = TimeTrackingController = __decorate([
     (0, common_1.Controller)('api/time-tracking'),
-    __metadata("design:paramtypes", [time_tracking_service_1.TimeTrackingService])
+    __metadata("design:paramtypes", [time_tracking_service_1.TimeTrackingService,
+        workspace_scope_service_1.WorkspaceScopeService])
 ], TimeTrackingController);
 //# sourceMappingURL=time-tracking.controller.js.map

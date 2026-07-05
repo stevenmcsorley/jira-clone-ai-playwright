@@ -12,13 +12,16 @@ import { ApiTokenGuard } from './guards/api-token.guard'
 import { OptionalApiTokenGuard } from './guards/optional-api-token.guard'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { GlobalAuthGuard } from './guards/global-auth.guard'
+import { WorkspaceContextGuard } from './guards/workspace-context.guard'
 import { AdminGuard } from './guards/admin.guard'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { User } from '../users/entities/user.entity'
+import { Workspace } from '../workspaces/entities/workspace.entity'
+import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ApiToken, User]),
+    TypeOrmModule.forFeature([ApiToken, User, Workspace, WorkspaceMember]),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
@@ -38,7 +41,12 @@ import { User } from '../users/entities/user.entity'
       provide: APP_GUARD,
       useClass: GlobalAuthGuard,
     },
+    {
+      // Registered after GlobalAuthGuard so req.user is already resolved
+      provide: APP_GUARD,
+      useClass: WorkspaceContextGuard,
+    },
   ],
-  exports: [ApiTokenService, ApiTokenGuard, OptionalApiTokenGuard, JwtAuthGuard, AdminGuard],
+  exports: [ApiTokenService, ApiTokenGuard, OptionalApiTokenGuard, JwtAuthGuard, AdminGuard, AuthService],
 })
 export class AuthModule {}

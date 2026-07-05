@@ -6,6 +6,7 @@ import { ProjectsModule } from './projects/projects.module'
 import { IssuesModule } from './issues/issues.module'
 import { SprintsModule } from './sprints/sprints.module'
 import { AuthModule } from './auth/auth.module'
+import { WorkspacesModule } from './workspaces/workspaces.module'
 import { EstimationModule } from './estimation/estimation.module'
 import { AnalyticsModule } from './analytics/analytics.module'
 import { EventsModule } from './events/events.module'
@@ -31,6 +32,7 @@ import { EventsModule } from './events/events.module'
     IssuesModule,
     SprintsModule,
     AuthModule,
+    WorkspacesModule,
     EstimationModule,
     AnalyticsModule,
     EventsModule,

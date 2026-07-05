@@ -18,9 +18,11 @@ export declare class ProjectsService {
     private issueLinksRepository;
     private subtasksRepository;
     constructor(projectsRepository: Repository<Project>, issuesRepository: Repository<Issue>, sprintsRepository: Repository<Sprint>, commentsRepository: Repository<Comment>, attachmentsRepository: Repository<Attachment>, timeLogsRepository: Repository<TimeLog>, issueLinksRepository: Repository<IssueLink>, subtasksRepository: Repository<Subtask>);
-    create(createProjectDto: CreateProjectDto): Promise<Project>;
-    findAll(): Promise<Project[]>;
-    findOne(id: number): Promise<Project>;
-    update(id: number, updateData: Partial<Project>): Promise<Project>;
-    remove(id: number): Promise<void>;
+    create(createProjectDto: CreateProjectDto & {
+        workspaceId: number;
+    }): Promise<Project>;
+    findAll(workspaceId: number): Promise<Project[]>;
+    findOne(id: number, workspaceId: number): Promise<Project>;
+    update(id: number, updateData: Partial<Project>, workspaceId: number): Promise<Project>;
+    remove(id: number, workspaceId: number): Promise<void>;
 }

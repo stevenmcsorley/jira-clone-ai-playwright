@@ -17,6 +17,7 @@ const sprint_entity_1 = require("../sprints/entities/sprint.entity");
 const project_entity_1 = require("../projects/entities/project.entity");
 const user_entity_1 = require("../users/entities/user.entity");
 const time_log_entity_1 = require("../issues/entities/time-log.entity");
+const workspaces_module_1 = require("../workspaces/workspaces.module");
 let AnalyticsModule = class AnalyticsModule {
 };
 exports.AnalyticsModule = AnalyticsModule;
@@ -30,6 +31,7 @@ exports.AnalyticsModule = AnalyticsModule = __decorate([
                 user_entity_1.User,
                 time_log_entity_1.TimeLog,
             ]),
+            workspaces_module_1.WorkspacesModule,
         ],
         controllers: [analytics_controller_1.AnalyticsController],
         providers: [analytics_service_1.AnalyticsService, velocity_service_1.VelocityService],

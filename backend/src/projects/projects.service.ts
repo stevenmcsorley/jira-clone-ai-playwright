@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, In } from 'typeorm'
 import { Project } from './entities/project.entity'
@@ -32,30 +32,35 @@ export class ProjectsService {
     private subtasksRepository: Repository<Subtask>,
   ) {}
 
-  async create(createProjectDto: CreateProjectDto): Promise<Project> {
+  async create(createProjectDto: CreateProjectDto & { workspaceId: number }): Promise<Project> {
     const project = this.projectsRepository.create(createProjectDto)
     return this.projectsRepository.save(project)
   }
 
-  async findAll(): Promise<Project[]> {
+  async findAll(workspaceId: number): Promise<Project[]> {
     return this.projectsRepository.find({
+      where: { workspaceId },
       relations: ['lead', 'issues'],
     })
   }
 
-  async findOne(id: number): Promise<Project> {
-    return this.projectsRepository.findOne({
-      where: { id },
+  async findOne(id: number, workspaceId: number): Promise<Project> {
+    const project = await this.projectsRepository.findOne({
+      where: { id, workspaceId },
       relations: ['lead', 'issues', 'issues.assignee', 'issues.reporter'],
     })
+    if (!project) throw new NotFoundException('Project not found')
+    return project
   }
 
-  async update(id: number, updateData: Partial<Project>): Promise<Project> {
+  async update(id: number, updateData: Partial<Project>, workspaceId: number): Promise<Project> {
+    await this.findOne(id, workspaceId)
     await this.projectsRepository.update(id, updateData)
-    return this.findOne(id)
+    return this.findOne(id, workspaceId)
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, workspaceId: number): Promise<void> {
+    await this.findOne(id, workspaceId)
     // Get all issues for this project
     const issues = await this.issuesRepository.find({
       where: { projectId: id },

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException } from '@nestjs/common'
+import { Controller, Get, Post, Put, Body, Param, Query, Req, BadRequestException } from '@nestjs/common'
 import { EstimationService } from './estimation.service'
 import { EstimationScalesService } from './estimation-scales.service'
 import { EstimationScale } from './entities/estimation-session.entity'
+import { WorkspaceScopeService } from '../workspaces/workspace-scope.service'
 
 interface CreateSessionDto {
   name: string
@@ -28,26 +29,38 @@ interface FinalizeEstimateDto {
 
 @Controller('api/estimation')
 export class EstimationController {
-  constructor(private readonly estimationService: EstimationService) {}
+  constructor(
+    private readonly estimationService: EstimationService,
+    private readonly workspaceScope: WorkspaceScopeService,
+  ) {}
+
+  /** Load a session and 404 unless its project belongs to the request's workspace. */
+  private async assertSession(sessionId: number, workspaceId: number) {
+    const session = await this.estimationService.getSession(sessionId)
+    await this.workspaceScope.assertProject(session.projectId, workspaceId)
+    return session
+  }
 
   // Create new estimation session
   @Post('sessions')
-  async createSession(@Body() createSessionDto: CreateSessionDto) {
+  async createSession(@Body() createSessionDto: CreateSessionDto, @Req() req: any) {
+    await this.workspaceScope.assertProject(createSessionDto.projectId, req.workspaceId)
     return this.estimationService.createSession(createSessionDto)
   }
 
   // Get session details
   @Get('sessions/:id')
-  async getSession(@Param('id') id: number) {
-    return this.estimationService.getSession(id)
+  async getSession(@Param('id') id: number, @Req() req: any) {
+    return this.assertSession(id, req.workspaceId)
   }
 
   // Get sessions by project
   @Get('sessions')
-  async getSessionsByProject(@Query('projectId') projectId: number) {
+  async getSessionsByProject(@Query('projectId') projectId: number, @Req() req: any) {
     if (!projectId) {
       throw new BadRequestException('projectId is required')
     }
+    await this.workspaceScope.assertProject(projectId, req.workspaceId)
     return this.estimationService.getSessionsByProject(projectId)
   }
 
@@ -55,8 +68,10 @@ export class EstimationController {
   @Post('sessions/:id/participants')
   async addParticipant(
     @Param('id') sessionId: number,
-    @Body('userId') userId: number
+    @Body('userId') userId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.addParticipant(sessionId, userId)
   }
 
@@ -64,8 +79,10 @@ export class EstimationController {
   @Post('sessions/:id/start')
   async startSession(
     @Param('id') sessionId: number,
-    @Body('facilitatorId') facilitatorId: number
+    @Body('facilitatorId') facilitatorId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.startSession(sessionId, facilitatorId)
   }
 
@@ -73,8 +90,10 @@ export class EstimationController {
   @Post('sessions/:id/start-voting')
   async startVoting(
     @Param('id') sessionId: number,
-    @Body('facilitatorId') facilitatorId: number
+    @Body('facilitatorId') facilitatorId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.startVoting(sessionId, facilitatorId)
   }
 
@@ -84,8 +103,10 @@ export class EstimationController {
     @Param('sessionId') sessionId: number,
     @Param('issueId') issueId: number,
     @Body('voterId') voterId: number,
-    @Body('vote') voteData: VoteDto
+    @Body('vote') voteData: VoteDto,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.submitVote(sessionId, issueId, voterId, voteData)
   }
 
@@ -94,8 +115,10 @@ export class EstimationController {
   async revealVotes(
     @Param('sessionId') sessionId: number,
     @Param('issueId') issueId: number,
-    @Body('facilitatorId') facilitatorId: number
+    @Body('facilitatorId') facilitatorId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.revealVotes(sessionId, issueId, facilitatorId)
   }
 
@@ -105,8 +128,10 @@ export class EstimationController {
     @Param('sessionId') sessionId: number,
     @Param('issueId') issueId: number,
     @Body('facilitatorId') facilitatorId: number,
-    @Body() { finalEstimate }: FinalizeEstimateDto
+    @Body() { finalEstimate }: FinalizeEstimateDto,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.finalizeEstimate(sessionId, issueId, facilitatorId, finalEstimate)
   }
 
@@ -114,8 +139,10 @@ export class EstimationController {
   @Post('sessions/:id/next-issue')
   async moveToNextIssue(
     @Param('id') sessionId: number,
-    @Body('facilitatorId') facilitatorId: number
+    @Body('facilitatorId') facilitatorId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.moveToNextIssue(sessionId, facilitatorId)
   }
 
@@ -124,8 +151,10 @@ export class EstimationController {
   async startNewRound(
     @Param('sessionId') sessionId: number,
     @Param('issueId') issueId: number,
-    @Body('facilitatorId') facilitatorId: number
+    @Body('facilitatorId') facilitatorId: number,
+    @Req() req: any
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     return this.estimationService.startNewRound(sessionId, issueId, facilitatorId)
   }
 
@@ -140,8 +169,10 @@ export class EstimationController {
   async getVoteStatistics(
     @Param('sessionId') sessionId: number,
     @Param('issueId') issueId: number,
+    @Req() req: any,
     @Query('round') round: number = 1
   ) {
+    await this.assertSession(sessionId, req.workspaceId)
     const sessionIssueId = parseInt(issueId.toString()) // This would need proper lookup
     return this.estimationService.getVoteStatistics(sessionIssueId, round)
   }

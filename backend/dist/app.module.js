@@ -15,6 +15,7 @@ const projects_module_1 = require("./projects/projects.module");
 const issues_module_1 = require("./issues/issues.module");
 const sprints_module_1 = require("./sprints/sprints.module");
 const auth_module_1 = require("./auth/auth.module");
+const workspaces_module_1 = require("./workspaces/workspaces.module");
 const estimation_module_1 = require("./estimation/estimation.module");
 const analytics_module_1 = require("./analytics/analytics.module");
 const events_module_1 = require("./events/events.module");
@@ -31,7 +32,9 @@ exports.AppModule = AppModule = __decorate([
                 type: 'postgres',
                 url: process.env.DATABASE_URL,
                 entities: [__dirname + '/**/*.entity{.ts,.js}'],
-                synchronize: process.env.NODE_ENV === 'development',
+                synchronize: process.env.NODE_ENV === 'development' || process.env.TYPEORM_SYNC === 'true',
+                migrations: [__dirname + '/migrations/*{.ts,.js}'],
+                migrationsRun: process.env.TYPEORM_MIGRATIONS === 'true',
                 logging: process.env.NODE_ENV === 'development',
             }),
             users_module_1.UsersModule,
@@ -39,6 +42,7 @@ exports.AppModule = AppModule = __decorate([
             issues_module_1.IssuesModule,
             sprints_module_1.SprintsModule,
             auth_module_1.AuthModule,
+            workspaces_module_1.WorkspacesModule,
             estimation_module_1.EstimationModule,
             analytics_module_1.AnalyticsModule,
             events_module_1.EventsModule,

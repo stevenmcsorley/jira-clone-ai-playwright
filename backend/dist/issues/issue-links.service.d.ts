@@ -13,6 +13,7 @@ export declare class IssueLinksService {
     constructor(issueLinksRepository: Repository<IssueLink>, issuesRepository: Repository<Issue>);
     create(createIssueLinkDto: CreateIssueLinkDto): Promise<IssueLink>;
     findByIssueId(issueId: number): Promise<IssueLink[]>;
+    findOne(id: number): Promise<IssueLink>;
     remove(id: number): Promise<void>;
     searchIssues(query: string, projectId?: number): Promise<Issue[]>;
     private getReverseLinkType;

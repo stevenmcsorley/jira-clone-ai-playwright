@@ -19,11 +19,14 @@ const multer_1 = require("multer");
 const path_1 = require("path");
 const attachments_service_1 = require("./attachments.service");
 const fs_1 = require("fs");
+const workspace_scope_service_1 = require("../workspaces/workspace-scope.service");
 let AttachmentsController = class AttachmentsController {
-    constructor(attachmentsService) {
+    constructor(attachmentsService, workspaceScope) {
         this.attachmentsService = attachmentsService;
+        this.workspaceScope = workspaceScope;
     }
     async uploadFile(issueId, file, req) {
+        await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         if (!file) {
             throw new common_1.NotFoundException('No file uploaded');
         }
@@ -38,14 +41,18 @@ let AttachmentsController = class AttachmentsController {
         const userId = req.user?.id || 1;
         return this.attachmentsService.create(createAttachmentDto, userId);
     }
-    findByIssue(issueId) {
+    async findByIssue(issueId, req) {
+        await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         return this.attachmentsService.findByIssue(issueId);
     }
-    findOne(id) {
-        return this.attachmentsService.findOne(id);
-    }
-    async downloadFile(id, res) {
+    async findOne(id, req) {
         const attachment = await this.attachmentsService.findOne(id);
+        await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId);
+        return attachment;
+    }
+    async downloadFile(id, res, req) {
+        const attachment = await this.attachmentsService.findOne(id);
+        await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId);
         if (!(0, fs_1.existsSync)(attachment.path)) {
             throw new common_1.NotFoundException('File not found on disk');
         }
@@ -54,7 +61,9 @@ let AttachmentsController = class AttachmentsController {
         const file = (0, fs_1.createReadStream)(attachment.path);
         file.pipe(res);
     }
-    remove(id, req) {
+    async remove(id, req) {
+        const attachment = await this.attachmentsService.findOne(id);
+        await this.workspaceScope.assertIssue(attachment.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.attachmentsService.remove(id, userId);
     }
@@ -85,23 +94,26 @@ __decorate([
 __decorate([
     (0, common_1.Get)('issue/:issueId'),
     __param(0, (0, common_1.Param)('issueId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], AttachmentsController.prototype, "findByIssue", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], AttachmentsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)('download/:id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
     __param(1, (0, common_1.Response)()),
+    __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Number, Object, Object]),
     __metadata("design:returntype", Promise)
 ], AttachmentsController.prototype, "downloadFile", null);
 __decorate([
@@ -110,10 +122,11 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AttachmentsController.prototype, "remove", null);
 exports.AttachmentsController = AttachmentsController = __decorate([
     (0, common_1.Controller)('api/attachments'),
-    __metadata("design:paramtypes", [attachments_service_1.AttachmentsService])
+    __metadata("design:paramtypes", [attachments_service_1.AttachmentsService,
+        workspace_scope_service_1.WorkspaceScopeService])
 ], AttachmentsController);
 //# sourceMappingURL=attachments.controller.js.map

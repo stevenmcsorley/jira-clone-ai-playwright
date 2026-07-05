@@ -1,6 +1,7 @@
 import { SprintsService } from './sprints.service';
 import { SprintStatus } from './entities/sprint.entity';
 import { EventsGateway } from '../events/events.gateway';
+import { WorkspaceScopeService } from '../workspaces/workspace-scope.service';
 interface CreateSprintDto {
     name: string;
     goal?: string;
@@ -21,17 +22,19 @@ interface StartSprintDto {
 export declare class SprintsController {
     private readonly sprintsService;
     private readonly eventsGateway;
-    constructor(sprintsService: SprintsService, eventsGateway: EventsGateway);
-    create(createSprintDto: CreateSprintDto): Promise<import("./entities/sprint.entity").Sprint>;
-    findByProject(projectId: string): Promise<import("./entities/sprint.entity").Sprint[]>;
-    getBacklog(projectId: string): Promise<import("../issues/entities/issue.entity").Issue[]>;
-    findOne(id: string): Promise<import("./entities/sprint.entity").Sprint>;
-    update(id: string, updateSprintDto: UpdateSprintDto): Promise<import("./entities/sprint.entity").Sprint>;
-    startSprint(id: string, startSprintDto: StartSprintDto): Promise<import("./entities/sprint.entity").Sprint>;
-    completeSprint(id: string): Promise<import("./entities/sprint.entity").Sprint>;
-    addIssueToSprint(id: string, issueId: string): Promise<void>;
-    removeIssueFromSprint(issueId: string): Promise<void>;
-    remove(id: string): Promise<{
+    private readonly workspaceScope;
+    constructor(sprintsService: SprintsService, eventsGateway: EventsGateway, workspaceScope: WorkspaceScopeService);
+    private assertSprint;
+    create(createSprintDto: CreateSprintDto, req: any): Promise<import("./entities/sprint.entity").Sprint>;
+    findByProject(projectId: string, req: any): Promise<import("./entities/sprint.entity").Sprint[]>;
+    getBacklog(projectId: string, req: any): Promise<import("../issues/entities/issue.entity").Issue[]>;
+    findOne(id: string, req: any): Promise<import("./entities/sprint.entity").Sprint>;
+    update(id: string, updateSprintDto: UpdateSprintDto, req: any): Promise<import("./entities/sprint.entity").Sprint>;
+    startSprint(id: string, startSprintDto: StartSprintDto, req: any): Promise<import("./entities/sprint.entity").Sprint>;
+    completeSprint(id: string, req: any): Promise<import("./entities/sprint.entity").Sprint>;
+    addIssueToSprint(id: string, issueId: string, req: any): Promise<void>;
+    removeIssueFromSprint(issueId: string, req: any): Promise<void>;
+    remove(id: string, req: any): Promise<{
         message: string;
     }>;
 }

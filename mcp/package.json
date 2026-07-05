@@ -1,6 +1,6 @@
 {
   "name": "ossicone-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server exposing the Ossicone project tracker to AI agents",
   "type": "module",
   "bin": {

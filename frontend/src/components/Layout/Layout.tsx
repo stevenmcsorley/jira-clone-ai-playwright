@@ -16,7 +16,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
   const { projectId } = useParams<{ projectId: string }>()
   const { projects } = useProjects()
-  const { user, logout } = useAuth()
+  const { user, logout, workspaces, currentWorkspace, switchWorkspace } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   const currentProject = projects.find(p => p.id === Number(projectId))
@@ -282,6 +282,42 @@ export const Layout = ({ children }: LayoutProps) => {
                       <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
+                    {workspaces.length > 0 && (
+                      <div className="border-b border-gray-100 pb-1 mb-1">
+                        <p className="px-4 pt-2 pb-1 text-xs font-medium text-gray-400 uppercase">
+                          Workspaces
+                        </p>
+                        {workspaces.map(workspace => {
+                          const isCurrent = workspace.id === currentWorkspace?.id
+                          return (
+                            <button
+                              key={workspace.id}
+                              onClick={() => {
+                                if (!isCurrent) {
+                                  switchWorkspace(workspace.id)
+                                }
+                                setUserMenuOpen(false)
+                              }}
+                              className="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                            >
+                              <span className="truncate">{workspace.name}</span>
+                              {isCurrent && (
+                                <svg className="w-4 h-4 text-blue-600 flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </button>
+                          )
+                        })}
+                        <Link
+                          to="/workspace"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Workspace settings
+                        </Link>
+                      </div>
+                    )}
                     <Link
                       to="/users"
                       onClick={() => setUserMenuOpen(false)}

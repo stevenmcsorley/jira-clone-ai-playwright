@@ -20,9 +20,10 @@ import { TimeTrackingController } from './time-tracking.controller'
 import { IssueLinksService } from './issue-links.service'
 import { IssueLinksController } from './issue-links.controller'
 import { EventsModule } from '../events/events.module'
+import { WorkspacesModule } from '../workspaces/workspaces.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, IssueLink, User]), EventsModule],
+  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, IssueLink, User]), EventsModule, WorkspacesModule],
   providers: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService, IssueLinksService],
   controllers: [
     IssuesController,

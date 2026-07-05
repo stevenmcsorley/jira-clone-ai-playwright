@@ -16,25 +16,35 @@ exports.CommentsController = void 0;
 const common_1 = require("@nestjs/common");
 const comments_service_1 = require("./comments.service");
 const comment_dto_1 = require("./dto/comment.dto");
+const workspace_scope_service_1 = require("../workspaces/workspace-scope.service");
 let CommentsController = class CommentsController {
-    constructor(commentsService) {
+    constructor(commentsService, workspaceScope) {
         this.commentsService = commentsService;
+        this.workspaceScope = workspaceScope;
     }
-    create(createCommentDto, req) {
+    async create(createCommentDto, req) {
+        await this.workspaceScope.assertIssue(createCommentDto.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.commentsService.create(createCommentDto, userId);
     }
-    findByIssue(issueId) {
+    async findByIssue(issueId, req) {
+        await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         return this.commentsService.findByIssue(issueId);
     }
-    findOne(id) {
-        return this.commentsService.findOne(id);
+    async findOne(id, req) {
+        const comment = await this.commentsService.findOne(id);
+        await this.workspaceScope.assertIssue(comment.issueId, req.workspaceId);
+        return comment;
     }
-    update(id, updateCommentDto, req) {
+    async update(id, updateCommentDto, req) {
+        const comment = await this.commentsService.findOne(id);
+        await this.workspaceScope.assertIssue(comment.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.commentsService.update(id, updateCommentDto, userId);
     }
-    remove(id, req) {
+    async remove(id, req) {
+        const comment = await this.commentsService.findOne(id);
+        await this.workspaceScope.assertIssue(comment.issueId, req.workspaceId);
         const userId = req.user?.id || 1;
         return this.commentsService.remove(id, userId);
     }
@@ -46,21 +56,23 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [comment_dto_1.CreateCommentDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('issue/:issueId'),
     __param(0, (0, common_1.Param)('issueId', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "findByIssue", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
@@ -69,7 +81,7 @@ __decorate([
     __param(2, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, comment_dto_1.UpdateCommentDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
@@ -77,10 +89,11 @@ __decorate([
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], CommentsController.prototype, "remove", null);
 exports.CommentsController = CommentsController = __decorate([
     (0, common_1.Controller)('api/comments'),
-    __metadata("design:paramtypes", [comments_service_1.CommentsService])
+    __metadata("design:paramtypes", [comments_service_1.CommentsService,
+        workspace_scope_service_1.WorkspaceScopeService])
 ], CommentsController);
 //# sourceMappingURL=comments.controller.js.map

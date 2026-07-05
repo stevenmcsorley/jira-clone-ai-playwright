@@ -14,12 +14,13 @@ const issue_entity_1 = require("../issues/entities/issue.entity");
 const sprints_service_1 = require("./sprints.service");
 const sprints_controller_1 = require("./sprints.controller");
 const events_module_1 = require("../events/events.module");
+const workspaces_module_1 = require("../workspaces/workspaces.module");
 let SprintsModule = class SprintsModule {
 };
 exports.SprintsModule = SprintsModule;
 exports.SprintsModule = SprintsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([sprint_entity_1.Sprint, issue_entity_1.Issue]), events_module_1.EventsModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([sprint_entity_1.Sprint, issue_entity_1.Issue]), events_module_1.EventsModule, workspaces_module_1.WorkspacesModule],
         providers: [sprints_service_1.SprintsService],
         controllers: [sprints_controller_1.SprintsController],
         exports: [sprints_service_1.SprintsService],

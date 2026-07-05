@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { getToken, getWorkspaceId } from '../lib/auth'
 
 // Dev: VITE_WS_URL points at the exposed backend port.
 // Prod: same origin — nginx proxies /socket.io to the backend.
@@ -26,6 +27,12 @@ export const useWebSocket = () => {
 
     socket.on('connect', () => {
       console.log('✅ WebSocket connected:', socket.id)
+      // Join the workspace room — the server enforces membership.
+      const workspaceId = getWorkspaceId()
+      socket.emit('join', {
+        token: getToken(),
+        workspaceId: workspaceId ? Number(workspaceId) : undefined,
+      })
     })
 
     socket.on('disconnect', () => {

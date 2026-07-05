@@ -1,19 +1,21 @@
 import { SubtasksService } from './subtasks.service';
 import { CreateSubtaskDto, UpdateSubtaskDto } from './dto/subtask.dto';
+import { WorkspaceScopeService } from '../workspaces/workspace-scope.service';
 export declare class SubtasksController {
     private readonly subtasksService;
-    constructor(subtasksService: SubtasksService);
-    create(createSubtaskDto: CreateSubtaskDto): Promise<import("./entities/subtask.entity").Subtask>;
-    findByIssue(issueId: number): Promise<import("./entities/subtask.entity").Subtask[]>;
-    getProgress(issueId: number): Promise<{
+    private readonly workspaceScope;
+    constructor(subtasksService: SubtasksService, workspaceScope: WorkspaceScopeService);
+    create(createSubtaskDto: CreateSubtaskDto, req: any): Promise<import("./entities/subtask.entity").Subtask>;
+    findByIssue(issueId: number, req: any): Promise<import("./entities/subtask.entity").Subtask[]>;
+    getProgress(issueId: number, req: any): Promise<{
         completed: number;
         total: number;
         percentage: number;
     }>;
-    findOne(id: number): Promise<import("./entities/subtask.entity").Subtask>;
-    update(id: number, updateSubtaskDto: UpdateSubtaskDto): Promise<import("./entities/subtask.entity").Subtask>;
+    findOne(id: number, req: any): Promise<import("./entities/subtask.entity").Subtask>;
+    update(id: number, updateSubtaskDto: UpdateSubtaskDto, req: any): Promise<import("./entities/subtask.entity").Subtask>;
     reorderSubtasks(issueId: number, body: {
         subtaskIds: number[];
-    }): Promise<void>;
-    remove(id: number): Promise<void>;
+    }, req: any): Promise<void>;
+    remove(id: number, req: any): Promise<void>;
 }

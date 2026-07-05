@@ -6,8 +6,11 @@
  * as MCP tools so an AI agent can plan projects and track work Jira-style.
  *
  * Env:
- *   OSSICONE_URL        Base URL of the Ossicone backend (default http://localhost:4000)
- *   OSSICONE_API_TOKEN  API token created in Ossicone (POST /api/tokens) — required
+ *   OSSICONE_URL           Base URL of the Ossicone backend (default http://localhost:4000)
+ *   OSSICONE_API_TOKEN     API token created in Ossicone (POST /api/tokens) — required
+ *   OSSICONE_WORKSPACE_ID  Optional workspace override. Tokens created since the
+ *                          workspaces release are bound server-side and ignore this;
+ *                          it only affects legacy unbound tokens.
  */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -26,6 +29,9 @@ async function api(path, { method = 'GET', body } = {}) {
     method,
     headers: {
       Authorization: `Bearer ${API_TOKEN}`,
+      ...(process.env.OSSICONE_WORKSPACE_ID
+        ? { 'X-Workspace-Id': process.env.OSSICONE_WORKSPACE_ID }
+        : {}),
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -81,11 +87,38 @@ const slimIssue = (issue) => ({
   epicId: issue.epicId ?? null,
 })
 
-const server = new McpServer({ name: 'ossicone', version: '0.1.0' })
+const server = new McpServer({ name: 'ossicone', version: '0.2.0' })
 
 const ISSUE_STATUSES = ['todo', 'in_progress', 'code_review', 'done']
 const ISSUE_TYPES = ['story', 'task', 'bug', 'epic']
 const ISSUE_PRIORITIES = ['low', 'medium', 'high', 'urgent']
+
+// ---------- Workspace context ----------
+
+server.registerTool(
+  'get_workspace',
+  { description: 'The workspace this MCP connection operates in (all other tools are scoped to it), with your role and the member list.' },
+  run(async () => {
+    const [current, members] = await Promise.all([
+      api('/workspaces/current'),
+      api('/workspaces/current/members').catch(() => []),
+    ])
+    return {
+      workspace: { id: current.id, name: current.name, yourRole: current.role },
+      members: members.map(m => ({ id: m.user.id, name: m.user.name, email: m.user.email, role: m.role })),
+      note: 'API tokens are bound to one workspace. To work in a different workspace, create a token there (AI Agent page) and register a second MCP server with it.',
+    }
+  })
+)
+
+server.registerTool(
+  'list_workspaces',
+  { description: 'All workspaces the token owner belongs to (for context — this connection stays scoped to its own workspace).' },
+  run(async () => {
+    const workspaces = await api('/workspaces')
+    return workspaces.map(w => ({ id: w.id, name: w.name, role: w.role }))
+  })
+)
 
 // ---------- Projects & people ----------
 
