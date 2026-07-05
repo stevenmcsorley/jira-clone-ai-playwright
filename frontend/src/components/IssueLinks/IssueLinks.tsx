@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
+import { CollapsibleCard } from '../CollapsibleCard'
 import { IssueLinksService, type IssueLink, type IssueLinkType } from '../../services/api/issue-links.service'
 import { useProjects } from '../../hooks/useProjects'
 import type { Issue } from '../../types/domain.types'
@@ -190,11 +191,13 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">
-          Issue Links
-        </h3>
+    <CollapsibleCard
+      title="Issue Links"
+      count={issueLinks.length}
+      defaultOpen={issueLinks.length > 0}
+      testId="issue-links-section"
+    >
+      <div className="flex items-center justify-end mb-4">
         <Button
           onClick={() => setShowLinkForm(true)}
           size="sm"
@@ -391,6 +394,6 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
           <p><strong>Causes:</strong> This issue causes the problem described in the linked issue</p>
         </div>
       </div>
-    </div>
+    </CollapsibleCard>
   )
 }

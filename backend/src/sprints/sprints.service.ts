@@ -124,6 +124,7 @@ export class SprintsService {
       where: {
         projectId,
         sprintId: IsNull(), // Issues not assigned to any sprint
+        status: Not('done' as any), // Backlog = work still to plan; done issues live in the Issues list / Sprint History
       },
       relations: ['assignee', 'reporter', 'epic'],
       order: { position: 'ASC' },

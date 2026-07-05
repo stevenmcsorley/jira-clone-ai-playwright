@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { SubtasksService, type Subtask, type CreateSubtaskRequest, type UpdateSubtaskRequest, type SubtaskProgress } from '../../services/api/subtasks.service'
 import { useUsers } from '../../hooks/useUsers'
 import { Button } from '../ui/Button'
+import { CollapsibleCard } from '../CollapsibleCard'
 import type { IssueStatus } from '../../types/domain.types'
 
 interface SubtasksProps {
@@ -121,12 +122,14 @@ export const Subtasks = ({ issueId }: SubtasksProps) => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <CollapsibleCard
+      title="Subtasks"
+      count={subtasks.length}
+      defaultOpen={subtasks.length > 0}
+      testId="subtasks-section"
+    >
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Subtasks ({subtasks.length})
-          </h3>
           {progress.total > 0 && (
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-xs">
@@ -292,6 +295,6 @@ export const Subtasks = ({ issueId }: SubtasksProps) => {
           ))
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   )
 }

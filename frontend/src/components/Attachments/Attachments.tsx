@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { AttachmentsService, type Attachment } from '../../services/api/attachments.service'
 import { Button } from '../ui/Button'
+import { CollapsibleCard } from '../CollapsibleCard'
 
 interface AttachmentsProps {
   issueId: number
@@ -106,11 +107,12 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-6">
-        Attachments ({attachments.length})
-      </h3>
-
+    <CollapsibleCard
+      title="Attachments"
+      count={attachments.length}
+      defaultOpen={attachments.length > 0}
+      testId="attachments-section"
+    >
       {/* Upload Area */}
       <div
         className={`border-2 border-dashed rounded-lg p-6 mb-6 text-center transition-colors ${
@@ -203,6 +205,6 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
           ))
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   )
 }

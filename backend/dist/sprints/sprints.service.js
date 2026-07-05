@@ -91,6 +91,7 @@ let SprintsService = class SprintsService {
             where: {
                 projectId,
                 sprintId: (0, typeorm_2.IsNull)(),
+                status: (0, typeorm_2.Not)('done'),
             },
             relations: ['assignee', 'reporter', 'epic'],
             order: { position: 'ASC' },

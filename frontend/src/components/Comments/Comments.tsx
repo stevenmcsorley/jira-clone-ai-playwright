@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { CommentsService, type Comment, type CreateCommentRequest } from '../../services/api/comments.service'
 import { Button } from '../ui/Button'
 import { Markdown } from '../Markdown'
+import { CollapsibleCard } from '../CollapsibleCard'
 
 interface CommentsProps {
   issueId: number
@@ -233,11 +234,12 @@ export const Comments = ({ issueId }: CommentsProps) => {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-6">
-        Activity ({comments.length} comments)
-      </h3>
-
+    <CollapsibleCard
+      title="Comments"
+      count={comments.length}
+      defaultOpen={comments.length > 0}
+      testId="comments-section"
+    >
       {/* New Comment Form */}
       <form onSubmit={handleSubmitComment} className="mb-6">
         <textarea
@@ -268,6 +270,6 @@ export const Comments = ({ issueId }: CommentsProps) => {
             .map((comment) => renderComment(comment))
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { TimeTrackingService, type TimeLog, type CreateTimeLogRequest, type TimeTrackingSummary } from '../../services/api/time-tracking.service'
 import { Button } from '../ui/Button'
+import { CollapsibleCard } from '../CollapsibleCard'
 
 interface TimeTrackingProps {
   issueId: number
@@ -133,11 +134,13 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-medium text-gray-900">
-          Time Tracking
-        </h3>
+    <CollapsibleCard
+      title="Time Tracking"
+      count={timeLogs.length}
+      defaultOpen={timeLogs.length > 0 || Boolean(originalEstimate)}
+      testId="time-tracking-section"
+    >
+      <div className="flex items-center justify-end mb-6">
         <Button
           onClick={() => setShowLogForm(true)}
           size="sm"
@@ -338,6 +341,6 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
           ))
         )}
       </div>
-    </div>
+    </CollapsibleCard>
   )
 }
