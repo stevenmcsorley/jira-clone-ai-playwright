@@ -21,6 +21,29 @@ export interface RedactedRepoConfig {
   updatedAt: Date
 }
 
+/**
+ * Accepts a clean owner/repo, a trailing ".git", or a full clone URL pasted
+ * into either field, and returns a normalised { owner, repo }.
+ *   "widget.git"                              → repo "widget"
+ *   "https://github.com/acme/widget.git"      → owner "acme", repo "widget"
+ *   "git@github.com:acme/widget.git"          → owner "acme", repo "widget"
+ */
+function normaliseOwnerRepo(rawOwner: string, rawRepo: string): { owner: string; repo: string } {
+  let owner = (rawOwner || '').trim()
+  let repo = (rawRepo || '').trim()
+
+  const url = `${owner} ${repo}`.match(/(?:github\.com[/:])([^/\s]+)\/([^/\s]+)/i)
+  if (url) {
+    owner = url[1]
+    repo = url[2]
+  }
+
+  const clean = (s: string) => s.replace(/^[/\s]+|[/\s]+$/g, '')
+  owner = clean(owner)
+  repo = clean(repo).replace(/\.git$/i, '')
+  return { owner, repo }
+}
+
 @Injectable()
 export class GitService {
   constructor(
@@ -66,13 +89,17 @@ export class GitService {
     const token =
       dto.token === undefined ? (existing?.token ?? null) : dto.token === '' ? null : dto.token
 
+    // Normalise owner/repo so a pasted clone URL or a trailing ".git" works:
+    // e.g. "https://github.com/acme/widget.git" or "widget.git" → owner acme, repo widget.
+    const { owner, repo } = normaliseOwnerRepo(dto.owner, dto.repo)
+
     const entity = this.repos.create({
       ...(existing ?? {}),
       projectId,
       provider: dto.provider,
-      owner: dto.owner,
-      repo: dto.repo,
-      defaultBranch: dto.defaultBranch ?? null,
+      owner,
+      repo,
+      defaultBranch: dto.defaultBranch?.trim() || null,
       token,
     })
 
