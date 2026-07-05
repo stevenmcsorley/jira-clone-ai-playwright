@@ -366,6 +366,7 @@ export const ProjectBoard = () => {
               onIssueDelete={handleIssueDelete}
               filters={boardFilters}
               onFiltersChange={setBoardFilters}
+              activeSprintId={activeSprint?.id ?? null}
             />
           </div>
         ) : (

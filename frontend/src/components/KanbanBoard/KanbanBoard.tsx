@@ -9,6 +9,7 @@ export const KanbanBoard = ({
   className,
   filters,
   onFiltersChange,
+  activeSprintId = null,
 }: KanbanBoardProps) => {
   if (loading) {
     return (
@@ -30,6 +31,7 @@ export const KanbanBoard = ({
         onIssueUpdate={onIssueUpdate}
         filters={filters}
         onFiltersChange={onFiltersChange}
+        activeSprintId={activeSprintId}
       />
     </div>
   )

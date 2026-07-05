@@ -18,13 +18,20 @@ interface UseKanbanMachineOptions {
   initialIssues?: Issue[];
   enableSync?: boolean;
   syncInterval?: number;
+  /**
+   * The board is an *active-sprint* board (like Jira). Only issues in this
+   * sprint are shown; null means no active sprint → empty board. Without it,
+   * every done issue from every completed sprint would pile up in the columns.
+   */
+  activeSprintId?: number | null;
 }
 
 export const useKanbanMachine = ({
   projectId,
   initialIssues = [],
   enableSync = true,
-  syncInterval = 60000
+  syncInterval = 60000,
+  activeSprintId = null
 }: UseKanbanMachineOptions) => {
   // Initialize XState machine
   // NOTE: XState v5 removed the `context` option from useMachine/createActor
@@ -54,15 +61,20 @@ export const useKanbanMachine = ({
   const lastSync = null;
   const isSyncing = false;
 
-  // Sync Effect.ts data with XState machine
+  // Scope the fetched project issues to the active sprint (empty when none),
+  // then feed the machine. Sending even an empty list is intentional — it
+  // clears stale cards when a sprint completes or the board has no sprint.
+  const scopedIssues = useMemo(
+    () => (activeSprintId == null ? [] : effectIssues.filter(i => i.sprintId === activeSprintId)),
+    [effectIssues, activeSprintId]
+  );
+
   useEffect(() => {
-    if (effectIssues && effectIssues.length > 0) {
-      send({
-        type: 'LOAD_ISSUES',
-        issues: effectIssues
-      });
-    }
-  }, [effectIssues, send]);
+    send({
+      type: 'LOAD_ISSUES',
+      issues: scopedIssues
+    });
+  }, [scopedIssues, send]);
 
   // Handle sync updates - disabled since XState handles its own sync
   // useEffect(() => {

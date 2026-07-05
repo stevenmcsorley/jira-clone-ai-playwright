@@ -28,6 +28,8 @@ interface XStateKanbanProps {
   initialIssues?: Issue[];
   onIssueUpdate?: (issueId: number, updates: any) => void;
   className?: string;
+  /** Active-sprint board: only this sprint's issues show; null = empty board. */
+  activeSprintId?: number | null;
   /**
    * Board filters applied at render time only — machine state keeps the full
    * issue set so positions and drag-drop stay intact while filters are active.
@@ -371,7 +373,8 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
   onIssueUpdate,
   className = '',
   filters = EMPTY_BOARD_FILTERS,
-  onFiltersChange
+  onFiltersChange,
+  activeSprintId = null
 }) => {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
   const projectIdStr = urlProjectId || projectId.toString();
@@ -403,7 +406,8 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
     projectId,
     initialIssues,
     enableSync: true,
-    syncInterval: 60000
+    syncInterval: 60000,
+    activeSprintId
   });
 
   // Timer manager for automatic time tracking

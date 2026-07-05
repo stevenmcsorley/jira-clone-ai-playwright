@@ -51,6 +51,7 @@ export interface Issue {
   epicId?: number
   epic?: Issue
   epicIssues?: Issue[]
+  sprintId?: number | null
   // Enhanced fields
   dueDate?: string // ISO date string
   componentIds?: number[] // Array of component IDs
