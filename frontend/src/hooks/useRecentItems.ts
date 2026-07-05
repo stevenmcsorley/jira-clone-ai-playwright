@@ -159,12 +159,6 @@ export const useRecentItems = (options: UseRecentItemsOptions = {}) => {
   // Analytics tracking
   const trackItemVisit = useCallback((item: Omit<RecentItem, 'lastVisited' | 'visitCount'>) => {
     // In a real app, this would send analytics data
-    console.log('📈 Item visited:', {
-      type: item.type,
-      id: item.id,
-      title: item.title,
-      timestamp: new Date().toISOString(),
-    });
   }, []);
 
   // Get item statistics

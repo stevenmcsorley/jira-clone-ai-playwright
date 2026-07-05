@@ -82,7 +82,6 @@ export const Backlog = () => {
     const handleRefresh = (event: CustomEvent) => {
       const { type } = event.detail
       if (type === 'issues' || type === 'sprints') {
-        console.log('🔄 Real-time update detected, refreshing backlog data...')
         if (projectId) {
           // Directly call the fetch logic here to ensure it runs
           Promise.all([
@@ -101,7 +100,6 @@ export const Backlog = () => {
             })
             setSprints(sortedSprints)
             setBacklogIssues(backlogData)
-            console.log('✅ Backlog data refreshed successfully')
           }).catch(error => {
             console.error('Error refreshing backlog data:', error)
           })

@@ -15,7 +15,6 @@ export const Search: React.FC = () => {
   const { search, query, results, isLoading, clearSearch } = useSearch();
 
   const handleResultSelect = (result: any) => {
-    console.log('Selected result:', result);
     // Navigate to the result
     if (result.type === 'issue') {
       window.location.href = `/projects/11/issues/${result.id}`;
@@ -180,7 +179,6 @@ export const Search: React.FC = () => {
               </p>
               <QueryBuilder
                 onQueryChange={(query) => {
-                  console.log('Built query:', query);
                   if (query.jql) {
                     search(query.jql);
                   }
@@ -193,11 +191,10 @@ export const Search: React.FC = () => {
             <div className="p-6">
               <SavedFilters
                 filters={[]} // Would be loaded from the dashboard machine
-                onSaveFilter={(filter) => console.log('Save filter:', filter)}
-                onUpdateFilter={(id, updates) => console.log('Update filter:', id, updates)}
-                onDeleteFilter={(id) => console.log('Delete filter:', id)}
+                onSaveFilter={(filter) => {}}
+                onUpdateFilter={(id, updates) => {}}
+                onDeleteFilter={(id) => {}}
                 onFilterSelect={(filter) => {
-                  console.log('Select filter:', filter);
                   search(filter.jql);
                   setActiveTab('search');
                 }}

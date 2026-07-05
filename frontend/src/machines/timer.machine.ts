@@ -186,7 +186,6 @@ export const timerMachine = createMachine(
       syncToBackend: ({ context }) => {
         // Background sync for active timers (non-blocking)
         if (context.totalElapsed > 0) {
-          console.log(`Syncing timer for issue ${context.issueId}: ${context.totalElapsed}ms`);
         }
       },
 
@@ -233,10 +232,8 @@ const saveTimersToStorage = (timers: Map<number, any>) => {
 
     if (activeTimerArray.length > 0) {
       localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(activeTimerArray));
-      console.log(`💾 Saved ${activeTimerArray.length} active timers to localStorage`);
     } else {
       localStorage.removeItem(TIMER_STORAGE_KEY);
-      console.log(`🗑️ Cleared localStorage (no active timers)`);
     }
   } catch (error) {
     console.error('Failed to save timers to localStorage:', error);
@@ -249,7 +246,6 @@ const loadTimersFromStorage = (): Map<number, any> => {
     if (stored) {
       const timerArray = JSON.parse(stored) as Array<[number, any]>;
       const timers = new Map<number, any>(timerArray);
-      console.log(`📁 Loaded ${timers.size} timers from localStorage`);
 
       // Restore running timers - adjust start times to account for time away
       const now = Date.now();
@@ -260,7 +256,6 @@ const loadTimersFromStorage = (): Map<number, any> => {
           // Add time away to accumulated time and reset start time
           timer.totalElapsed += timeAway;
           timer.startTime = now;
-          console.log(`🔄 Restored running timer for issue ${timer.issueId}, added ${timeAway}ms from time away`);
         }
       }
 
@@ -334,14 +329,12 @@ export const timerManagerMachine = createMachine(
           newStatus: string;
           estimate?: number;
         };
-        console.log(`⚙️ Timer Machine: Processing status change for issue ${issueId}: ${newStatus}, estimate: ${estimate}`);
         const existingTimer = context.activeTimers.get(issueId);
 
         switch (newStatus) {
           case 'in_progress':
             if (!existingTimer) {
               // Start new timer
-              console.log(`🚀 Starting new timer for issue ${issueId}`);
               context.activeTimers.set(issueId, {
                 issueId,
                 startTime: Date.now(),
@@ -353,10 +346,8 @@ export const timerManagerMachine = createMachine(
               // Resume or restart existing timer
               if (existingTimer.status === 'completed') {
                 // Reset for new session
-                console.log(`🔄 Restarting completed timer for issue ${issueId}`);
                 existingTimer.totalElapsed = 0;
               } else {
-                console.log(`▶️ Resuming paused timer for issue ${issueId}`);
               }
               existingTimer.startTime = Date.now();
               existingTimer.status = 'running';
@@ -387,23 +378,19 @@ export const timerManagerMachine = createMachine(
 
               // Auto-log time but keep timer for future restarts
               const sessionHours = existingTimer.totalElapsed / (1000 * 60 * 60);
-              console.log(`🕐 Timer completed for issue ${issueId}: ${sessionHours} hours (${existingTimer.totalElapsed}ms)`);
 
               // Only log time if there's actually time elapsed (> 0)
               if (sessionHours > 0) {
-                console.log(`✅ Logging time for issue ${issueId}: ${sessionHours} hours`);
                 TimeTrackingService.logTime({
                   issueId,
                   hours: Math.round(sessionHours * 1000) / 1000, // Round to 0.001h precision
                   description: 'Automatic time tracking session',
                   date: new Date().toISOString(),
                 }).then(() => {
-                  console.log(`📝 Time logged successfully for issue ${issueId}`);
                 }).catch((error) => {
                   console.error(`❌ Failed to log time for issue ${issueId}:`, error);
                 });
               } else {
-                console.log(`⏭️ Skipping time log for issue ${issueId}: No time elapsed (timer was never started)`);
               }
 
               // Reset timer for potential future sessions (don't delete)

@@ -8,6 +8,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Strip debug logging from the app (dev + build); real errors still log.
+  esbuild: {
+    pure: ['console.log', 'console.info', 'console.debug'],
+  },
   server: {
     proxy: {
       '/api': {

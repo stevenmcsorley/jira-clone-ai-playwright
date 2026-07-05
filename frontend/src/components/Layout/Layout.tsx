@@ -220,7 +220,8 @@ export const Layout = ({ children }: LayoutProps) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <Link to="/projects" className="text-xl font-bold text-blue-600">
+              <Link to="/projects" className="flex items-center gap-2 text-xl font-bold text-blue-600">
+                <img src="/logo.png" alt="" className="w-7 h-7 rounded-md" />
                 Ossicone
               </Link>
             </div>

@@ -428,8 +428,6 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
     const draggedIssue = machine.context.draggedIssue;
     if (!draggedIssue) return;
 
-    console.log(`🎯 XStateKanban: Dropping issue ${draggedIssue.id} to ${targetStatus}, estimate: ${draggedIssue.estimate}`);
-
     // When filters hide cards, the drop index refers to the *visible* list —
     // translate it to the position in the full column so hidden cards keep
     // their relative order.
@@ -463,7 +461,6 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
   // Log state machine transitions in development
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('🎰 Kanban State:', machine.currentState, machine.context);
     }
   }, [machine.currentState, machine.context]);
 
@@ -627,15 +624,6 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             projectId={projectIdStr}
             columnStats={{ count: visibleIssuesByStatus.done.length, optimistic: columnStats.done.optimistic }}
           />
-        </div>
-      )}
-
-      {/* Debug Info (Development only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-6 p-3 bg-gray-100 rounded text-xs">
-          <strong>XState Debug:</strong> State: {String(machine.currentState)},
-          Optimistic: {optimisticUpdates.size},
-          Conflicts: {conflicts.length}
         </div>
       )}
     </div>

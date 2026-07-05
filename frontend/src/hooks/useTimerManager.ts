@@ -31,7 +31,6 @@ export const useTimerManager = () => {
             // legitimately change across the awaits above — widen to string so TS
             // doesn't flag the comparison as impossible after narrowing)
             if (issue && issue.status === 'done' && (timer.status as string) !== 'completed') {
-              console.log(`🔄 Found stuck timer for completed issue ${issueId}, fixing...`);
               send({
                 type: 'ISSUE_STATUS_CHANGED',
                 issueId,
@@ -55,7 +54,6 @@ export const useTimerManager = () => {
   useEffect(() => {
     const handleBeforeUnload = () => {
       // Force save current timer state
-      console.log('💾 Page unloading, saving timer state...');
       const activeTimers = state.context.activeTimers;
       if (activeTimers.size > 0) {
         const activeTimerArray = Array.from(activeTimers.entries())
@@ -75,7 +73,6 @@ export const useTimerManager = () => {
   // Handle issue status changes (called from kanban, issue detail, etc.)
   const handleIssueStatusChange = useCallback(
     (issueId: number, newStatus: string, estimate?: number) => {
-      console.log(`🎰 Timer Manager: Issue ${issueId} status changed to ${newStatus}, estimate: ${estimate}`);
       send({
         type: 'ISSUE_STATUS_CHANGED',
         issueId,
@@ -162,7 +159,6 @@ export const useTimerProgressBar = (issue: Issue) => {
       const summary = await TimeTrackingService.getTimeTrackingSummary(issue.id);
       setExistingTimeSpent(summary.totalTimeSpent || 0);
       setLastUpdateTime(Date.now());
-      console.log(`📊 Fetched existing time for issue ${issue.id}: ${summary.totalTimeSpent || 0} hours`);
     } catch (error) {
       console.error('Error fetching time summary:', error);
       setExistingTimeSpent(0);
@@ -178,7 +174,6 @@ export const useTimerProgressBar = (issue: Issue) => {
   React.useEffect(() => {
     if (timerState?.status === 'completed' && Date.now() - lastUpdateTime > 2000) {
       const timeoutId = setTimeout(() => {
-        console.log(`🔄 Timer completed, refetching time summary for issue ${issue.id}`);
         fetchExistingTime();
       }, 3000); // Wait 3 seconds for API to settle
 

@@ -103,7 +103,6 @@ export const searchMachine = setup({
     // Query management
     setQuery: assign(({ event }) => {
       const query = (event as { type: 'TYPE_QUERY'; query: string }).query;
-      console.log('🎯 Setting query:', query);
       return {
         query,
         error: undefined,
@@ -119,9 +118,7 @@ export const searchMachine = setup({
     }),
     parseQuery: assign(({ context }) => {
       try {
-        console.log('🔧 Parsing query:', context.query);
         const result = parseJQLQuery(context.query);
-        console.log('✅ Parse result:', result);
         return {
           parsedQuery: result,
         };
@@ -223,20 +220,12 @@ export const searchMachine = setup({
     }),
 
     // Side effects
-    notifySearchPerformed: ({ context }) => {
-      console.log('🔍 Search performed:', context.query, `(${context.totalResults} results)`);
-    },
-    logQueryValidation: ({ context }) => {
-      console.log('✅ JQL query validated:', context.parsedQuery);
-      console.log('🎯 Moving to checkingCache state');
-    },
-    logCacheHit: ({ context }) => {
-      console.log('⚡ Cache hit for query:', context.query);
-    },
+    notifySearchPerformed: () => {},
+    logQueryValidation: () => {},
+    logCacheHit: () => {},
   },
   actors: {
     searchAPI: fromPromise(({ input }: { input: { query: string } }) => {
-      console.log('🔍 Search API called with query:', input.query);
       return fetch('/api/issues/search', {
         method: 'POST',
         headers: {
@@ -247,14 +236,12 @@ export const searchMachine = setup({
         }),
       })
       .then(response => {
-        console.log('📡 Search API response status:', response.status);
         if (!response.ok) {
           throw new Error(`Search API error: ${response.status}`);
         }
         return response.json();
       })
       .then(data => {
-        console.log('📊 Search API response data:', data);
         const results = data.results.map((issue: any) => ({
           id: issue.id,
           type: 'issue',
@@ -268,7 +255,6 @@ export const searchMachine = setup({
           project: issue.project?.name,
           score: 1,
         }));
-        console.log('✅ Mapped search results:', results);
         return {
           results,
           totalResults: data.totalResults,
@@ -283,14 +269,12 @@ export const searchMachine = setup({
       return new Promise<{ isValid: boolean; parsedQuery?: SearchQuery }>((resolve, reject) => {
         setTimeout(() => {
           try {
-            console.log('🔍 Validating JQL query:', input.query);
             // Always consider queries as valid - let backend handle validation
             const isValid = input.query.trim().length > 0;
             const parsedQuery: SearchQuery = {
               jql: input.query,
               filters: {},
             };
-            console.log('✅ JQL validation result:', { isValid, parsedQuery });
 
             if (isValid) {
               resolve({ isValid, parsedQuery });
@@ -379,7 +363,6 @@ export const searchMachine = setup({
 
     validating: {
       entry: [
-        () => console.log('🚀 Entering validating state'),
         'setValidating',
         'parseQuery'
       ],
@@ -387,19 +370,16 @@ export const searchMachine = setup({
         {
           target: 'checkingCache',
           actions: [
-            () => console.log('🎯 Validation passed, moving to checkingCache'),
             'clearValidating',
             'logQueryValidation'
           ],
           guard: ({ context }) => {
-            console.log('🔍 Checking if query is valid:', context.query);
             return context.query.trim().length > 0;
           }
         },
         {
           target: 'error',
           actions: [
-            () => console.log('❌ Validation failed'),
             assign({
               error: 'Invalid JQL syntax',
               isLoading: false,
@@ -417,16 +397,16 @@ export const searchMachine = setup({
     },
 
     checkingCache: {
-      entry: () => console.log('🔍 Checking cache for query'),
+      entry: () => {},
       always: [
         {
           target: 'loadingFromCache',
           guard: 'isCacheValid',
-          actions: () => console.log('✅ Cache hit! Loading from cache')
+          actions: () => {}
         },
         {
           target: 'searching',
-          actions: () => console.log('🚀 No cache hit, proceeding to search API')
+          actions: () => {}
         },
       ],
     },
@@ -450,7 +430,6 @@ export const searchMachine = setup({
 
     searching: {
       entry: [
-        () => console.log('🔎 Entering searching state'),
         'setLoading'
       ],
       invoke: {
@@ -459,7 +438,6 @@ export const searchMachine = setup({
         onDone: {
           target: 'results',
           actions: [
-            () => console.log('✅ Search API succeeded'),
             'setResults',
             'cacheResults',
             'addToHistory',

@@ -37,7 +37,6 @@ export const CleanIssueCard = ({
   }
 
   const handleDragStart = (e: React.DragEvent) => {
-    console.log('Drag started for issue:', issue.id)
     e.dataTransfer.setData('application/json', JSON.stringify({ id: issue.id, type: 'issue' }))
     e.dataTransfer.setData('text/plain', issue.id.toString())
     e.dataTransfer.effectAllowed = 'move'

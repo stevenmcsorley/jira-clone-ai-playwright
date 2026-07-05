@@ -37,7 +37,6 @@ const getSocket = (): Socket => {
   })
 
   socket.on('connect', () => {
-    console.log('✅ WebSocket connected:', socket!.id)
     // (Re)join on every connect; on first login the workspace id may not be
     // resolved yet — the 'ossicone-workspace-changed' listener covers that.
     joinWorkspaceRoom()
@@ -46,7 +45,6 @@ const getSocket = (): Socket => {
   window.addEventListener('ossicone-workspace-changed', joinWorkspaceRoom)
 
   socket.on('disconnect', () => {
-    console.log('❌ WebSocket disconnected')
   })
 
   // Issue events

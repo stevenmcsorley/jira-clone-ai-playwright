@@ -95,11 +95,6 @@ export const ProjectBoard = () => {
         // metadata silently instead; other users' changes (outside the echo
         // window) still get the full refresh below.
         const isOwnEcho = isRecentLocalMutation()
-        console.log(
-          isOwnEcho
-            ? '🔄 Local mutation echo — refreshing sprint data silently (no board remount)'
-            : '🔄 Real-time update detected, refreshing board data...'
-        )
         if (projectId) {
           // Directly call the fetch logic here to ensure it runs
           SprintsService.getByProject(parseInt(projectId)).then(sprintsData => {
@@ -114,7 +109,6 @@ export const ProjectBoard = () => {
             if (!isOwnEcho) {
               setRefreshKey(prev => prev + 1) // Force re-render
             }
-            console.log('✅ Board data refreshed successfully', activeSprintData?.issues?.length, 'issues')
           }).catch(error => {
             console.error('Error refreshing board data:', error)
           })
@@ -149,11 +143,9 @@ export const ProjectBoard = () => {
   }
 
   const handleIssueEdit = (issue: Issue) => {
-    console.log('Edit issue:', issue)
   }
 
   const handleIssueDelete = (issueId: number) => {
-    console.log('Delete issue:', issueId)
   }
 
   const handleSearch = (e: React.FormEvent) => {

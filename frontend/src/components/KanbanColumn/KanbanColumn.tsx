@@ -54,7 +54,7 @@ export const KanbanColumn = ({
               key={issue.id}
               issue={issue}
               draggable
-              onEdit={(issue) => console.log('Edit issue:', issue)}
+              onEdit={(issue) => {}}
             />
           ))}
 
