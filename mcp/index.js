@@ -87,7 +87,7 @@ const slimIssue = (issue) => ({
   epicId: issue.epicId ?? null,
 })
 
-const server = new McpServer({ name: 'ossicone', version: '0.3.0' })
+const server = new McpServer({ name: 'ossicone', version: '0.4.0' })
 
 const ISSUE_STATUSES = ['todo', 'in_progress', 'code_review', 'done']
 const ISSUE_TYPES = ['story', 'task', 'bug', 'epic']
@@ -296,6 +296,18 @@ server.registerTool(
     const body = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined))
     const issue = await api(`/issues/${issueId}`, { method: 'PATCH', body })
     return slimIssue(issue)
+  })
+)
+
+server.registerTool(
+  'delete_issue',
+  {
+    description: 'Permanently delete an issue (and its comments, subtasks, links and time logs cascade). Irreversible — prefer update_issue to close as "done" unless it is genuinely junk/a test. Deleting an epic does NOT delete its children; they keep their epicId.',
+    inputSchema: { issueId: z.number() },
+  },
+  run(async ({ issueId }) => {
+    await api(`/issues/${issueId}`, { method: 'DELETE' })
+    return { deleted: issueId }
   })
 )
 
