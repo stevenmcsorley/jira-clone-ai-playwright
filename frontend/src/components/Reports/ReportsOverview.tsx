@@ -75,10 +75,12 @@ const VelocityMockChart = () => (
 
 const CumulativeFlowMockChart = () => (
   <div className="h-24 bg-gray-50 rounded relative overflow-hidden">
-    <svg className="w-full h-full">
-      <path d="M 0 24 Q 10 20 20 18 T 40 15 L 60 24 Z" fill="#a78bfa" />
-      <path d="M 0 24 Q 10 22 20 20 T 40 18 L 60 24 Z" fill="#fbbf24" />
-      <path d="M 0 24 Q 10 23 20 22 T 40 21 L 60 24 Z" fill="#34d399" />
+    {/* Stacked bands are painted back-to-front (widest first) so they read as a
+        cumulative flow diagram. viewBox + preserveAspectRatio fills the card. */}
+    <svg className="w-full h-full" viewBox="0 0 120 96" preserveAspectRatio="none">
+      <path d="M0 96 L0 60 C 30 52 60 40 90 26 S 115 16 120 14 L120 96 Z" fill="#a78bfa" />
+      <path d="M0 96 L0 72 C 30 66 60 56 90 44 S 115 36 120 34 L120 96 Z" fill="#fbbf24" />
+      <path d="M0 96 L0 84 C 30 80 60 72 90 62 S 115 56 120 54 L120 96 Z" fill="#34d399" />
     </svg>
   </div>
 )

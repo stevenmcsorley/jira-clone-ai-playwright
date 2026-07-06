@@ -12,7 +12,15 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [uploadsEnabled, setUploadsEnabled] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then(res => (res.ok ? res.json() : { uploadsEnabled: false }))
+      .then(config => setUploadsEnabled(Boolean(config?.uploadsEnabled)))
+      .catch(() => setUploadsEnabled(false))
+  }, [])
 
   const fetchAttachments = useCallback(async () => {
     try {
@@ -113,49 +121,55 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
       defaultOpen={attachments.length > 0}
       testId="attachments-section"
     >
-      {/* Upload Area */}
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 mb-6 text-center transition-colors ${
-          dragOver
-            ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(e) => handleFileUpload(e.target.files)}
-        />
+      {/* Upload Area — hidden when uploads are disabled for this instance */}
+      {uploadsEnabled ? (
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 mb-6 text-center transition-colors ${
+            dragOver
+              ? 'border-blue-400 bg-blue-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFileUpload(e.target.files)}
+          />
 
-        <div className="text-gray-500">
-          <div className="text-2xl mb-2">📎</div>
-          <p className="mb-2">
-            Drag and drop files here, or{' '}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="text-blue-600 hover:underline"
-              disabled={uploading}
-            >
-              browse to upload
-            </button>
-          </p>
-          <p className="text-sm text-gray-400">
-            Maximum file size: 10MB
-          </p>
-        </div>
-
-        {uploading && (
-          <div className="mt-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-sm text-gray-600 mt-2">Uploading...</p>
+          <div className="text-gray-500">
+            <div className="text-2xl mb-2">📎</div>
+            <p className="mb-2">
+              Drag and drop files here, or{' '}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="text-blue-600 hover:underline"
+                disabled={uploading}
+              >
+                browse to upload
+              </button>
+            </p>
+            <p className="text-sm text-gray-400">
+              Maximum file size: 10MB
+            </p>
           </div>
-        )}
-      </div>
+
+          {uploading && (
+            <div className="mt-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-sm text-gray-600 mt-2">Uploading...</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 mb-6 text-center text-sm text-gray-500">
+          File uploads are turned off for this instance.
+        </div>
+      )}
 
       {/* Attachments List */}
       <div className="space-y-3">

@@ -1,3 +1,5 @@
+import { captureApiError } from './skylark'
+
 const TOKEN_KEY = 'ossicone-token'
 const WORKSPACE_KEY = 'ossicone-workspace'
 
@@ -66,7 +68,18 @@ export function installAuthFetch(): void {
       }
     }
 
-    const response = await originalFetch(input, init)
+    const method = (
+      init?.method || (input instanceof Request ? input.method : 'GET') || 'GET'
+    ).toUpperCase()
+
+    let response: Response
+    try {
+      response = await originalFetch(input, init)
+    } catch (err) {
+      // Network failure reaching the API — report and rethrow.
+      if (isApi) captureApiError(url, 0, method)
+      throw err
+    }
 
     if (
       isApi &&
@@ -76,6 +89,11 @@ export function installAuthFetch(): void {
     ) {
       clearToken()
       window.location.href = '/login'
+    }
+
+    // Surface server-side (5xx) API failures to Skylark from the client's view.
+    if (isApi && response.status >= 500) {
+      captureApiError(url, response.status, method)
     }
 
     return response

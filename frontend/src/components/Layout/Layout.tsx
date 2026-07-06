@@ -8,6 +8,7 @@ import { QuickActions } from '../QuickActions'
 import { Breadcrumb } from '../Breadcrumb'
 import { GlobalSearch } from '../Search/GlobalSearch'
 import { NotificationBell } from '../Notifications'
+import { WorkspaceIcon } from '../../lib/workspaceIcons'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -23,6 +24,8 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const currentProject = projects.find(p => p.id === Number(projectId))
   const isProjectBoard = location.pathname.includes('/projects/') && projectId
+
+  const workspaceName = currentWorkspace?.name || 'Ossicone'
 
   const closeSidebar = () => setSidebarOpen(false)
 
@@ -73,22 +76,27 @@ export const Layout = ({ children }: LayoutProps) => {
         }`}
         data-testid="app-sidebar"
       >
-        {/* Project Header */}
-        <div className="p-4 border-b border-gray-200">
+        {/* Workspace Header */}
+        <Link
+          to="/workspace"
+          onClick={closeSidebar}
+          className="block p-4 border-b border-gray-200 hover:bg-gray-50"
+          title="Workspace settings"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {currentProject?.key || 'OSS'}
-              </span>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900">
-                {currentProject?.name || 'Ossicone'}
-              </h3>
-              <p className="text-xs text-gray-500">Software project</p>
+            <WorkspaceIcon
+              name={workspaceName}
+              icon={currentWorkspace?.icon}
+              iconImage={currentWorkspace?.iconImage}
+            />
+            <div className="min-w-0">
+              <h3 className="font-medium text-gray-900 truncate">{workspaceName}</h3>
+              <p className="text-xs text-gray-500 truncate">
+                {currentProject?.name || 'Workspace'}
+              </p>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-4">
@@ -279,7 +287,16 @@ export const Layout = ({ children }: LayoutProps) => {
                               }}
                               className="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
                             >
-                              <span className="truncate">{workspace.name}</span>
+                              <span className="flex items-center gap-2 min-w-0">
+                                <WorkspaceIcon
+                                  name={workspace.name}
+                                  icon={workspace.icon}
+                                  iconImage={workspace.iconImage}
+                                  className="w-5 h-5"
+                                  textClassName="text-[10px]"
+                                />
+                                <span className="truncate">{workspace.name}</span>
+                              </span>
                               {isCurrent && (
                                 <svg className="w-4 h-4 text-blue-600 flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

@@ -8,6 +8,11 @@ COPY . .
 # Same-origin API and websockets in production (nginx proxies both)
 ENV VITE_API_URL=/api
 ENV VITE_WS_URL=
+# Skylark error monitoring (baked at build time; token is a public ingest DSN)
+ARG VITE_SKYLARK_URL=https://skylark.halfagiraf.com
+ARG VITE_SKYLARK_TOKEN=
+ENV VITE_SKYLARK_URL=$VITE_SKYLARK_URL
+ENV VITE_SKYLARK_TOKEN=$VITE_SKYLARK_TOKEN
 RUN npm run build
 
 FROM nginx:alpine

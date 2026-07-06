@@ -8,7 +8,7 @@ interface AuthContextValue {
   workspaces: Workspace[]
   currentWorkspace: Workspace | null
   login: (email: string, password: string) => Promise<void>
-  registerUser: (name: string, email: string, password: string) => Promise<void>
+  registerUser: (name: string, email: string, password: string, workspaceName?: string) => Promise<void>
   logout: () => void
   switchWorkspace: (id: number) => void
   refreshWorkspaces: () => Promise<void>
@@ -73,11 +73,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await loadWorkspaces()
   }
 
-  const registerUser = async (name: string, email: string, password: string) => {
+  const registerUser = async (name: string, email: string, password: string, workspaceName?: string) => {
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, workspaceName }),
     })
     if (!response.ok) {
       const body = await response.json().catch(() => null)

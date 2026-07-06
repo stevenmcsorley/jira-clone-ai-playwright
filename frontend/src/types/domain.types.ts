@@ -13,6 +13,8 @@ export type WorkspaceRole = 'owner' | 'admin' | 'member'
 export interface Workspace {
   id: number
   name: string
+  icon?: string | null
+  iconImage?: string | null
   role: WorkspaceRole
 }
 

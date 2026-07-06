@@ -26,6 +26,9 @@ let AttachmentsController = class AttachmentsController {
         this.workspaceScope = workspaceScope;
     }
     async uploadFile(issueId, file, req) {
+        if (process.env.UPLOADS_ENABLED !== 'true') {
+            throw new common_1.ForbiddenException('File uploads are disabled on this instance');
+        }
         await this.workspaceScope.assertIssue(issueId, req.workspaceId);
         if (!file) {
             throw new common_1.NotFoundException('No file uploaded');

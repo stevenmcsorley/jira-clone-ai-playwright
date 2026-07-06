@@ -41,6 +41,13 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env.prod}
       FRONTEND_URL: ${PUBLIC_URL:-https://ossicone.halfagiraf.com}
       PORT: 4000
+      # Report unhandled 5xx errors to Skylark (no-op unless the token is set).
+      SKYLARK_URL: ${SKYLARK_URL:-https://skylark.halfagiraf.com}
+      SKYLARK_TOKEN: ${SKYLARK_TOKEN:-}
+      # Public self-service signup; each account still gets exactly one workspace.
+      OPEN_SIGNUP: ${OPEN_SIGNUP:-false}
+      # File uploads OFF by default so open signup can't turn the box into a file depot.
+      UPLOADS_ENABLED: ${UPLOADS_ENABLED:-false}
       # Deliberate schema management: run migrations on boot (src/migrations/)
       TYPEORM_MIGRATIONS: "true"
     depends_on:
@@ -62,9 +69,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+      args:
+        VITE_SKYLARK_URL: ${VITE_SKYLARK_URL:-https://skylark.halfagiraf.com}
+        VITE_SKYLARK_TOKEN: ${SKYLARK_TOKEN:-}
     container_name: ossicone-web
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      # Use 127.0.0.1, not localhost — localhost resolves to ::1 (IPv6) in the
+      # nginx:alpine image but nginx listens on IPv4 only, so localhost is refused.
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 10s
       retries: 3

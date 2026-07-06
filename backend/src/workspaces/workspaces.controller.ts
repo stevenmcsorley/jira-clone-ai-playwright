@@ -2,7 +2,7 @@ import {
   Controller, Get, Post, Patch, Delete, Body, Param, ParseIntPipe, Req,
   ForbiddenException, BadRequestException, HttpCode,
 } from '@nestjs/common'
-import { IsEmail, IsIn, IsString, MinLength } from 'class-validator'
+import { IsEmail, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import { WorkspacesService } from './workspaces.service'
 import { UsersService } from '../users/users.service'
 import { ProjectsService } from '../projects/projects.service'
@@ -10,10 +10,35 @@ import { Public } from '../auth/decorators/public.decorator'
 import { AuthService } from '../auth/services/auth.service'
 import { rateLimit } from '../auth/rate-limit'
 
+// A resized 256px icon data URL comfortably fits in ~400k base64 chars; cap generously.
+const ICON_IMAGE_MAX = 600_000
+
 class CreateWorkspaceDto {
   @IsString()
   @MinLength(2)
   name: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  icon?: string
+}
+
+class UpdateWorkspaceDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  name?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  icon?: string
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(ICON_IMAGE_MAX)
+  iconImage?: string
 }
 
 class InviteDto {
@@ -60,13 +85,13 @@ export class WorkspacesController {
 
   @Post()
   create(@Body() dto: CreateWorkspaceDto, @Req() req: any) {
-    return this.workspacesService.createWorkspace(dto.name, req.user.id)
+    return this.workspacesService.createWorkspace(dto.name, req.user.id, dto.icon)
   }
 
   @Patch('current')
-  rename(@Body() dto: CreateWorkspaceDto, @Req() req: any) {
+  update(@Body() dto: UpdateWorkspaceDto, @Req() req: any) {
     requireManager(req)
-    return this.workspacesService.rename(req.workspaceId, dto.name)
+    return this.workspacesService.update(req.workspaceId, dto)
   }
 
   @Delete('current')

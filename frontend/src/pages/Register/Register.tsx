@@ -7,6 +7,7 @@ export const Register = () => {
   const navigate = useNavigate()
   const [openSignup, setOpenSignup] = useState<boolean | null>(null)
   const [name, setName] = useState('')
+  const [workspaceName, setWorkspaceName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -28,7 +29,7 @@ export const Register = () => {
     setError(null)
     setSubmitting(true)
     try {
-      await registerUser(name, email, password)
+      await registerUser(name, email, password, workspaceName)
       navigate('/projects', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
@@ -73,7 +74,7 @@ export const Register = () => {
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Name
+                Your name
               </label>
               <input
                 id="name"
@@ -82,8 +83,28 @@ export const Register = () => {
                 autoFocus
                 value={name}
                 onChange={e => setName(e.target.value)}
+                placeholder="e.g. Alex Taylor"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+            </div>
+
+            <div>
+              <label htmlFor="workspaceName" className="block text-sm font-medium text-gray-700 mb-1">
+                Workspace name
+              </label>
+              <input
+                id="workspaceName"
+                type="text"
+                required
+                minLength={2}
+                value={workspaceName}
+                onChange={e => setWorkspaceName(e.target.value)}
+                placeholder="e.g. Acme Team, Side Projects"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Your team's home for projects and issues — not your personal name. You can change it later.
+              </p>
             </div>
 
             <div>

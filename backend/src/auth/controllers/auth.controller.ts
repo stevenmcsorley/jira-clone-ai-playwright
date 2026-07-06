@@ -1,5 +1,5 @@
 import { Controller, Post, Get, Body, Req, HttpCode } from '@nestjs/common'
-import { IsEmail, IsString, MinLength } from 'class-validator'
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
 import { AuthService } from '../services/auth.service'
 import { Public } from '../decorators/public.decorator'
 import { rateLimit } from '../rate-limit'
@@ -24,6 +24,13 @@ class RegisterDto {
   @IsString()
   @MinLength(6)
   password: string
+
+  // Optional: names the workspace created on signup. Falls back to "<name>'s workspace".
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(60)
+  workspaceName?: string
 }
 
 class ChangePasswordDto {
@@ -52,14 +59,17 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto, @Req() req: any) {
     rateLimit('register', req.ip, 5)
-    return this.authService.register(dto.email, dto.name, dto.password)
+    return this.authService.register(dto.email, dto.name, dto.password, dto.workspaceName)
   }
 
-  /** Public instance config so the SPA knows whether to offer sign-up. */
+  /** Public instance config so the SPA knows whether to offer sign-up / uploads. */
   @Public()
   @Get('config')
   config() {
-    return { openSignup: AuthService.openSignup }
+    return {
+      openSignup: AuthService.openSignup,
+      uploadsEnabled: process.env.UPLOADS_ENABLED === 'true',
+    }
   }
 
   @Get('me')

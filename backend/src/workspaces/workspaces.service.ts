@@ -22,9 +22,19 @@ export class WorkspacesService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createWorkspace(name: string, ownerId: number): Promise<Workspace> {
+  async createWorkspace(name: string, ownerId: number, icon?: string): Promise<Workspace> {
+    // One workspace per account. Being invited into other workspaces is fine,
+    // but each email can only own/create one (curbs abuse on open signup).
+    const alreadyOwns = await this.memberRepository.count({
+      where: { userId: ownerId, role: 'owner' },
+    })
+    if (alreadyOwns > 0) {
+      throw new BadRequestException(
+        'Each account can have one workspace. Use a different email address to create another.',
+      )
+    }
     const workspace = await this.workspaceRepository.save(
-      this.workspaceRepository.create({ name }),
+      this.workspaceRepository.create({ name, icon: icon?.trim() || null }),
     )
     await this.memberRepository.save(
       this.memberRepository.create({ workspaceId: workspace.id, userId: ownerId, role: 'owner' }),
@@ -45,8 +55,36 @@ export class WorkspacesService {
     return this.memberRepository.findOne({ where: { workspaceId, userId } })
   }
 
-  async rename(workspaceId: number, name: string): Promise<Workspace> {
-    await this.workspaceRepository.update(workspaceId, { name })
+  async update(
+    workspaceId: number,
+    patch: { name?: string; icon?: string; iconImage?: string },
+  ): Promise<Workspace> {
+    const changes: Partial<Workspace> = {}
+    if (patch.name !== undefined) changes.name = patch.name.trim()
+
+    // A custom image and a named icon are mutually exclusive; setting one clears
+    // the other. An explicit empty string clears back to the default initials.
+    if (patch.iconImage !== undefined) {
+      const img = patch.iconImage.trim()
+      if (img) {
+        if (!/^data:image\/(png|jpeg|webp);base64,/.test(img)) {
+          throw new BadRequestException('Icon image must be a PNG, JPEG or WebP data URL')
+        }
+        changes.iconImage = img
+        changes.icon = null
+      } else {
+        changes.iconImage = null
+      }
+    }
+    if (patch.icon !== undefined) {
+      const key = patch.icon.trim()
+      changes.icon = key || null
+      if (key) changes.iconImage = null
+    }
+
+    if (Object.keys(changes).length > 0) {
+      await this.workspaceRepository.update(workspaceId, changes)
+    }
     return this.workspaceRepository.findOne({ where: { id: workspaceId } })
   }
 

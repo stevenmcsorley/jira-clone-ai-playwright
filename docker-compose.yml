@@ -41,6 +41,8 @@ services:
       NODE_ENV: development
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       OPEN_SIGNUP: "true"
+      # Off by default in prod; on locally so the attachment flow is testable.
+      UPLOADS_ENABLED: "true"
       # Poll for file changes - native FS events do not cross the Windows bind mount
       TSC_WATCHFILE: DynamicPriorityPolling
       CHOKIDAR_USEPOLLING: "true"

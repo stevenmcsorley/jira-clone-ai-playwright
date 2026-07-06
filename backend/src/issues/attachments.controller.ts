@@ -10,7 +10,8 @@ import {
   UploadedFile,
   ParseIntPipe,
   Response,
-  NotFoundException
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
@@ -51,6 +52,12 @@ export class AttachmentsController {
     @UploadedFile() file: Express.Multer.File,
     @Request() req
   ) {
+    // Global kill-switch: file uploads are off unless UPLOADS_ENABLED=true.
+    // Keeps a public-signup instance from being used as a free file depot.
+    if (process.env.UPLOADS_ENABLED !== 'true') {
+      throw new ForbiddenException('File uploads are disabled on this instance')
+    }
+
     await this.workspaceScope.assertIssue(issueId, req.workspaceId)
 
     if (!file) {

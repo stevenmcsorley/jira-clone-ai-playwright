@@ -12,6 +12,7 @@ import { AnalyticsModule } from './analytics/analytics.module'
 import { EventsModule } from './events/events.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { GitModule } from './git/git.module'
+import { SkylarkTestController } from './skylark/skylark-test.controller'
 
 @Module({
   imports: [
@@ -41,5 +42,6 @@ import { GitModule } from './git/git.module'
     NotificationsModule,
     GitModule,
   ],
+  controllers: [SkylarkTestController],
 })
 export class AppModule {}

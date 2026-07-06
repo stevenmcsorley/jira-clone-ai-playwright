@@ -21,6 +21,7 @@ const analytics_module_1 = require("./analytics/analytics.module");
 const events_module_1 = require("./events/events.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const git_module_1 = require("./git/git.module");
+const skylark_test_controller_1 = require("./skylark/skylark-test.controller");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -51,6 +52,7 @@ exports.AppModule = AppModule = __decorate([
             notifications_module_1.NotificationsModule,
             git_module_1.GitModule,
         ],
+        controllers: [skylark_test_controller_1.SkylarkTestController],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

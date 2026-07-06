@@ -60,8 +60,8 @@ export class AuthService {
     return { changed: true }
   }
 
-  /** Self-service signup: create the account and a personal workspace, sign in. */
-  async register(email: string, name: string, password: string) {
+  /** Self-service signup: create the account and their workspace, sign in. */
+  async register(email: string, name: string, password: string, workspaceName?: string) {
     if (!AuthService.openSignup) {
       throw new ForbiddenException('Sign-up is invite-only on this instance')
     }
@@ -79,7 +79,9 @@ export class AuthService {
       }),
     )
     const workspace = await this.workspaceRepository.save(
-      this.workspaceRepository.create({ name: `${name}'s workspace` }),
+      this.workspaceRepository.create({
+        name: workspaceName?.trim() || `${name}'s workspace`,
+      }),
     )
     await this.memberRepository.save(
       this.memberRepository.create({ workspaceId: workspace.id, userId: user.id, role: 'owner' }),

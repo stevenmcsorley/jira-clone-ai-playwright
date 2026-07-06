@@ -1,7 +1,13 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { clearWorkspaceId } from '../../lib/auth'
 import type { WorkspaceRole } from '../../types/domain.types'
+import {
+  WORKSPACE_ICONS,
+  WorkspaceIcon,
+  resizeImageToIcon,
+  ICON_IMAGE_TARGET_PX,
+} from '../../lib/workspaceIcons'
 
 interface WorkspaceMember {
   id: number
@@ -26,18 +32,23 @@ interface WorkspaceInvite {
 }
 
 export const WorkspaceSettings = () => {
-  const { user, currentWorkspace, refreshWorkspaces, switchWorkspace } = useAuth()
+  const { user, workspaces, currentWorkspace, refreshWorkspaces, switchWorkspace } = useAuth()
   const myRole = currentWorkspace?.role
+  const ownsAWorkspace = workspaces.some(w => w.role === 'owner')
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const canManage = myRole === 'owner' || myRole === 'admin'
   const isOwner = myRole === 'owner'
 
-  // Rename
+  // Rename + icon
   const [renameValue, setRenameValue] = useState('')
+  const [iconValue, setIconValue] = useState('')
+  const [iconImageValue, setIconImageValue] = useState('')
+  const [iconError, setIconError] = useState<string | null>(null)
   const [renaming, setRenaming] = useState(false)
   const [renameError, setRenameError] = useState<string | null>(null)
+  const iconFileRef = useRef<HTMLInputElement>(null)
 
   // Members
   const [members, setMembers] = useState<WorkspaceMember[]>([])
@@ -59,7 +70,40 @@ export const WorkspaceSettings = () => {
 
   useEffect(() => {
     setRenameValue(currentWorkspace?.name ?? '')
+    setIconValue(currentWorkspace?.icon ?? '')
+    setIconImageValue(currentWorkspace?.iconImage ?? '')
   }, [currentWorkspace])
+
+  const detailsDirty =
+    renameValue.trim() !== (currentWorkspace?.name ?? '') ||
+    (iconValue || '') !== (currentWorkspace?.icon ?? '') ||
+    (iconImageValue || '') !== (currentWorkspace?.iconImage ?? '')
+
+  const chooseIcon = (id: string) => {
+    setIconError(null)
+    setIconValue(id)
+    setIconImageValue('')
+  }
+
+  const clearIcon = () => {
+    setIconError(null)
+    setIconValue('')
+    setIconImageValue('')
+  }
+
+  const handleIconImage = async (file: File | undefined) => {
+    if (!file) return
+    setIconError(null)
+    try {
+      const dataUrl = await resizeImageToIcon(file)
+      setIconImageValue(dataUrl)
+      setIconValue('')
+    } catch (err) {
+      setIconError(err instanceof Error ? err.message : 'Could not use that image')
+    } finally {
+      if (iconFileRef.current) iconFileRef.current.value = ''
+    }
+  }
 
   const loadMembers = () => {
     fetch('/api/workspaces/current/members')
@@ -97,9 +141,13 @@ export const WorkspaceSettings = () => {
       const response = await fetch('/api/workspaces/current', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: renameValue.trim() }),
+        body: JSON.stringify({
+          name: renameValue.trim(),
+          icon: iconValue,
+          iconImage: iconImageValue,
+        }),
       })
-      if (!response.ok) throw new Error(await readError(response, 'Failed to rename workspace'))
+      if (!response.ok) throw new Error(await readError(response, 'Failed to save workspace'))
       await refreshWorkspaces()
     } catch (err) {
       setRenameError(err instanceof Error ? err.message : 'Failed to rename workspace')
@@ -208,22 +256,92 @@ export const WorkspaceSettings = () => {
         </p>
 
         {canManage && (
-          <form onSubmit={handleRename} className="mt-4 flex items-center gap-3">
-            <input
-              value={renameValue}
-              onChange={e => setRenameValue(e.target.value)}
-              required
-              placeholder="Workspace name"
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-            />
-            <button
-              type="submit"
-              disabled={renaming || renameValue.trim() === currentWorkspace?.name}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-md px-4 py-2 text-sm"
-            >
-              {renaming ? 'Saving…' : 'Rename'}
-            </button>
-            {renameError && <span className="text-sm text-red-600">{renameError}</span>}
+          <form onSubmit={handleRename} className="mt-4 space-y-4 max-w-lg">
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Name</label>
+              <input
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                required
+                placeholder="Workspace name"
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-72"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Icon</label>
+              <div className="flex items-start gap-4">
+                <WorkspaceIcon
+                  name={renameValue}
+                  icon={iconValue}
+                  iconImage={iconImageValue}
+                  className="w-14 h-14"
+                  textClassName="text-lg"
+                />
+                <div className="flex-1">
+                  <div className="flex flex-wrap gap-1.5">
+                    {WORKSPACE_ICONS.map(def => (
+                      <button
+                        key={def.id}
+                        type="button"
+                        onClick={() => chooseIcon(def.id)}
+                        className={`w-9 h-9 rounded flex items-center justify-center text-gray-600 hover:bg-gray-100 ${
+                          iconValue === def.id ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-700' : 'border border-gray-200'
+                        }`}
+                        title={def.label}
+                        aria-label={`Use the ${def.label} icon`}
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5" aria-hidden="true">
+                          <path d={def.path} />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <input
+                      ref={iconFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={e => handleIconImage(e.target.files?.[0])}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => iconFileRef.current?.click()}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Upload custom image
+                    </button>
+                    {(iconValue || iconImageValue) && (
+                      <button
+                        type="button"
+                        onClick={clearIcon}
+                        className="text-sm text-gray-500 hover:text-gray-700"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Monochrome icons, or a custom PNG/JPG/WebP up to 3MB — cropped square and
+                    resized to {ICON_IMAGE_TARGET_PX}px. Falls back to initials when empty.
+                  </p>
+                  {iconError && <p className="mt-1 text-xs text-red-600">{iconError}</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={renaming || !detailsDirty || renameValue.trim().length < 2}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-md px-4 py-2 text-sm"
+              >
+                {renaming ? 'Saving…' : 'Save changes'}
+              </button>
+              {renameError && <span className="text-sm text-red-600">{renameError}</span>}
+            </div>
           </form>
         )}
       </div>
@@ -379,30 +497,40 @@ export const WorkspaceSettings = () => {
         </section>
       )}
 
-      {/* New workspace */}
-      <section className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">New workspace</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Create a separate workspace with its own projects and members. You&apos;ll be switched to it.
-        </p>
-        <form onSubmit={handleCreateWorkspace} className="flex items-center gap-3">
-          <input
-            required
-            placeholder="Workspace name"
-            value={newWorkspaceName}
-            onChange={e => setNewWorkspaceName(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
-          />
-          <button
-            type="submit"
-            disabled={creating}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-md px-4 py-2 text-sm"
-          >
-            {creating ? 'Creating…' : 'Create workspace'}
-          </button>
-        </form>
-        {createError && <p className="text-sm text-red-600 mt-3">{createError}</p>}
-      </section>
+      {/* New workspace — one per account, so only shown to people who don't own one yet */}
+      {ownsAWorkspace ? (
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">New workspace</h2>
+          <p className="text-sm text-gray-600">
+            Each account can own one workspace. To run a separate workspace, sign up with a
+            different email address, or ask its owner to invite you into theirs.
+          </p>
+        </section>
+      ) : (
+        <section className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">New workspace</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Create a workspace with its own projects and members. You&apos;ll be switched to it.
+          </p>
+          <form onSubmit={handleCreateWorkspace} className="flex items-center gap-3">
+            <input
+              required
+              placeholder="Workspace name"
+              value={newWorkspaceName}
+              onChange={e => setNewWorkspaceName(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+            />
+            <button
+              type="submit"
+              disabled={creating}
+              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-md px-4 py-2 text-sm"
+            >
+              {creating ? 'Creating…' : 'Create workspace'}
+            </button>
+          </form>
+          {createError && <p className="text-sm text-red-600 mt-3">{createError}</p>}
+        </section>
+      )}
 
       {/* Danger zone */}
       {isOwner && (
