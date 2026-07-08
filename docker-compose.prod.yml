@@ -65,6 +65,17 @@ services:
       retries: 3
       start_period: 30s
 
+  ossicone-mcp:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    environment:
+      OSSICONE_URL: http://backend:4000
+      PORT: 3000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend

@@ -88,10 +88,18 @@ export const McpSetup = () => {
   const [copied, setCopied] = useState<string | null>(null)
 
   const origin = window.location.origin
-  const registerCommand = `claude mcp add ossicone \\
-  --env OSSICONE_URL=${origin} \\
-  --env OSSICONE_API_TOKEN=<your token> \\
-  -- node <path-to-repo>/mcp/index.js`
+  const mcpUrl = `${origin}/mcp`
+  const registerCommand = `claude mcp add --transport http ossicone ${mcpUrl} \\
+  --header "Authorization: Bearer <your token>"`
+  const bridgeConfig = `{
+  "mcpServers": {
+    "ossicone": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "${mcpUrl}",
+        "--header", "Authorization: Bearer <your token>"]
+    }
+  }
+}`
 
   const loadTokens = () => {
     fetch('/api/tokens')
@@ -242,11 +250,13 @@ export const McpSetup = () => {
 
       {/* Step 2: register */}
       <section className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">2. Register with Claude Code</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">2. Connect it</h2>
         <p className="text-sm text-gray-600 mb-4">
-          The MCP server lives in the <code className="bg-gray-100 px-1 rounded">mcp/</code> folder of the
-          Ossicone repo (run <code className="bg-gray-100 px-1 rounded">npm install</code> there once). Then:
+          Ossicone hosts the MCP server — <span className="font-medium">no clone, no install</span>. Just add
+          the URL <code className="bg-gray-100 px-1 rounded">{mcpUrl}</code> and your token.
         </p>
+
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Claude Code (CLI) — one command</p>
         <div className="relative">
           <pre className="bg-gray-900 text-gray-100 rounded-md p-4 text-xs overflow-x-auto">{registerCommand}</pre>
           <button
@@ -256,9 +266,24 @@ export const McpSetup = () => {
             {copied === 'cmd' ? 'Copied ✓' : 'Copy'}
           </button>
         </div>
+
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-5 mb-1">
+          Claude Desktop / Clawx — config (uses the <code className="normal-case">mcp-remote</code> bridge, auto-downloaded by npx)
+        </p>
+        <div className="relative">
+          <pre className="bg-gray-900 text-gray-100 rounded-md p-4 text-xs overflow-x-auto">{bridgeConfig}</pre>
+          <button
+            onClick={() => copy(bridgeConfig, 'cfg')}
+            className="absolute top-2 right-2 text-xs text-gray-300 hover:text-white bg-gray-700 rounded px-2 py-1"
+          >
+            {copied === 'cfg' ? 'Copied ✓' : 'Copy'}
+          </button>
+        </div>
         <p className="text-xs text-gray-500 mt-3">
-          Tools appear when the next Claude session starts. Other MCP clients work too — anything that can
-          launch a stdio MCP server with those two environment variables.
+          Claude Desktop: <code className="bg-gray-100 px-1 rounded">claude_desktop_config.json</code>. Clawx:
+          global <code className="bg-gray-100 px-1 rounded">~/.clawx/clawx.json</code>. Tools appear when the
+          next session starts. claude.ai (web): Settings → Connectors → Add custom connector, paste{' '}
+          <code className="bg-gray-100 px-1 rounded">{mcpUrl}</code>.
         </p>
       </section>
 
