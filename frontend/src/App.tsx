@@ -12,6 +12,7 @@ import { SearchResults } from './pages/SearchResults'
 import { Search } from './pages/Search'
 import { ProjectSettings } from './pages/ProjectSettings'
 import { Repository } from './pages/Repository'
+import { Wiki } from './pages/Wiki'
 import { Reports } from './pages/Reports'
 import { BurnupReport } from './components/Reports/BurnupReport/BurnupReport'
 import { BurndownChart } from './components/Reports/BurndownChart/BurndownChart'
@@ -225,6 +226,14 @@ const AppRoutes = () => {
           element={
             <Layout>
               <Repository />
+            </Layout>
+          }
+        />
+        <Route
+          path="/projects/:projectId/wiki"
+          element={
+            <Layout>
+              <Wiki />
             </Layout>
           }
         />

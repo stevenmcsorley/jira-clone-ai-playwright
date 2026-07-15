@@ -152,6 +152,75 @@ export function registerTools(server, api) {
     })
   )
 
+  // ---------- Wiki (per-project docs) ----------
+
+  server.registerTool(
+    'list_wiki_pages',
+    {
+      description: 'List a project\'s wiki/docs pages (titles + slugs, newest first). ' +
+        'Use get_wiki_page for the full markdown body.',
+      inputSchema: { projectId: z.number() },
+    },
+    run(async ({ projectId }) => {
+      const pages = await api(`/projects/${projectId}/wiki`)
+      return pages.map(p => ({ id: p.id, title: p.title, slug: p.slug, updatedAt: p.updatedAt }))
+    })
+  )
+
+  server.registerTool(
+    'get_wiki_page',
+    {
+      description: 'Read one wiki page (full markdown content) by its id.',
+      inputSchema: { projectId: z.number(), pageId: z.number() },
+    },
+    run(({ projectId, pageId }) => api(`/projects/${projectId}/wiki/${pageId}`))
+  )
+
+  server.registerTool(
+    'create_wiki_page',
+    {
+      description: 'Create a wiki/docs page in a project. Markdown body. Ossicone is a private ' +
+        'store, so runbooks and credentials are acceptable here. Slug is derived from the title if omitted.',
+      inputSchema: {
+        projectId: z.number(),
+        title: z.string(),
+        content: z.string().optional().describe('Markdown body'),
+        slug: z.string().optional().describe('URL slug; auto-generated from title if omitted'),
+      },
+    },
+    run(({ projectId, ...body }) => api(`/projects/${projectId}/wiki`, { method: 'POST', body }))
+  )
+
+  server.registerTool(
+    'update_wiki_page',
+    {
+      description: 'Update a wiki page\'s title, slug, or markdown content. Only provided fields change.',
+      inputSchema: {
+        projectId: z.number(),
+        pageId: z.number(),
+        title: z.string().optional(),
+        slug: z.string().optional(),
+        content: z.string().optional().describe('Markdown body'),
+      },
+    },
+    run(({ projectId, pageId, ...fields }) => {
+      const body = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined))
+      return api(`/projects/${projectId}/wiki/${pageId}`, { method: 'PATCH', body })
+    })
+  )
+
+  server.registerTool(
+    'delete_wiki_page',
+    {
+      description: 'Delete a wiki page.',
+      inputSchema: { projectId: z.number(), pageId: z.number() },
+    },
+    run(async ({ projectId, pageId }) => {
+      await api(`/projects/${projectId}/wiki/${pageId}`, { method: 'DELETE' })
+      return { deleted: true, pageId }
+    })
+  )
+
   // ---------- Board & issues ----------
 
   server.registerTool(

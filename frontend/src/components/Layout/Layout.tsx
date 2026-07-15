@@ -138,7 +138,7 @@ export const Layout = ({ children }: LayoutProps) => {
               Backlog
             </ProjectNavItem>
 
-            <ProjectNavItem to={`/projects/${projectId}`} active={!!isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues') && !location.pathname.includes('/reports') && !location.pathname.includes('/history') && !location.pathname.includes('/repository') && !location.pathname.includes('/settings')}>
+            <ProjectNavItem to={`/projects/${projectId}`} active={!!isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues') && !location.pathname.includes('/reports') && !location.pathname.includes('/history') && !location.pathname.includes('/repository') && !location.pathname.includes('/wiki') && !location.pathname.includes('/settings')}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
               </svg>
@@ -150,6 +150,13 @@ export const Layout = ({ children }: LayoutProps) => {
                 <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2h6v10l-3-2-3 2V4z" clipRule="evenodd" />
               </svg>
               Repository
+            </ProjectNavItem>
+
+            <ProjectNavItem to={`/projects/${projectId}/wiki`} active={location.pathname.includes('/wiki')}>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm1 4a1 1 0 011-1h3a1 1 0 110 2H6a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+              Wiki
             </ProjectNavItem>
 
             <ProjectNavItem to={`/projects/${projectId}/reports`} active={location.pathname.includes('/reports')}>

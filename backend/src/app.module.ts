@@ -12,6 +12,7 @@ import { AnalyticsModule } from './analytics/analytics.module'
 import { EventsModule } from './events/events.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { GitModule } from './git/git.module'
+import { WikiModule } from './wiki/wiki.module'
 import { SkylarkTestController } from './skylark/skylark-test.controller'
 
 @Module({
@@ -41,6 +42,7 @@ import { SkylarkTestController } from './skylark/skylark-test.controller'
     EventsModule,
     NotificationsModule,
     GitModule,
+    WikiModule,
   ],
   controllers: [SkylarkTestController],
 })

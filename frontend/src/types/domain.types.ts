@@ -219,3 +219,25 @@ export interface UpdateIssueRequest {
   labels?: string[]
   epicId?: number
 }
+
+// ---------- Wiki ----------
+
+export interface WikiPageSummary {
+  id: number
+  projectId: number
+  title: string
+  slug: string
+  authorId: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface WikiPage extends WikiPageSummary {
+  content: string
+}
+
+export interface CreateWikiPageRequest {
+  title: string
+  slug?: string
+  content?: string
+}
