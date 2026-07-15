@@ -34,6 +34,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
+    image: ghcr.io/stevenmcsorley/ossicone-backend:${OSSICONE_TAG:-latest}
     environment:
       DATABASE_URL: postgres://ossicone:${POSTGRES_PASSWORD}@postgres:5432/ossicone
       REDIS_URL: redis://redis:6379
@@ -83,6 +84,7 @@ services:
       args:
         VITE_SKYLARK_URL: ${VITE_SKYLARK_URL:-https://skylark.halfagiraf.com}
         VITE_SKYLARK_TOKEN: ${SKYLARK_TOKEN:-}
+    image: ghcr.io/stevenmcsorley/ossicone-frontend:${OSSICONE_TAG:-latest}
     container_name: ossicone-web
     healthcheck:
       # Use 127.0.0.1, not localhost — localhost resolves to ::1 (IPv6) in the

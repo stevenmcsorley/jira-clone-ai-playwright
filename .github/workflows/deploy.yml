@@ -5,6 +5,11 @@ on:
   push:
     branches: [ossicone]
   workflow_dispatch:
+    inputs:
+      rollback_tag:
+        description: "Rollback: image tag / git SHA to redeploy (blank = build & deploy HEAD)"
+        required: false
+        default: ""
 
 concurrency:
   group: deploy-ossicone
@@ -12,13 +17,18 @@ concurrency:
 
 jobs:
   deploy:
-    uses: stevenmcsorley/pi-ci/.github/workflows/pi-deploy.yml@main
+    permissions:
+      contents: read
+      packages: write
+    uses: stevenmcsorley/pi-ci/.github/workflows/pi-deploy-ghcr.yml@main
     with:
       app_dir: ossicone
       compose_args: "-f docker-compose.prod.yml --env-file .env.prod"
       services: "backend frontend"
+      tag_var: OSSICONE_TAG
       health_url: "http://127.0.0.1:8087/api/auth/config"
       health_match: "openSignup"
       app_label: Ossicone
+      rollback_tag: ${{ github.event.inputs.rollback_tag || '' }}
     secrets:
       deploy_webhook: ${{ secrets.RELAY_DEPLOY_WEBHOOK }}
