@@ -6,6 +6,7 @@ import { useUsers } from '../../hooks/useUsers'
 import { useAuth } from '../../contexts/AuthContext'
 import { ProjectsService } from '../../services/api/projects.service'
 import { GitService, isRepoConnected } from '../../services/api/git.service'
+import { WebhooksService, WEBHOOK_EVENT_LABELS, type ProjectWebhook } from '../../services/api/webhooks.service'
 import type { Project, RepoConfig } from '../../types/domain.types'
 
 export const ProjectSettings = () => {
@@ -479,6 +480,9 @@ export const ProjectSettings = () => {
           </form>
         </div>
 
+        {/* Chat integrations (outbound webhooks) */}
+        <WebhooksCard projectId={Number(projectId)} canManage={canManageRepo} />
+
         {/* Danger Zone */}
         <div className="bg-white rounded-lg border border-red-200 p-6">
           <h2 className="text-lg font-medium text-red-900 mb-4">Danger Zone</h2>
@@ -500,6 +504,186 @@ export const ProjectSettings = () => {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** Per-project outbound webhooks: post issue/sprint activity to a chat channel (Slack, Relay, …)
+ *  with deep links back to the exact ticket/sprint/report. Owner/admin manages; anyone can view. */
+function WebhooksCard({ projectId, canManage }: { projectId: number; canManage: boolean }) {
+  const [hooks, setHooks] = useState<ProjectWebhook[]>([])
+  const [allEvents, setAllEvents] = useState<string[]>([])
+  const [label, setLabel] = useState('')
+  const [url, setUrl] = useState('')
+  const [secret, setSecret] = useState('')
+  const [selEvents, setSelEvents] = useState<string[]>([
+    'issue.created', 'issue.done', 'sprint.started', 'sprint.completed',
+  ])
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [msg, setMsg] = useState<string | null>(null)
+
+  const load = () => WebhooksService.list(projectId).then(setHooks).catch(() => {})
+  useEffect(() => {
+    load()
+    WebhooksService.events(projectId)
+      .then(setAllEvents)
+      .catch(() => setAllEvents(Object.keys(WEBHOOK_EVENT_LABELS)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId])
+
+  const toggleEvent = (e: string) =>
+    setSelEvents(s => (s.includes(e) ? s.filter(x => x !== e) : [...s, e]))
+
+  const add = async (ev: React.FormEvent) => {
+    ev.preventDefault()
+    setError(null); setMsg(null)
+    if (!url.trim()) { setError('Enter a webhook URL'); return }
+    try {
+      setSaving(true)
+      await WebhooksService.create(projectId, {
+        label: label.trim() || 'Chat webhook',
+        url: url.trim(),
+        events: selEvents,
+        secret: secret.trim() || null,
+      })
+      setLabel(''); setUrl(''); setSecret('')
+      setMsg('Webhook added.')
+      await load()
+    } catch (e: any) {
+      setError(e?.message || 'Failed to add webhook')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleActive = async (h: ProjectWebhook) => {
+    await WebhooksService.update(projectId, h.id, { active: !h.active }).catch(() => {})
+    load()
+  }
+  const removeHook = async (h: ProjectWebhook) => {
+    if (!window.confirm('Delete this webhook?')) return
+    await WebhooksService.remove(projectId, h.id).catch(() => {})
+    load()
+  }
+  const test = async (h: ProjectWebhook) => {
+    setMsg(null); setError(null)
+    try {
+      const r = await WebhooksService.test(projectId, h.id)
+      if (r.ok) setMsg(`Test delivered (HTTP ${r.status}).`)
+      else setError(`Test failed (HTTP ${r.status || 'no response'}). Check the URL.`)
+    } catch (e: any) {
+      setError(e?.message || 'Test failed')
+    }
+  }
+
+  const events = allEvents.length ? allEvents : Object.keys(WEBHOOK_EVENT_LABELS)
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-medium text-gray-900">Chat integrations</h2>
+        <span className="text-sm text-gray-500">
+          {hooks.length} webhook{hooks.length === 1 ? '' : 's'}
+        </span>
+      </div>
+      <p className="text-sm text-gray-600 mb-4">
+        Post issue &amp; sprint activity to a chat channel (Slack, Relay, …). In your chat app add an{' '}
+        <strong>Ossicone incoming webhook</strong> and paste its URL here — each update arrives with a
+        direct link back to the ticket, sprint or report.
+      </p>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
+      {msg && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+          <p className="text-sm text-green-600">{msg}</p>
+        </div>
+      )}
+
+      {hooks.length > 0 && (
+        <ul className="divide-y divide-gray-100 mb-5 border border-gray-100 rounded-md">
+          {hooks.map(h => (
+            <li key={h.id} className="p-3 flex items-start gap-3">
+              <span className={`mt-1 w-2 h-2 rounded-full shrink-0 ${h.active ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900">{h.label}</div>
+                <div className="text-xs text-gray-500 truncate">{h.url}</div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  {h.events?.length ? h.events.map(e => WEBHOOK_EVENT_LABELS[e] || e).join(' · ') : 'All events'}
+                </div>
+              </div>
+              {canManage && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => test(h)} className="text-xs text-blue-600 hover:underline">Test</button>
+                  <button onClick={() => toggleActive(h)} className="text-xs text-gray-600 hover:underline">
+                    {h.active ? 'Disable' : 'Enable'}
+                  </button>
+                  <button onClick={() => removeHook(h)} className="text-xs text-red-600 hover:underline">Delete</button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!canManage ? (
+        <p className="text-sm text-gray-500 italic">
+          Only workspace owners and admins can manage webhooks.
+        </p>
+      ) : (
+        <form onSubmit={add} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Label</label>
+              <input
+                value={label}
+                onChange={e => setLabel(e.target.value)}
+                placeholder="e.g. #dev in Relay"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Webhook URL *</label>
+              <input
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                placeholder="https://relay.…/api/integrations/in/…"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Events</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {events.map(e => (
+                <label key={e} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={selEvents.includes(e)} onChange={() => toggleEvent(e)} />
+                  {WEBHOOK_EVENT_LABELS[e] || e}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Leave all unchecked to receive every event.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Signing secret (optional)</label>
+            <input
+              type="password"
+              value={secret}
+              onChange={e => setSecret(e.target.value)}
+              autoComplete="new-password"
+              placeholder="optional — sent as X-Ossicone-Signature"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <Button type="submit" disabled={saving || !url.trim()}>
+            {saving ? 'Adding…' : 'Add webhook'}
+          </Button>
+        </form>
+      )}
     </div>
   )
 }

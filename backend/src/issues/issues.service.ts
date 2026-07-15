@@ -6,6 +6,7 @@ import { CreateIssueDto } from './dto/create-issue.dto'
 import { Sprint } from '../sprints/entities/sprint.entity'
 import { TimeTrackingService } from './time-tracking.service'
 import { NotificationsService, IssueFieldChange } from '../notifications/notifications.service'
+import { WebhookDispatcher } from '../webhooks/webhook-dispatcher.service'
 
 // Fields tracked in the issue activity history (issue_events)
 const TRACKED_FIELDS = [
@@ -26,11 +27,14 @@ export class IssuesService {
     private issuesRepository: Repository<Issue>,
     private timeTrackingService: TimeTrackingService,
     private notificationsService: NotificationsService,
+    private webhooks: WebhookDispatcher,
   ) {}
 
   async create(createIssueDto: CreateIssueDto): Promise<Issue> {
     const issue = this.issuesRepository.create(createIssueDto)
-    return this.issuesRepository.save(issue)
+    const saved = await this.issuesRepository.save(issue)
+    this.webhooks.dispatchIssue('issue.created', saved as any, saved.reporterId ?? null)
+    return saved
   }
 
   async findAll(): Promise<Issue[]> {
@@ -143,6 +147,20 @@ export class IssuesService {
     }
 
     const updatedIssue = await this.findOne(id)
+
+    // Outbound webhook: notify chat integrations on real status/field changes only — a pure board
+    // reorder changes just `position` (status unchanged) and must NOT fire, to avoid spam.
+    const statusChanged =
+      'status' in updateData && String((updateData as any).status ?? '') !== String(currentIssue.status ?? '')
+    let webhookEvent: string | null = null
+    if (statusChanged) {
+      webhookEvent = updateData.status === 'done' ? 'issue.done' : 'issue.moved'
+    } else if (recordHistory && changes.some((c) => c.field !== 'status')) {
+      webhookEvent = 'issue.updated'
+    }
+    if (webhookEvent && updatedIssue) {
+      this.webhooks.dispatchIssue(webhookEvent, updatedIssue as any, actorId)
+    }
 
     // Assignment notification: assignee changed to a real user who isn't the actor
     const assigneeChanged =

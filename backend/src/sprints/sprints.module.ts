@@ -6,9 +6,10 @@ import { SprintsService } from './sprints.service'
 import { SprintsController } from './sprints.controller'
 import { EventsModule } from '../events/events.module'
 import { WorkspacesModule } from '../workspaces/workspaces.module'
+import { WebhooksModule } from '../webhooks/webhooks.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Sprint, Issue]), EventsModule, WorkspacesModule],
+  imports: [TypeOrmModule.forFeature([Sprint, Issue]), EventsModule, WorkspacesModule, WebhooksModule],
   providers: [SprintsService],
   controllers: [SprintsController],
   exports: [SprintsService],

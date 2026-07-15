@@ -3,6 +3,7 @@ import { SprintsService } from './sprints.service'
 import { SprintStatus } from './entities/sprint.entity'
 import { EventsGateway } from '../events/events.gateway'
 import { WorkspaceScopeService } from '../workspaces/workspace-scope.service'
+import { WebhookDispatcher } from '../webhooks/webhook-dispatcher.service'
 
 interface CreateSprintDto {
   name: string
@@ -29,7 +30,8 @@ export class SprintsController {
   constructor(
     private readonly sprintsService: SprintsService,
     private readonly eventsGateway: EventsGateway,
-    private readonly workspaceScope: WorkspaceScopeService
+    private readonly workspaceScope: WorkspaceScopeService,
+    private readonly webhooks: WebhookDispatcher
   ) {}
 
   /** Load a sprint and 404 unless its project belongs to the request's workspace. */
@@ -77,6 +79,7 @@ export class SprintsController {
     await this.assertSprint(+id, req.workspaceId)
     const sprint = await this.sprintsService.startSprint(+id, startSprintDto.startDate, startSprintDto.endDate)
     this.eventsGateway.emitSprintStarted(sprint)
+    this.webhooks.dispatchSprint('sprint.started', sprint as any, req.user?.id ?? null)
     return sprint
   }
 
@@ -85,6 +88,7 @@ export class SprintsController {
     await this.assertSprint(+id, req.workspaceId)
     const sprint = await this.sprintsService.completeSprint(+id)
     this.eventsGateway.emitSprintCompleted(sprint)
+    this.webhooks.dispatchSprint('sprint.completed', sprint as any, req.user?.id ?? null)
     return sprint
   }
 

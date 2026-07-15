@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { GitModule } from './git/git.module'
 import { WikiModule } from './wiki/wiki.module'
+import { WebhooksModule } from './webhooks/webhooks.module'
 import { SkylarkTestController } from './skylark/skylark-test.controller'
 
 @Module({
@@ -43,6 +44,7 @@ import { SkylarkTestController } from './skylark/skylark-test.controller'
     NotificationsModule,
     GitModule,
     WikiModule,
+    WebhooksModule,
   ],
   controllers: [SkylarkTestController],
 })

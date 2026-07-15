@@ -22,9 +22,10 @@ import { IssueLinksController } from './issue-links.controller'
 import { EventsModule } from '../events/events.module'
 import { WorkspacesModule } from '../workspaces/workspaces.module'
 import { NotificationsModule } from '../notifications/notifications.module'
+import { WebhooksModule } from '../webhooks/webhooks.module'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, IssueLink, User]), EventsModule, WorkspacesModule, NotificationsModule],
+  imports: [TypeOrmModule.forFeature([Issue, Comment, Attachment, Subtask, TimeLog, IssueLink, User]), EventsModule, WorkspacesModule, NotificationsModule, WebhooksModule],
   providers: [IssuesService, CommentsService, AttachmentsService, SubtasksService, TimeTrackingService, IssueLinksService],
   controllers: [
     IssuesController,
