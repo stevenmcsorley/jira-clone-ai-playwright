@@ -1,7 +1,0 @@
-export declare class CreateUserDto {
-    email: string;
-    name: string;
-    password: string;
-    avatar?: string;
-    role?: 'admin' | 'member';
-}
