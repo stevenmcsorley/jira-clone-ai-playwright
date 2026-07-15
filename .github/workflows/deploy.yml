@@ -1,0 +1,54 @@
+name: Deploy to Pi
+
+# Deploys Ossicone to the Pi via the self-hosted runner (labelled `pi`, `ossicone`).
+# IMPORTANT: `ossicone` is the working/default branch for this repo, NOT `main`.
+on:
+  push:
+    branches: [ossicone]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ossicone
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, pi, ossicone]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Overlay source onto the live deploy dir WITHOUT touching prod secrets (.env.prod)
+      # or gitignored runtime data (node_modules/dist/uploads/…).
+      - name: Sync source into ~/ossicone
+        run: |
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.env' \
+            --exclude='.env.prod' \
+            --exclude='node_modules' \
+            --exclude='dist' \
+            --exclude='__pycache__' \
+            --exclude='uploads' \
+            ./ "$HOME/ossicone/"
+
+      - name: Build & restart containers (prod compose, runs migrations on boot)
+        run: |
+          cd "$HOME/ossicone"
+          docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build backend frontend
+
+      # The deploy only "succeeds" if the app actually comes back up.
+      - name: Health check
+        run: |
+          for i in $(seq 1 45); do
+            if curl -fsS http://127.0.0.1:8087/api/auth/config | grep -q 'openSignup'; then
+              echo "✅ Ossicone healthy"
+              curl -s http://127.0.0.1:8087/api/auth/config; echo
+              exit 0
+            fi
+            echo "waiting for Ossicone to come up… ($i/45)"; sleep 4
+          done
+          echo "❌ Ossicone did not become healthy after deploy"
+          cd "$HOME/ossicone" && docker compose -f docker-compose.prod.yml --env-file .env.prod ps
+          exit 1
