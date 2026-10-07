@@ -27,6 +27,7 @@ import { WorkspaceSettings } from './pages/WorkspaceSettings'
 import { Users } from './pages/Users'
 import { Account } from './pages/Account'
 import { McpSetup } from './pages/McpSetup'
+import { OAuthConsent } from './pages/OAuthConsent'
 import { AuthProvider } from './contexts/AuthContext'
 import { RequireAuth } from './components/Auth/RequireAuth'
 
@@ -48,6 +49,7 @@ export const App = () => {
 const AppRoutes = () => {
   return (
       <Routes>
+        <Route path="/oauth/consent" element={<OAuthConsent />} />
         <Route
           path="/login"
           element={<Login />}
@@ -90,7 +92,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/mcp"
+          path="/ai-agents"
           element={
             <Layout>
               <McpSetup />

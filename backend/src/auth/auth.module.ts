@@ -18,6 +18,9 @@ import { JwtStrategy } from './strategies/jwt.strategy'
 import { User } from '../users/entities/user.entity'
 import { Workspace } from '../workspaces/entities/workspace.entity'
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity'
+import { OAuthController } from './controllers/oauth.controller'
+import { OAuthService } from './services/oauth.service'
+import { OAuthGuard } from './guards/oauth.guard'
 
 @Module({
   imports: [
@@ -28,9 +31,11 @@ import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity'
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  controllers: [ApiTokensController, AuthController],
+  controllers: [ApiTokensController, AuthController, OAuthController],
   providers: [
     ApiTokenService,
+    OAuthService,
+    OAuthGuard,
     AuthService,
     ApiTokenGuard,
     OptionalApiTokenGuard,

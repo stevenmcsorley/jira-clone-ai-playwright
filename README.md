@@ -47,6 +47,7 @@ Services:
 
 - **Browser**: `POST /api/auth/login` issues a 7-day JWT; the SPA stores it and attaches it to every `/api` request. `GET /api/auth/me` returns the current user.
 - **Agents/scripts**: create an API token (`POST /api/tokens` while authenticated), then send `Authorization: Bearer <token>`. Both credential types are accepted on every endpoint.
+- **ChatGPT**: add `https://ossicone.halfagiraf.com/mcp` with OAuth, leaving client credentials blank. Sign in, choose a workspace/access level and allow access. Manage connections in **AI Agent access**. See [MCP OAuth](docs/MCP-OAUTH.md).
 - All endpoints require auth except `POST /api/auth/login`. Admin role is required to create/delete users.
 
 ## API

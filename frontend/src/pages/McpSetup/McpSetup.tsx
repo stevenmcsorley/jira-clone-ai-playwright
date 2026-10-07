@@ -8,6 +8,13 @@ interface TokenInfo {
   lastUsedAt?: string
   createdAt: string
 }
+interface OAuthConnection {
+  id: string
+  clientName: string
+  workspaceName: string
+  scope: string
+  expiresAt: string
+}
 
 const TOOL_GROUPS: { title: string; tools: [string, string][] }[] = [
   {
@@ -86,6 +93,10 @@ export const McpSetup = () => {
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [connections, setConnections] = useState<OAuthConnection[]>([])
+  const loadConnections = () => fetch('/api/oauth/connections')
+    .then(async r => { if (r.ok) setConnections(await r.json()) }).catch(() => {})
+  useEffect(() => { loadConnections() }, [])
 
   const origin = window.location.origin
   const mcpUrl = `${origin}/mcp`
@@ -154,9 +165,30 @@ export const McpSetup = () => {
           Ossicone ships an <span className="font-medium">MCP server</span> — a bridge that lets an AI
           agent like Claude work this tracker the way you do: create projects and issues, plan and run
           sprints, move cards across the board, comment, log time and read reports. Everything the agent
-          does is done as <span className="font-medium">you</span>, using a personal API token.
+          does is done as <span className="font-medium">you</span>, using OAuth or a personal API token.
         </p>
       </div>
+
+      <section className="bg-white rounded-lg shadow p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-gray-900">ChatGPT — OAuth</h2>
+        <p className="text-sm text-gray-600">Create a custom MCP connector in ChatGPT and use this server URL:</p>
+        <div className="flex items-center gap-3"><code className="bg-gray-100 p-2 rounded text-sm">{mcpUrl}</code>
+          <button className="text-blue-600 text-sm" onClick={() => copy(mcpUrl, 'oauth-url')}>{copied === 'oauth-url' ? 'Copied ✓' : 'Copy'}</button></div>
+        <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-2">
+          <li>Choose OAuth. Leave Client ID and Client Secret blank; ChatGPT discovers the settings automatically.</li>
+          <li>Sign in with your Ossicone account, choose a workspace and access level, then select Allow access.</li>
+        </ol>
+        <p className="text-sm text-gray-600">Each connection uses your permissions in the selected workspace and renews for up to 30 days.</p>
+        {connections.map(connection => <div key={connection.id} className="border-t pt-3 flex justify-between gap-3 text-sm">
+          <div><strong>{connection.clientName}</strong> — {connection.workspaceName}<br />
+            {connection.scope.split(' ').includes('write') ? 'Read and write' : 'Read-only'} · expires {new Date(connection.expiresAt).toLocaleDateString()}</div>
+          <button className="text-red-600" onClick={async () => {
+            if (!window.confirm('Revoke this OAuth connection? The client loses access immediately.')) return
+            const response = await fetch(`/api/oauth/connections/${connection.id}`, { method: 'DELETE' })
+            if (response.ok) loadConnections()
+          }}>Revoke</button>
+        </div>)}
+      </section>
 
       {/* Step 1: token */}
       <section className="bg-white rounded-lg shadow p-6">

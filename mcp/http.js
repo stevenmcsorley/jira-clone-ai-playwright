@@ -20,6 +20,7 @@ import { makeApi, buildServer } from './tools.js'
 
 const BASE_URL = (process.env.OSSICONE_URL || 'http://backend:4000').replace(/\/$/, '')
 const PORT = Number(process.env.PORT || 3000)
+const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://ossicone.halfagiraf.com').replace(/\/$/, '')
 
 const app = express()
 app.use(express.json({ limit: '4mb' }))
@@ -34,9 +35,30 @@ const bearer = (req) => {
 const rpcError = (res, status, message) =>
   res.status(status).json({ jsonrpc: '2.0', error: { code: -32001, message }, id: null })
 
+const unauthorized = (res) => {
+  res.set('WWW-Authenticate', `Bearer resource_metadata="${PUBLIC_URL}/.well-known/oauth-protected-resource", scope="mcp"`)
+  return rpcError(res, 401, 'Sign in with OAuth or supply your Ossicone API token.')
+}
+
+// Authenticate discovery and initialization before exposing tools.
+app.use('/mcp', async (req, res, next) => {
+  const token = bearer(req)
+  if (!token) return unauthorized(res)
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000),
+    })
+    if (response.status === 401 || response.status === 403) return unauthorized(res)
+    if (!response.ok) return rpcError(res, 503, 'Ossicone authentication is temporarily unavailable.')
+    next()
+  } catch {
+    return rpcError(res, 503, 'Ossicone authentication is temporarily unavailable.')
+  }
+})
+
 app.post('/mcp', async (req, res) => {
   const token = bearer(req)
-  if (!token) return rpcError(res, 401, 'Missing bearer token — paste your Ossicone API token as the Authorization: Bearer credential.')
+  if (!token) return unauthorized(res)
 
   // Stateless: a new server + transport per request (sessionIdGenerator: undefined).
   // No workspaceId on the HTTP path — tokens are workspace-bound server-side.

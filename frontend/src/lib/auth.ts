@@ -88,7 +88,8 @@ export function installAuthFetch(): void {
       window.location.pathname !== '/login'
     ) {
       clearToken()
-      window.location.href = '/login'
+      window.location.href = window.location.pathname === '/oauth/consent'
+        ? `/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}` : '/login'
     }
 
     // Surface server-side (5xx) API failures to Skylark from the client's view.

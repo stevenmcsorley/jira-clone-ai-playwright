@@ -8,6 +8,7 @@ node_modules/
 
 # Lock files
 package-lock.json
+!mcp/package-lock.json
 yarn.lock
 pnpm-lock.yaml
 

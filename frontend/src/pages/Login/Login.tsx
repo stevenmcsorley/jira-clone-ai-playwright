@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { loginReturn } from '../../lib/login-return'
 
 export const Login = () => {
   const { user, login } = useAuth()
   const navigate = useNavigate()
+  const returnTo = loginReturn(window.location.search)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +21,7 @@ export const Login = () => {
   }, [])
 
   if (user) {
-    return <Navigate to="/projects" replace />
+    return <Navigate to={returnTo} replace />
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -28,7 +30,7 @@ export const Login = () => {
     setSubmitting(true)
     try {
       await login(email, password)
-      navigate('/projects', { replace: true })
+      navigate(returnTo, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {

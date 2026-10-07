@@ -182,10 +182,10 @@ export const Layout = ({ children }: LayoutProps) => {
             </ProjectNavItem>
 
             <Link
-              to="/mcp"
+              to="/ai-agents"
               onClick={closeSidebar}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === '/mcp'
+                location.pathname === '/ai-agents'
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
