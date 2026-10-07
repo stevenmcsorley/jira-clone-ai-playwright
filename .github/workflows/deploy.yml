@@ -34,6 +34,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      # Older commits contain tracked container-built dependencies. Install for
+      # this runner rather than loading their Alpine native binaries on Ubuntu.
+      - name: Clear archived dependencies in the disposable checkout
+        run: |
+          test "$GITHUB_WORKSPACE" = "$PWD"
+          rm -rf backend/node_modules frontend/node_modules mcp/node_modules
       - run: npm install --no-audit
         working-directory: backend
       - run: npm ci --no-audit
