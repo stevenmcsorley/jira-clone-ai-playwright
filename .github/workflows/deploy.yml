@@ -48,7 +48,7 @@ jobs:
         working-directory: backend
         env:
           TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/ossicone_oauth_test
-      - run: npm install --no-audit && npm test && npm run build
+      - run: npm ci --legacy-peer-deps --no-audit && npm test && npm run build
         working-directory: frontend
   deploy:
     needs: verify
