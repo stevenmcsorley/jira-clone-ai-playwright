@@ -17,6 +17,7 @@
 import express from 'express'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { makeApi, buildServer } from './tools.js'
+import { buildCodeModeServer } from './codemode.js'
 
 const BASE_URL = (process.env.OSSICONE_URL || 'http://backend:4000').replace(/\/$/, '')
 const PORT = Number(process.env.PORT || 3000)
@@ -35,20 +36,23 @@ const bearer = (req) => {
 const rpcError = (res, status, message) =>
   res.status(status).json({ jsonrpc: '2.0', error: { code: -32001, message }, id: null })
 
-const unauthorized = (res) => {
-  res.set('WWW-Authenticate', `Bearer resource_metadata="${PUBLIC_URL}/.well-known/oauth-protected-resource", scope="mcp"`)
+const unauthorized = (res, path = '') => {
+  // RFC 9728: the metadata URL is path-specific for /mcp-code so the OAuth grant is bound to the URL the client actually uses.
+  const meta = path.startsWith('/mcp-code') ? '/.well-known/oauth-protected-resource/mcp-code' : '/.well-known/oauth-protected-resource'
+  res.set('WWW-Authenticate', `Bearer resource_metadata="${PUBLIC_URL}${meta}", scope="mcp"`)
   return rpcError(res, 401, 'Sign in with OAuth or supply your Ossicone API token.')
 }
 
 // Authenticate discovery and initialization before exposing tools.
-app.use('/mcp', async (req, res, next) => {
+// /mcp = the normal ~34 tools. /mcp-code = Code Mode (search + execute): same auth, same API, a fraction of the context cost.
+app.use(['/mcp', '/mcp-code'], async (req, res, next) => {
   const token = bearer(req)
-  if (!token) return unauthorized(res)
+  if (!token) return unauthorized(res, req.baseUrl)
   try {
     const response = await fetch(`${BASE_URL}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000),
     })
-    if (response.status === 401 || response.status === 403) return unauthorized(res)
+    if (response.status === 401 || response.status === 403) return unauthorized(res, req.baseUrl)
     if (!response.ok) return rpcError(res, 503, 'Ossicone authentication is temporarily unavailable.')
     next()
   } catch {
@@ -56,13 +60,13 @@ app.use('/mcp', async (req, res, next) => {
   }
 })
 
-app.post('/mcp', async (req, res) => {
+const handleMcp = (build) => async (req, res) => {
   const token = bearer(req)
-  if (!token) return unauthorized(res)
+  if (!token) return unauthorized(res, req.path)
 
   // Stateless: a new server + transport per request (sessionIdGenerator: undefined).
   // No workspaceId on the HTTP path — tokens are workspace-bound server-side.
-  const server = buildServer(makeApi(BASE_URL, token))
+  const server = build(makeApi(BASE_URL, token))
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
   res.on('close', () => { transport.close(); server.close() })
   try {
@@ -72,12 +76,14 @@ app.post('/mcp', async (req, res) => {
     console.error('MCP request failed:', err)
     if (!res.headersSent) rpcError(res, 500, 'Internal error')
   }
-})
+}
+app.post('/mcp', handleMcp(buildServer))
+app.post('/mcp-code', handleMcp(buildCodeModeServer))
 
 // Stateless mode has no long-lived session, so GET (SSE stream) / DELETE don't apply.
 const methodNotAllowed = (_req, res) =>
   res.status(405).json({ jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed (stateless server).' }, id: null })
-app.get('/mcp', methodNotAllowed)
-app.delete('/mcp', methodNotAllowed)
+app.get(['/mcp', '/mcp-code'], methodNotAllowed)
+app.delete(['/mcp', '/mcp-code'], methodNotAllowed)
 
 app.listen(PORT, () => console.error(`Ossicone MCP (HTTP) listening on :${PORT} → ${BASE_URL}`))

@@ -44,6 +44,8 @@ jobs:
         working-directory: backend
       - run: npm ci --no-audit
         working-directory: mcp
+      - run: npm test
+        working-directory: mcp
       - run: npm run test:oauth
         working-directory: backend
         env:

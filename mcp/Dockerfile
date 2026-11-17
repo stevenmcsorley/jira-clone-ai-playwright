@@ -8,7 +8,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # App source.
-COPY tools.js index.js http.js ./
+COPY tools.js codemode.js index.js http.js ./
 
 ENV PORT=3000
 EXPOSE 3000
