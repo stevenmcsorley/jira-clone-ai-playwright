@@ -532,8 +532,12 @@ export function registerTools(server, api) {
   server.registerTool(
     'create_sprint',
     {
-      description: 'Create a new (future) sprint. Use plan_sprint to fill it and start_sprint to begin it.',
-      inputSchema: { projectId: z.number(), name: z.string(), goal: z.string().optional() },
+      description: 'Create a new (future) sprint. Use plan_sprint to fill it and start_sprint to begin it. Keep the goal to ONE short sentence; put detail in the issues, not the goal.',
+      inputSchema: {
+        projectId: z.number(),
+        name: z.string(),
+        goal: z.string().max(200).optional().describe('One short sentence, 200 characters at most (for example "Ship the new onboarding flow"). Not a spec: detail belongs in the issues.'),
+      },
     },
     run(async ({ projectId, name, goal }) => {
       const creator = await me()
