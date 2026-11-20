@@ -11,6 +11,9 @@ import { useTimerManager } from '../../hooks/useTimerManager'
 import { useAuth } from '../../contexts/AuthContext'
 import { TimeProgressBar, TimeProgressIndicator } from '../../components/TimeProgressBar'
 import { ActiveTimerDisplay } from '../../components/ActiveTimerDisplay'
+import { BacklogIssueCard } from '../../components/BacklogIssueCard/BacklogIssueCard'
+import { getPriorityColor, getPriorityIcon } from '../../components/BacklogIssueCard/issuePriority'
+import { BacklogSkeleton } from '../../components/BacklogSkeleton/BacklogSkeleton'
 import type { Issue } from '../../types/domain.types'
 
 export const Backlog = () => {
@@ -37,6 +40,7 @@ export const Backlog = () => {
 
   const sprintGoalCounter = goalCounter(newSprintGoal)
   const currentProject = projects.find(p => p.id === Number(projectId))
+  const projectKey = currentProject?.key || 'JC'
 
   const fetchData = async (showLoadingState = true) => {
     if (!projectId) return
@@ -264,36 +268,7 @@ export const Backlog = () => {
     setDraggedIssue(null)
   }
 
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'low': return '↓'
-      case 'medium': return '→'
-      case 'high': return '↑'
-      case 'urgent': return '⇈'
-      default: return '→'
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'low': return 'text-green-600'
-      case 'medium': return 'text-yellow-600'
-      case 'high': return 'text-orange-600'
-      case 'urgent': return 'text-red-600'
-      default: return 'text-yellow-600'
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading backlog...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <BacklogSkeleton />
 
   if (error) {
     return (
@@ -309,25 +284,25 @@ export const Backlog = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
+    <div className="min-w-0 flex-1 flex flex-col bg-gray-50">
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 wrap-anywhere">
               {currentProject?.name} Backlog
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-1 max-md:hidden">
               Plan and prioritize your work. Drag issues between backlog and sprints.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to={`/projects/${projectId}/issues/create`}>
-              <Button variant="secondary">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to={`/projects/${projectId}/issues/create`} className="max-md:flex-1">
+              <Button variant="secondary" className="max-md:w-full max-md:min-h-11">
                 Create Issue
               </Button>
             </Link>
-            <Button onClick={() => setShowCreateSprint(true)}>
+            <Button onClick={() => setShowCreateSprint(true)} className="max-md:flex-1 max-md:min-h-11">
               Create Sprint
             </Button>
           </div>
@@ -335,12 +310,12 @@ export const Backlog = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-6 py-6">
+      <div className="flex-1 overflow-auto px-4 py-4 md:px-6 md:py-6">
         <div className="max-w-full mx-auto space-y-6">
 
           {/* Create Sprint Form */}
           {showCreateSprint && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <form onSubmit={handleCreateSprint} className="space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">Create Sprint</h3>
                 <div>
@@ -353,7 +328,7 @@ export const Backlog = () => {
                     value={newSprintName}
                     onChange={(e) => setNewSprintName(e.target.value)}
                     placeholder="Sprint 1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-md:min-h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
@@ -369,7 +344,7 @@ export const Backlog = () => {
                     placeholder="One short sentence, e.g. Ship the new onboarding flow"
                     maxLength={SPRINT_GOAL_MAX}
                     aria-describedby="sprintGoalCounter"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-md:min-h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p
                     id="sprintGoalCounter"
@@ -380,10 +355,11 @@ export const Backlog = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button type="submit" disabled={creating || !newSprintName.trim()}>
+                  <Button className="max-md:min-h-11" type="submit" disabled={creating || !newSprintName.trim()}>
                     {creating ? 'Creating...' : 'Create Sprint'}
                   </Button>
                   <Button
+                    className="max-md:min-h-11"
                     type="button"
                     variant="secondary"
                     onClick={() => {
@@ -402,25 +378,28 @@ export const Backlog = () => {
           {/* Active and Future Sprints */}
           {sprints?.filter(sprint => sprint.status !== 'completed').map((sprint) => (
             <div key={sprint.id} className="bg-white rounded-lg border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-medium text-gray-900">{sprint.name}</h3>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      sprint.status === 'active' ? 'bg-green-100 text-green-800' :
-                      sprint.status === 'completed' ? 'bg-gray-100 text-gray-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {sprint.status}
-                    </span>
-                    <span className="text-sm text-gray-600">
+              <div className="px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 bg-gray-50">
+                <div className="flex items-center justify-between max-md:flex-wrap gap-y-3">
+                  <div className="flex min-w-0 items-center gap-3 max-md:w-full max-md:flex-wrap gap-y-3">
+                    <div className="flex min-w-0 items-center gap-3 max-md:w-full">
+                      <h3 className="text-lg font-medium text-gray-900 min-w-0 wrap-anywhere">{sprint.name}</h3>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        sprint.status === 'active' ? 'bg-green-100 text-green-800' :
+                        sprint.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {sprint.status}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-600 max-md:basis-full">
                       {sprint.issues?.length || 0} issues
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 empty:hidden max-md:w-full">
                     {sprint.status === 'future' && (sprint.issues?.length || 0) > 0 && (
                       <Button
                         size="sm"
+                        className="max-md:flex-1 max-md:min-h-11"
                         onClick={() => handleStartSprintClick(sprint.id)}
                       >
                         Start Sprint
@@ -428,13 +407,14 @@ export const Backlog = () => {
                     )}
                     {sprint.status === 'active' && (
                       <>
-                        <Link to={`/projects/${projectId}`}>
-                          <Button size="sm" variant="secondary">
+                        <Link to={`/projects/${projectId}`} className="max-md:flex-1">
+                          <Button size="sm" variant="secondary" className="max-md:w-full max-md:min-h-11">
                             View Board
                           </Button>
                         </Link>
                         <Button
                           size="sm"
+                          className="max-md:flex-1 max-md:min-h-11"
                           onClick={() => handleCompleteSprint(sprint.id)}
                         >
                           Complete Sprint
@@ -473,7 +453,7 @@ export const Backlog = () => {
 
               {/* Sprint Issues Drop Zone */}
               <div
-                className="p-6 min-h-[100px]"
+                className="p-3 md:p-6 min-h-[100px]"
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDropOnSprint(e, sprint.id)}
               >
@@ -485,123 +465,13 @@ export const Backlog = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-lg shadow">
-                    {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
-                      <div className="col-span-1">Type</div>
-                      <div className="col-span-1">ID</div>
-                      <div className="col-span-3">Title</div>
-                      <div className="col-span-1">Story Points</div>
-                      <div className="col-span-2">Status</div>
-                      <div className="col-span-1">Priority</div>
-                      <div className="col-span-2">Assignee</div>
-                      <div className="col-span-1">Actions</div>
-                    </div>
-
-                    {/* Table Rows */}
-                    <div className="divide-y divide-gray-200">
-                      {(sprint.issues || []).map((issue) => (
-                        <div
-                          key={issue.id}
-                          draggable
-                          onDragStart={() => handleDragStart(issue)}
-                          className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-move"
-                        >
-                          {/* Type */}
-                          <div className="col-span-1 flex items-center">
-                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
-                              issue.type === 'story' ? 'bg-green-100 text-green-800' :
-                              issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
-                              issue.type === 'bug' ? 'bg-red-100 text-red-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
-                              {issue.type}
-                            </span>
-                          </div>
-
-                          {/* ID */}
-                          <div className="col-span-1 flex items-center">
-                            <span className="text-sm font-medium text-gray-500">
-                              {currentProject?.key || 'JC'}-{issue.id}
-                            </span>
-                          </div>
-
-                          {/* Title */}
-                          <div className="col-span-3 flex items-center">
-                            <Link
-                              to={`/projects/${projectId}/issues/${issue.id}`}
-                              className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
-                            >
-                              {issue.title}
-                            </Link>
-                          </div>
-
-                          {/* Story Points */}
-                          <div className="col-span-1 flex items-center">
-                            {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
-                              <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                                {issue.storyPoints}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
-                                —
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Status */}
-                          <div className="col-span-2 flex items-center">
-                            <span className={`text-xs font-medium px-2 py-1 rounded ${
-                              issue.status === 'todo' ? 'bg-gray-100 text-gray-800' :
-                              issue.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                              issue.status === 'code_review' ? 'bg-purple-100 text-purple-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
-                              {issue.status === 'todo' ? 'To Do' :
-                               issue.status === 'in_progress' ? 'In Progress' :
-                               issue.status === 'code_review' ? 'Code Review' :
-                               'Done'}
-                            </span>
-                          </div>
-
-                          {/* Priority */}
-                          <div className="col-span-1 flex items-center">
-                            <span className={`text-sm font-bold ${getPriorityColor(issue.priority)}`}>
-                              {getPriorityIcon(issue.priority)}
-                            </span>
-                          </div>
-
-                          {/* Assignee */}
-                          <div className="col-span-2 flex items-center">
-                            {issue.assignee ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-bold text-white">
-                                    {issue.assignee.name.charAt(0)}
-                                  </span>
-                                </div>
-                                <span className="text-sm text-gray-700 truncate">
-                                  {issue.assignee.name}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-sm text-gray-400">Unassigned</span>
-                            )}
-                          </div>
-
-                          {/* Actions */}
-                          <div className="col-span-1 flex items-center">
-                            <button
-                              onClick={() => handleRemoveIssueFromSprint(issue.id)}
-                              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <BacklogIssueList
+                    issues={sprint.issues || []}
+                    projectId={projectId}
+                    projectKey={projectKey}
+                    onDragStart={handleDragStart}
+                    onRemove={handleRemoveIssueFromSprint}
+                  />
                 )}
               </div>
             </div>
@@ -609,7 +479,7 @@ export const Backlog = () => {
 
           {/* Backlog Issues */}
           <div className="bg-white rounded-lg border border-gray-200">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <h3 className="text-lg font-medium text-gray-900">Backlog</h3>
@@ -622,7 +492,7 @@ export const Backlog = () => {
 
             {/* Backlog Drop Zone */}
             <div
-              className="p-6 min-h-[200px]"
+              className="p-3 md:p-6 min-h-[200px]"
               onDragOver={handleDragOver}
               onDrop={handleDropOnBacklog}
             >
@@ -637,127 +507,13 @@ export const Backlog = () => {
                   </p>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow">
-                  {/* Table Header */}
-                  <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
-                    <div className="col-span-1">Type</div>
-                    <div className="col-span-1">ID</div>
-                    <div className="col-span-3">Title</div>
-                    <div className="col-span-1">Story Points</div>
-                    <div className="col-span-2">Status</div>
-                    <div className="col-span-1">Priority</div>
-                    <div className="col-span-2">Assignee</div>
-                    <div className="col-span-1">Updated</div>
-                  </div>
-
-                  {/* Table Rows */}
-                  <div className="divide-y divide-gray-200">
-                    {backlogIssues.map((issue) => (
-                      <div
-                        key={issue.id}
-                        draggable
-                        onDragStart={() => handleDragStart(issue)}
-                        className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors cursor-move"
-                      >
-                        {/* Type */}
-                        <div className="col-span-1 flex items-center">
-                          <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
-                            issue.type === 'story' ? 'bg-green-100 text-green-800' :
-                            issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
-                            issue.type === 'bug' ? 'bg-red-100 text-red-800' :
-                            'bg-purple-100 text-purple-800'
-                          }`}>
-                            {issue.type}
-                          </span>
-                        </div>
-
-                        {/* ID */}
-                        <div className="col-span-1 flex items-center">
-                          <span className="text-sm font-medium text-gray-500">
-                            {currentProject?.key || 'JC'}-{issue.id}
-                          </span>
-                        </div>
-
-                        {/* Title */}
-                        <div className="col-span-3 flex items-center">
-                          <Link
-                            to={`/projects/${projectId}/issues/${issue.id}`}
-                            className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
-                          >
-                            {issue.title}
-                          </Link>
-                        </div>
-
-                        {/* Story Points */}
-                        <div className="col-span-1 flex items-center">
-                          {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
-                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                              {issue.storyPoints}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
-                              —
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Status */}
-                        <div className="col-span-2 flex items-center">
-                          <span className={`text-xs font-medium px-2 py-1 rounded ${
-                            issue.status === 'todo' ? 'bg-gray-100 text-gray-800' :
-                            issue.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                            issue.status === 'code_review' ? 'bg-purple-100 text-purple-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {issue.status === 'todo' ? 'To Do' :
-                             issue.status === 'in_progress' ? 'In Progress' :
-                             issue.status === 'code_review' ? 'Code Review' :
-                             'Done'}
-                          </span>
-                        </div>
-
-                        {/* Priority */}
-                        <div className="col-span-1 flex items-center">
-                          <span className={`text-sm font-bold ${getPriorityColor(issue.priority)}`}>
-                            {getPriorityIcon(issue.priority)}
-                          </span>
-                        </div>
-
-                        {/* Assignee */}
-                        <div className="col-span-2 flex items-center">
-                          {issue.assignee ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-white">
-                                  {issue.assignee.name.charAt(0)}
-                                </span>
-                              </div>
-                              <span className="text-sm text-gray-700 truncate">
-                                {issue.assignee.name}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-sm text-gray-400">Unassigned</span>
-                          )}
-                        </div>
-
-                        {/* Updated */}
-                        <div className="col-span-1 flex items-center">
-                          <span className="text-sm text-gray-500">
-                            {new Date(issue.updatedAt).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <BacklogIssueList
+                  issues={backlogIssues}
+                  projectId={projectId}
+                  projectKey={projectKey}
+                  onDragStart={handleDragStart}
+                  showUpdated
+                />
               )}
             </div>
           </div>
@@ -770,13 +526,13 @@ export const Backlog = () => {
 
             return (
               <div className="bg-white rounded-lg border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                <div className="px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between max-md:flex-wrap gap-y-3">
                   <button
                     onClick={() => setShowClosedSprints(!showClosedSprints)}
-                    className="flex items-center gap-3 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                    className="flex items-center gap-3 hover:bg-gray-100 px-2 py-1 rounded transition-colors max-md:min-h-11 max-md:w-full max-md:flex-wrap"
                   >
                     <h3 className="text-lg font-medium text-gray-900">Closed Sprints</h3>
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 max-md:order-last max-md:basis-full max-md:text-left">
                       {completedSprints.length} sprint{completedSprints.length === 1 ? '' : 's'}
                     </span>
                     <svg
@@ -789,14 +545,14 @@ export const Backlog = () => {
                   </button>
                   <Link
                     to={`/projects/${projectId}/reports`}
-                    className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                    className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 transition-colors max-md:flex max-md:w-full max-md:min-h-11 max-md:items-center max-md:justify-center"
                   >
                     View Reports
                   </Link>
                 </div>
 
                 {showClosedSprints && (
-                  <div className="p-6 space-y-4">
+                  <div className="p-4 md:p-6 space-y-4">
                     {completedSprints.map((sprint) => {
                       const totalIssues = sprint.issues?.length || 0
                       const completedIssues = sprint.issues?.filter(issue => issue.status === 'done').length || 0
@@ -804,35 +560,43 @@ export const Backlog = () => {
 
                       return (
                         <div key={sprint.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between flex-wrap gap-y-3">
+                            <div className="flex min-w-0 items-center gap-3 max-md:w-full">
                               <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
-                              <h4 className="font-medium text-gray-900">{sprint.name}</h4>
+                              <h4 className="min-w-0 font-medium text-gray-900 wrap-anywhere">{sprint.name}</h4>
                               <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                                 completed
                               </span>
                             </div>
-                            <Link to={`/projects/${projectId}/reports`}>
-                              <button className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50">
+                            <Link to={`/projects/${projectId}/reports`} className="max-md:order-last max-md:w-full">
+                              <button className="text-sm text-blue-600 hover:text-blue-700 px-2 py-1 rounded hover:bg-blue-50 max-md:w-full max-md:min-h-11">
                                 View Report
                               </button>
                             </Link>
+                            <div className="flex basis-full flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 md:mt-2">
+                              <span>{totalIssues} issues</span>
+                              <span>{completionRate}% completed</span>
+                              {sprint.startDate && sprint.endDate && (
+                                <span>
+                                  {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
+                                </span>
+                              )}
+                              {sprint.goal && (
+                                <span className="min-w-0 truncate" title={sprint.goal}>{sprint.goal}</span>
+                              )}
+                            </div>
                           </div>
-
-                          <div className="flex items-center gap-6 text-sm text-gray-600">
-                            <span>{totalIssues} issues</span>
-                            <span>{completionRate}% completed</span>
-                            {sprint.startDate && sprint.endDate && (
-                              <span>
-                                {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
-                              </span>
-                            )}
-                            {sprint.goal && (
-                              <span className="min-w-0 truncate" title={sprint.goal}>{sprint.goal}</span>
-                            )}
-                          </div>
+                          {totalIssues > 0 && (
+                            <div className="mt-3">
+                              <BacklogIssueList
+                                issues={sprint.issues}
+                                projectId={projectId}
+                                projectKey={projectKey}
+                              />
+                            </div>
+                          )}
                         </div>
                       )
                     })}
@@ -840,7 +604,7 @@ export const Backlog = () => {
                     {sprints?.filter(sprint => sprint.status === 'completed').length > 5 && (
                       <div className="text-center pt-2">
                         <Link to={`/projects/${projectId}/reports`}>
-                          <button className="text-sm text-blue-600 hover:text-blue-700 px-3 py-2 rounded hover:bg-blue-50">
+                          <button className="text-sm text-blue-600 hover:text-blue-700 px-3 py-2 rounded hover:bg-blue-50 max-md:min-h-11">
                             View All Sprint Reports ({sprints.filter(sprint => sprint.status === 'completed').length} total)
                           </button>
                         </Link>
@@ -856,8 +620,8 @@ export const Backlog = () => {
 
       {/* Start Sprint Modal */}
       {showStartSprintModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg border border-gray-200 p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Start Sprint</h3>
 
             <div className="space-y-4">
@@ -866,7 +630,7 @@ export const Backlog = () => {
                   Sprint Duration
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center">
+                  <label className="flex items-center max-md:min-h-11">
                     <input
                       type="radio"
                       name="duration"
@@ -877,7 +641,7 @@ export const Backlog = () => {
                     />
                     <span>1 Day</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center max-md:min-h-11">
                     <input
                       type="radio"
                       name="duration"
@@ -888,7 +652,7 @@ export const Backlog = () => {
                     />
                     <span>1 Week (7 days)</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center max-md:min-h-11">
                     <input
                       type="radio"
                       name="duration"
@@ -899,7 +663,7 @@ export const Backlog = () => {
                     />
                     <span>2 Weeks (14 days) - Recommended</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center max-md:min-h-11">
                     <input
                       type="radio"
                       name="duration"
@@ -926,7 +690,7 @@ export const Backlog = () => {
                     placeholder="Enter number of days"
                     min="1"
                     max="365"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full max-md:min-h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -941,12 +705,14 @@ export const Backlog = () => {
 
             <div className="flex items-center gap-2 mt-6">
               <Button
+                className="max-md:min-h-11"
                 onClick={handleStartSprint}
                 disabled={selectedDuration === 'custom' && (!customDuration || parseInt(customDuration) < 1)}
               >
                 Start Sprint
               </Button>
               <Button
+                className="max-md:min-h-11"
                 variant="secondary"
                 onClick={() => {
                   setShowStartSprintModal(false)
@@ -962,5 +728,174 @@ export const Backlog = () => {
         </div>
       )}
     </div>
+  )
+}
+
+interface BacklogIssueListProps {
+  issues: Issue[]
+  projectId?: string
+  projectKey: string
+  showUpdated?: boolean
+  onDragStart?: (issue: Issue) => void
+  onRemove?: (issueId: number) => void
+}
+
+const BacklogIssueList = ({
+  issues,
+  projectId,
+  projectKey,
+  showUpdated,
+  onDragStart,
+  onRemove,
+}: BacklogIssueListProps) => {
+  const removeButton = (issueId: number) => (
+    <button
+      onClick={() => onRemove?.(issueId)}
+      className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded max-md:min-h-11"
+    >
+      Remove
+    </button>
+  )
+
+  return (
+    <>
+      <div className="hidden xl:block bg-white rounded-lg shadow">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
+          <div className="col-span-1">Type</div>
+          <div className="col-span-1">ID</div>
+          <div className="col-span-3">Title</div>
+          <div className="col-span-1">Story Points</div>
+          <div className="col-span-2">Status</div>
+          <div className="col-span-1">Priority</div>
+          <div className="col-span-2">Assignee</div>
+          {onRemove ? <div className="col-span-1">Actions</div> : showUpdated && <div className="col-span-1">Updated</div>}
+        </div>
+
+        {/* Table Rows */}
+        <div className="divide-y divide-gray-200">
+          {issues.map((issue) => (
+            <div
+              key={issue.id}
+              draggable={Boolean(onDragStart)}
+              onDragStart={onDragStart && (() => onDragStart(issue))}
+              className={`grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors ${onDragStart ? 'cursor-move' : ''}`}
+            >
+              {/* Type */}
+              <div className="col-span-1 flex items-center">
+                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
+                  issue.type === 'story' ? 'bg-green-100 text-green-800' :
+                  issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
+                  issue.type === 'bug' ? 'bg-red-100 text-red-800' :
+                  'bg-purple-100 text-purple-800'
+                }`}>
+                  {issue.type}
+                </span>
+              </div>
+
+              {/* ID */}
+              <div className="col-span-1 flex items-center">
+                <span className="text-sm font-medium text-gray-500">
+                  {projectKey}-{issue.id}
+                </span>
+              </div>
+
+              {/* Title */}
+              <div className="col-span-3 flex items-center">
+                <Link
+                  to={`/projects/${projectId}/issues/${issue.id}`}
+                  className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate"
+                >
+                  {issue.title}
+                </Link>
+              </div>
+
+              {/* Story Points */}
+              <div className="col-span-1 flex items-center">
+                {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
+                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
+                    {issue.storyPoints}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-1 py-1 text-xs font-medium text-gray-400">
+                    —
+                  </span>
+                )}
+              </div>
+
+              {/* Status */}
+              <div className="col-span-2 flex items-center">
+                <span className={`text-xs font-medium px-2 py-1 rounded ${
+                  issue.status === 'todo' ? 'bg-gray-100 text-gray-800' :
+                  issue.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                  issue.status === 'code_review' ? 'bg-purple-100 text-purple-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {issue.status === 'todo' ? 'To Do' :
+                   issue.status === 'in_progress' ? 'In Progress' :
+                   issue.status === 'code_review' ? 'Code Review' :
+                   'Done'}
+                </span>
+              </div>
+
+              {/* Priority */}
+              <div className="col-span-1 flex items-center">
+                <span className={`text-sm font-bold ${getPriorityColor(issue.priority)}`}>
+                  {getPriorityIcon(issue.priority)}
+                </span>
+              </div>
+
+              {/* Assignee */}
+              <div className="col-span-2 flex items-center">
+                {issue.assignee ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-white">
+                        {issue.assignee.name.charAt(0)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-700 truncate">
+                      {issue.assignee.name}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-400">Unassigned</span>
+                )}
+              </div>
+
+              {onRemove ? (
+                <div className="col-span-1 flex items-center">{removeButton(issue.id)}</div>
+              ) : showUpdated && (
+                <div className="col-span-1 flex items-center">
+                  <span className="text-sm text-gray-500">
+                    {new Date(issue.updatedAt).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="xl:hidden space-y-3 p-3 md:p-4">
+        {issues.map(issue => (
+          <BacklogIssueCard
+            key={issue.id}
+            issue={issue}
+            projectKey={projectKey}
+            projectId={projectId}
+            showUpdated={showUpdated}
+            onDragStart={onDragStart && (() => onDragStart(issue))}
+            actions={onRemove && removeButton(issue.id)}
+          />
+        ))}
+      </div>
+    </>
   )
 }
