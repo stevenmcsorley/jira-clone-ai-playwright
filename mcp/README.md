@@ -31,6 +31,17 @@ Exposes the Ossicone project tracker as MCP tools so Claude (or any MCP client) 
      -- node /path/to/repo/mcp/index.js
    ```
 
+## Code Mode (the HTTP endpoint)
+
+The hosted endpoint (`/mcp`) runs in **Code Mode**: instead of advertising every tool below (about 34 schemas, paid for by every session), it exposes just two:
+
+- `search({ query, limit })` finds operations. An empty query returns a compact index of names; a query returns the best matches with their input schemas.
+- `execute({ code })` runs an async JavaScript function in a QuickJS (WASM) sandbox with an `ossicone.*` namespace holding every operation listed under **Tools**. The sandbox has no network, filesystem or `require`; the only thing it can reach is those functions, which call the same authenticated API with the caller's own token, so scopes and workspace binding are unchanged. Results are returned as compact JSON, and a script can filter and combine several calls so only the final answer reaches the model's context.
+
+There is a single endpoint; clients that were already connected to `/mcp` keep working with their existing sign-in. The stdio server (`node mcp/index.js`) still registers the individual tools, for local use.
+
+Free to run: no Cloudflare account or paid plan is involved, the sandbox is in-process.
+
 ## Tools
 
 | Area | Tools |
