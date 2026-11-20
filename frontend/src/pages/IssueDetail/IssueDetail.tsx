@@ -113,10 +113,22 @@ export const IssueDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading issue...</p>
+      <div
+        className="flex-1 bg-gray-50 motion-safe:animate-pulse"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading issue"
+        data-testid="issue-loading"
+      >
+        <div className="border-b border-gray-200 bg-white px-4 py-3 md:px-6 md:py-4">
+          <div className="h-20 rounded bg-gray-200 md:h-9" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 px-4 py-5 md:px-6 md:py-8 lg:grid-cols-3 lg:gap-8">
+          <div className="min-w-0 space-y-6 lg:col-span-2">
+            <div className="h-7 w-2/3 rounded bg-gray-200 md:h-8" />
+            <div className="h-40 rounded-lg bg-gray-200" />
+          </div>
+          <div className="hidden h-40 rounded-lg bg-gray-200 lg:block" />
         </div>
       </div>
     )
@@ -127,7 +139,7 @@ export const IssueDetail = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Issue not found'}</p>
-          <Button onClick={() => navigate(`/projects/${projectId}`)}>
+          <Button className="max-md:min-h-11" onClick={() => navigate(`/projects/${projectId}`)}>
             Back to Board
           </Button>
         </div>
@@ -138,8 +150,8 @@ export const IssueDetail = () => {
   return (
     <div className="flex-1 flex flex-col bg-gray-50">
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+        <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-y-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-500">
               {currentProject?.key || 'TIS'}-{issue.id}
@@ -150,13 +162,14 @@ export const IssueDetail = () => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to={`/projects/${projectId}/issues/${issueId}/edit`}>
-              <Button variant="secondary">
+          <div className="flex items-center gap-3 max-md:w-full">
+            <Link className="max-md:flex-1" to={`/projects/${projectId}/issues/${issueId}/edit`}>
+              <Button className="w-full max-md:min-h-11" variant="secondary">
                 Edit
               </Button>
             </Link>
             <Button
+              className="max-md:flex-1 max-md:min-h-11"
               onClick={() => navigate(`/projects/${projectId}`)}
               variant="secondary"
             >
@@ -167,23 +180,23 @@ export const IssueDetail = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-4 py-5 md:px-6 md:py-8">
         <div className="max-w-full mx-auto">
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Main Content */}
-          <div className="col-span-2 space-y-6">
+          <div className="min-w-0 space-y-6 lg:col-span-2">
             {/* Title */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl md:text-2xl wrap-anywhere font-bold text-gray-900 mb-2">
                 {issue.title}
               </h1>
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Description</h3>
               {issue.description ? (
-                <Markdown>{issue.description}</Markdown>
+                <Markdown className="min-w-0 overflow-x-auto">{issue.description}</Markdown>
               ) : (
                 <div className="text-gray-700">No description provided.</div>
               )}
@@ -191,7 +204,7 @@ export const IssueDetail = () => {
 
             {/* Labels */}
             {issue.labels && issue.labels.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Labels</h3>
                 <div className="flex flex-wrap gap-2">
                   {issue.labels.map((label, index) => (
@@ -229,7 +242,7 @@ export const IssueDetail = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Status */}
             <div className="bg-white rounded-lg border border-gray-200 p-4">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Status</h4>
