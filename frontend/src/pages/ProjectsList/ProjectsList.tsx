@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigationType, useSearchParams } from "react-router-dom";
+import { Pagination } from "../../components/Pagination";
 import { ProjectCard } from "../../components/ProjectCard";
 import { ProjectsSkeleton } from "../../components/ProjectsToolbar/ProjectsSkeleton";
 import { ProjectsToolbar } from "../../components/ProjectsToolbar/ProjectsToolbar";
 import { Button } from "../../components/ui/Button";
 import { useProjects } from "../../hooks/useProjects";
+import { paginate } from "../../utils/pagination";
 import { filterProjects, listStateToSearch, parseListState, sortProjects } from "../../utils/projectSort";
 import type { ProjectSortId } from "../../utils/projectSort";
 
@@ -12,6 +14,7 @@ import type { ProjectSortId } from "../../utils/projectSort";
 const mobileHeader =
   "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2 max-md:[header:has(~_&)_[data-testid=create-project-button]]:min-h-11";
 
+const PROJECTS_PAGE_SIZE = 12;
 const projectGrid = "grid grid-cols-1 gap-4";
 const sortStorageKey = "ossicone.projects.sort";
 
@@ -28,7 +31,8 @@ export const ProjectsList = () => {
   const [params, setParams] = useSearchParams();
   const [storedSort, setStoredSort] = useState(readStoredSort);
   const navigationType = useNavigationType();
-  const { sort } = parseListState(params.toString(), storedSort);
+  const { sort, page: requestedPage } = parseListState(params.toString(), storedSort);
+  const listRef = useRef<HTMLDivElement>(null);
   const urlQuery = (params.get("q") ?? "").trimStart().slice(0, 100);
   const [searchText, setSearchText] = useState(urlQuery);
   const q = searchText.trim();
@@ -39,7 +43,29 @@ export const ProjectsList = () => {
     if (navigationType !== "REPLACE") setSearchText(urlQuery);
   }, [navigationType, urlQuery]);
   const sortedProjects = useMemo(() => sortProjects(projects, sort), [projects, sort]);
-  const visibleProjects = filterProjects(sortedProjects, q);
+  const filteredProjects = useMemo(() => filterProjects(sortedProjects, q), [sortedProjects, q]);
+  const { items: visibleProjects, page, pageCount, start, end, total } =
+    paginate(filteredProjects, requestedPage, PROJECTS_PAGE_SIZE);
+
+  useEffect(() => {
+    const urlPage = params.get("page");
+    const canonicalPage = page === 1 ? null : String(page);
+    if (loading || error || q !== urlQuery.trim() || urlPage === canonicalPage) return;
+
+    const search = new URLSearchParams(params);
+    if (canonicalPage === null) search.delete("page");
+    else search.set("page", canonicalPage);
+    setParams(search, { replace: true });
+  }, [loading, error, page, params, q, urlQuery, setParams]);
+
+  const changePage = (nextPage: number) => {
+    if (nextPage === page) return;
+    const search = new URLSearchParams(params);
+    if (nextPage === 1) search.delete("page");
+    else search.set("page", String(nextPage));
+    setParams(search);
+    listRef.current?.scrollIntoView?.({ block: "start" });
+  };
 
   const changeQuery = (query: string) => {
     setSearchText(query);
@@ -92,7 +118,7 @@ export const ProjectsList = () => {
           <ProjectsToolbar
             query={searchText}
             sort={sort}
-            shown={visibleProjects.length}
+            shown={pageCount > 1 ? `${start}-${end}` : total}
             total={projects.length}
             onQueryChange={changeQuery}
             onSortChange={changeSort}
@@ -100,9 +126,12 @@ export const ProjectsList = () => {
         )}
 
         {!loading && !error && visibleProjects.length > 0 && (
-          <div className={projectGrid}>
-            {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
-          </div>
+          <>
+            <div ref={listRef} className={projectGrid}>
+              {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+            </div>
+            <Pagination page={page} pageCount={pageCount} onPageChange={changePage} className="mt-4" />
+          </>
         )}
 
         {!loading && !error && projects.length > 0 && visibleProjects.length === 0 && (

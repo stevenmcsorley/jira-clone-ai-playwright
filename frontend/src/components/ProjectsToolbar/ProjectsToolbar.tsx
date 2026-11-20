@@ -5,7 +5,7 @@ import type { ProjectSortId } from "../../utils/projectSort";
 interface ProjectsToolbarProps {
   query: string;
   sort: ProjectSortId;
-  shown: number;
+  shown: number | string;
   total: number;
   onQueryChange: (query: string) => void;
   onSortChange: (sort: ProjectSortId) => void;
