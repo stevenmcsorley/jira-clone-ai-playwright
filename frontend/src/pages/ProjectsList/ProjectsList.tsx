@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ProjectDescription } from "../../components/ProjectDescription";
 import { Button } from "../../components/ui/Button";
 import { useProjects } from "../../hooks/useProjects";
 
@@ -51,7 +52,7 @@ export const ProjectsList = () => {
                 data-testid={`project-card-${project.id}`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex min-w-0 items-center space-x-4">
                     <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 bg-blue-600 rounded">
                       <span className="text-sm font-medium text-white">
                         {project.key}
@@ -68,11 +69,10 @@ export const ProjectsList = () => {
                         </span>
                       </div>
 
-                      {project.description && (
-                        <p className="mt-1 text-sm text-gray-500">
-                          {project.description}
-                        </p>
-                      )}
+                      <ProjectDescription
+                        projectId={project.id}
+                        description={project.description}
+                      />
 
                       <div className="flex items-center mt-1 space-x-4 text-xs text-gray-500">
                         <span>Software project</span>
