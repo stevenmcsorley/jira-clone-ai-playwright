@@ -13,6 +13,7 @@ import { useTimerManager } from '../../hooks/useTimerManager';
 import { TimeTrackingService } from '../../services/api/time-tracking.service';
 import { TimeProgressIndicator } from '../TimeProgressBar';
 import { IssueTypeIcon } from '../IssueTypeIcon';
+import { ProjectDescription } from '../ProjectDescription';
 import { CardMoveMenu } from './CardMoveMenu';
 import { BOARD_STATUSES, moveAnnouncement } from '../../utils/boardMove';
 import {
@@ -492,10 +493,10 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
         {announcement}
       </div>
       {/* Project Header with State Information */}
-      <div className="mb-6" data-testid="xstate-project-header">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold" data-testid="project-name">{project.name}</h1>
-          <div className="flex items-center gap-3 text-sm">
+      <div className="mb-4" data-testid="xstate-project-header">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="min-w-0 max-w-full truncate text-xl font-semibold" title={project.name} data-testid="project-name">{project.name}</h1>
+          <div className="ml-auto flex items-center gap-3 text-sm">
             {/* Sync Status */}
             {isSyncing && (
               <div className="flex items-center gap-1 text-blue-600">
@@ -517,7 +518,17 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             </button>
           </div>
         </div>
-        <p className="text-gray-600" data-testid="project-description">{project.description}</p>
+        {project.description?.trim() && (
+          <div data-testid="project-description" className="min-w-0">
+            <ProjectDescription
+              projectId={project.id}
+              idPrefix="board-project"
+              lines={2}
+              description={project.description}
+              className="max-w-prose"
+            />
+          </div>
+        )}
       </div>
 
       {/* Error Banner */}
