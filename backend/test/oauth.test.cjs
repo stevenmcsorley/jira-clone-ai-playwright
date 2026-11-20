@@ -44,8 +44,8 @@ async function authorization(options = {}) {
   const location = result.response.headers.get('location')
   return { ...result, url: location ? new URL(location) : null }
 }
-async function code(access = 'write') {
-  const start = await authorization()
+async function code(access = 'write', resource) {
+  const start = await authorization(resource ? { resource } : {})
   assert.equal(start.status, 302)
   const request = start.url.searchParams.get('request')
   assert.ok(request)
@@ -67,8 +67,8 @@ async function refresh(token, options = {}) {
   return call('/oauth/token', { method: 'POST', form: true, body: {
     grant_type: 'refresh_token', client_id: client.client_id, refresh_token: token, ...options } })
 }
-async function rpc(token, method, params, id = 1) {
-  const response = await fetch(process.env.FRONTEND_URL + '/mcp', { method: 'POST',
+async function rpc(token, method, params, id = 1, endpoint = '/mcp') {
+  const response = await fetch(process.env.FRONTEND_URL + endpoint, { method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
     body: JSON.stringify({ jsonrpc: '2.0', id, method, params }) })
   const text = await response.text()
@@ -220,4 +220,30 @@ test('MCP challenges invalid credentials and accepts both OAuth and existing API
   const denied = await rpc(readOnly, 'tools/call', { name: 'create_project', arguments: { name: 'Denied', key: 'DENIED' } })
   assert.equal(denied.payload.result.isError, true)
   assert.ok(!(await call('/api/projects', { token: tokens.access_token })).data.some(p => p.key === 'DENIED'))
+})
+
+test('Code Mode endpoint is its own OAuth resource, exposes two tools, and runs strictly within the grant', async () => {
+  const codeResource = process.env.FRONTEND_URL + '/mcp-code'
+  const meta = (await call('/.well-known/oauth-protected-resource/mcp-code')).data
+  assert.equal(meta.resource, codeResource)
+  assert.deepEqual(meta.authorization_servers, [process.env.FRONTEND_URL])
+  // a grant made for /mcp-code cannot be redeemed as /mcp (and the failed attempt must not burn the code)
+  const value = await code('write', codeResource)
+  assert.equal((await exchange(value, { resource: process.env.FRONTEND_URL + '/mcp' })).status, 400)
+  const tokens = (await exchange(value, { resource: codeResource })).data
+  assert.ok(tokens.access_token)
+  const tools = await rpc(tokens.access_token, 'tools/list', {}, 1, '/mcp-code')
+  assert.deepEqual(tools.payload.result.tools.map(t => t.name).sort(), ['execute', 'search'])
+  const run = async (token, code) => JSON.parse((await rpc(token, 'tools/call', { name: 'execute', arguments: { code } }, 2, '/mcp-code')).payload.result.content[0].text)
+  const listed = await run(tokens.access_token, 'async () => (await ossicone.list_projects({})).map(p => p.id)')
+  assert.ok(!listed.result.includes(project), 'must not see another workspace through Code Mode')
+  const created = await run(tokens.access_token, `async () => (await ossicone.create_project({ name: 'CM test', key: 'CMT' })).key`)
+  assert.equal(created.result, 'CMT')
+  // read-only grants cannot write through Code Mode either: the same guard applies to the same API calls
+  const ro = (await exchange(await code('read', codeResource), { resource: codeResource })).data
+  const denied = await run(ro.access_token, `async () => await ossicone.create_project({ name: 'nope', key: 'NOPE' })`)
+  assert.match(denied.error, /does not permit|forbidden|403/i)
+  assert.equal(denied.result, undefined)
+  // wrong resource at authorization is still refused
+  assert.equal((await authorization({ resource: 'https://evil.test/mcp-code' })).url.searchParams.get('error'), 'invalid_target')
 })

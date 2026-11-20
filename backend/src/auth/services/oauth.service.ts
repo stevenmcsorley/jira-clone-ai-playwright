@@ -4,6 +4,8 @@ import { createHash, randomBytes } from 'crypto'
 
 export const oauthSite = () => (process.env.FRONTEND_URL || 'https://ossicone.halfagiraf.com').replace(/\/$/, '')
 export const oauthResource = () => `${oauthSite()}/mcp`
+// Same server, two entry points: /mcp (normal tools) and /mcp-code (Code Mode: search + execute). Grants are bound to exactly one of them.
+export const oauthResources = () => [oauthResource(), `${oauthSite()}/mcp-code`]
 export const hash = (s: string) => createHash('sha256').update(s).digest('hex')
 export const challenge = (s: string) => createHash('sha256').update(s).digest('base64url')
 const random = () => randomBytes(32).toString('base64url')
@@ -43,13 +45,13 @@ export class OAuthService {
     if (typeof p.state !== 'string' || p.state.length > 2048 ||
       p.code_challenge_method !== 'S256' || typeof p.code_challenge !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(p.code_challenge))
       return this.redirect(p, { error: 'invalid_request' })
-    if (p.resource !== undefined && p.resource !== oauthResource()) return this.redirect(p, { error: 'invalid_target' })
+    if (p.resource !== undefined && !oauthResources().includes(p.resource)) return this.redirect(p, { error: 'invalid_target' })
     const scope = p.scope === undefined ? 'mcp offline_access' : p.scope
     if (typeof scope !== 'string' || !scope.split(' ').includes('mcp') || scope.split(' ').some((s: string) => !['mcp', 'offline_access'].includes(s)))
       return this.redirect(p, { error: 'invalid_scope' })
     const id = random()
     await this.db.query(`INSERT INTO mcp_oauth_requests(id,client_id,redirect_uri,state,challenge,scope,resource)
-      VALUES($1,$2,$3,$4,$5,$6,$7)`, [hash(id), p.client_id, p.redirect_uri, p.state, p.code_challenge, scope, oauthResource()])
+      VALUES($1,$2,$3,$4,$5,$6,$7)`, [hash(id), p.client_id, p.redirect_uri, p.state, p.code_challenge, scope, p.resource ?? oauthResource()])
     return `${oauthSite()}/oauth/consent?request=${id}`
   }
 
@@ -99,7 +101,7 @@ export class OAuthService {
 
   async token(b: any) {
     if (!b || typeof b.client_id !== 'string') error('invalid_request')
-    if (b.resource !== undefined && b.resource !== oauthResource()) error('invalid_target')
+    if (b.resource !== undefined && !oauthResources().includes(b.resource)) error('invalid_target')
     if (b.client_secret !== undefined || b.client_assertion !== undefined) error('invalid_client')
     if (!['authorization_code', 'refresh_token'].includes(b.grant_type)) error('unsupported_grant_type')
     const credential = b.grant_type === 'authorization_code' ? b.code : b.refresh_token
@@ -109,7 +111,8 @@ export class OAuthService {
       const [stored] = await manager.query(`SELECT * FROM ${table} WHERE hash=$1 FOR UPDATE`, [hash(credential)])
       if (!stored || (b.grant_type === 'refresh_token' && stored.kind !== 'refresh')) error('invalid_grant')
       const [grant] = await manager.query('SELECT * FROM mcp_oauth_grants WHERE id=$1 FOR UPDATE', [stored.grant_id])
-      if (!grant || grant.client_id !== b.client_id || grant.resource !== oauthResource() || grant.revoked || new Date(grant.expires_at).getTime() <= Date.now()) error('invalid_grant')
+      if (grant && b.resource !== undefined && b.resource !== grant.resource) error('invalid_target')
+      if (!grant || grant.client_id !== b.client_id || !oauthResources().includes(grant.resource) || grant.revoked || new Date(grant.expires_at).getTime() <= Date.now()) error('invalid_grant')
       // Refresh replay revokes the whole connection, including still-live access tokens.
       if (stored.used) {
         if (b.grant_type === 'refresh_token') {
@@ -145,7 +148,7 @@ export class OAuthService {
       JOIN mcp_oauth_grants g ON g.id=t.grant_id
       JOIN workspace_members m ON m."userId"=g.user_id AND m."workspaceId"=g.workspace_id
       WHERE t.hash=$1 AND t.kind='access' AND t.expires_at>now() AND g.expires_at>now()
-      AND NOT g.revoked AND g.resource=$2`, [hash(token), oauthResource()])
+      AND NOT g.revoked AND g.resource = ANY($2)`, [hash(token), oauthResources()])
     if (!row || !row.scope.split(' ').includes('mcp')) throw new UnauthorizedException('Invalid OAuth access token')
     return row
   }
