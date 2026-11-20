@@ -94,3 +94,40 @@ export const sparklinePoints = (values: readonly number[], width: number, height
     return `${x},${y}`;
   }).join(" ");
 };
+
+const nameFromAddress = (address: string) =>
+  address.split("@")[0].trim().split(/[._\s-]+/).filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+export const displayName = (person?: { name?: string | null; email?: string | null } | null): string => {
+  const name = person?.name?.trim() ?? "";
+  return (name.includes("@") ? nameFromAddress(name) : name) || nameFromAddress(person?.email ?? "");
+};
+
+export const formatUpdated = (dateString: string | Date, now = Date.now()): string => {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
+  if (now - date.getTime() < 7 * millisecondsPerDay) return updatedLabel(date, now);
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() === new Date(now).getFullYear() ? undefined : "numeric",
+  }).format(date);
+};
+
+export const progressSegments = (counts: {
+  total: number;
+  done: number;
+  code_review: number;
+  in_progress: number;
+  todo?: number;
+}): { done: number; review: number; progress: number; rest: number } => {
+  const percent = (count: number) => counts.total > 0 ? Math.floor(count / counts.total * 100) : 0;
+  const done = percent(counts.done);
+  const review = percent(counts.code_review);
+  const progress = percent(counts.in_progress);
+  const rest = counts.total > 0 ? 100 - done - review - progress : 0;
+  return { done, review, progress, rest };
+};

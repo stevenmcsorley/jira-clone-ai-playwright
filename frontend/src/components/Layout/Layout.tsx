@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { Button } from '../ui/Button'
 import { useProjects } from '../../hooks/useProjects'
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
@@ -292,18 +291,6 @@ export const Layout = ({ children }: LayoutProps) => {
             </div>
 
             <div className={`flex items-center gap-1 md:gap-3 ${styles.actions}`}>
-              {location.pathname === '/projects' && (
-                <Link to="/projects/create">
-                  <Button
-                    variant="secondary"
-                    className="max-sm:px-2"
-                    data-testid="create-project-button"
-                  >
-                    <span className="hidden sm:inline">Create Project</span>
-                    <span className="sm:hidden">Create</span>
-                  </Button>
-                </Link>
-              )}
               <button
                 ref={searchTrigger}
                 type="button"

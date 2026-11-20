@@ -47,13 +47,13 @@ export const ProjectsToolbar = ({
             value={query}
             maxLength={100}
             onChange={(event) => onQueryChange(event.currentTarget.value)}
-            className="min-h-11 min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 text-gray-900"
+            className="h-11 md:h-9 min-w-0 flex-1 rounded-md border border-gray-300 bg-white px-3 text-gray-900"
           />
           {query && (
             <button
               type="button"
               data-testid="projects-clear-search"
-              className="min-h-11 shrink-0 rounded-md border border-gray-300 bg-white px-3 text-gray-700 hover:bg-gray-100"
+              className="h-11 md:h-9 shrink-0 rounded-md border border-gray-300 bg-white px-3 text-gray-700 hover:bg-gray-100"
               aria-label="Clear project search"
               onClick={() => {
                 onQueryChange("");
@@ -68,19 +68,18 @@ export const ProjectsToolbar = ({
           aria-label="Sort projects"
           aria-describedby="projects-sort-hint"
           data-testid="projects-sort"
-          title={hint}
           value={sort}
           onChange={(event) => onSortChange(event.currentTarget.value as ProjectSortId)}
-          className="min-h-11 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 sm:w-auto"
+          className="h-11 md:h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-gray-900 sm:w-auto"
         >
-          {SORT_OPTIONS.map(({ id, label, hint }) => (
-            <option key={id} value={id} title={hint}>{label}</option>
+          {SORT_OPTIONS.map(({ id, label }) => (
+            <option key={id} value={id}>{label}</option>
           ))}
         </select>
       </div>
       <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm text-gray-600">
         <p data-testid="projects-count" role="status">Showing {shown} of {total} projects</p>
-        <p id="projects-sort-hint">{hint}</p>
+        <p id="projects-sort-hint" className="sr-only">{hint}</p>
       </div>
     </div>
   );
