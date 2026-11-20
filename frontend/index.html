@@ -9,6 +9,25 @@
     <meta name="theme-color" content="#2563eb" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ossicone</title>
+    <script>
+      (() => {
+        let theme = 'dark'
+        try {
+          const preference = localStorage.getItem('ossicone-theme')
+          if (preference === 'system') {
+            theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          } else if (preference === 'light' || preference === 'dark') {
+            theme = preference
+          }
+        } catch {
+          // Keep the default when storage is unavailable.
+        }
+        document.documentElement.classList.toggle('dark', theme === 'dark')
+        document.documentElement.style.colorScheme = theme
+        document.querySelector('meta[name="theme-color"]')
+          .setAttribute('content', theme === 'dark' ? '#0b1120' : '#2563eb')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
