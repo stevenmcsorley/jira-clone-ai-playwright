@@ -229,7 +229,7 @@ export const ProjectBoard = () => {
               </Button>
             )}
             <Link to={`/projects/${projectId}/issues/create`} className="max-md:order-first max-md:w-full">
-              <Button className="max-md:w-full" data-testid="create-issue-button">
+              <Button className="max-md:w-full max-md:min-h-11" data-testid="create-issue-button">
                 Create Issue
               </Button>
             </Link>
