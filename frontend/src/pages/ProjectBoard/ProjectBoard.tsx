@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { BoardSkeleton } from '../../components/BoardSkeleton'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import {
   EMPTY_BOARD_FILTERS,
@@ -92,7 +93,7 @@ export const ProjectBoard = () => {
         // If WE just mutated an issue (e.g. dropped a card), this event is the
         // websocket echo of our own write. The board machine already holds the
         // confirmed state, so a remount (refreshKey bump) would only cause a
-        // loading spinner, scroll reset and card flicker. Refresh the sprint
+        // loading skeleton, scroll reset and card flicker. Refresh the sprint
         // metadata silently instead; other users' changes (outside the echo
         // window) still get the full refresh below.
         const isOwnEcho = isRecentLocalMutation()
@@ -122,9 +123,6 @@ export const ProjectBoard = () => {
       window.removeEventListener('ossicone-refresh', handleRefresh as EventListener)
     }
   }, [projectId])
-
-  // Don't render issues until we have the correct project
-  const shouldShowIssues = currentProject && !projectsLoading
 
   const handleIssueUpdate = async (issueId: number, updates: UpdateIssueRequest) => {
     try {
@@ -175,28 +173,21 @@ export const ProjectBoard = () => {
   }
 
   if (projectsLoading || loading || !currentProject) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading project...</p>
-        </div>
-      </div>
-    )
+    return <BoardSkeleton />
   }
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50" data-testid="project-board">
       {/* Board Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4" data-testid="board-header">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900" data-testid="project-title">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4" data-testid="board-header">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
+          <div className="min-w-0">
+            <h1 className="min-w-0 text-2xl font-bold text-gray-900 max-md:truncate" title={currentProject.name} data-testid="project-title">
               {activeSprint ? `${activeSprint.name} Board` : 'Project Board'}
             </h1>
             {activeSprint ? (
               <div data-testid="active-sprint-info">
-                <p className="text-sm text-gray-600 mt-1" data-testid="sprint-details">
+                <p className="text-sm text-gray-600 mt-1 max-md:wrap-anywhere" data-testid="sprint-details">
                   {activeSprint.goal && `Goal: ${activeSprint.goal}`}
                   {activeSprint.issues.length === 0
                     ? ' • No issues in this sprint'
@@ -206,11 +197,11 @@ export const ProjectBoard = () => {
                 {(activeSprint.startDate || activeSprint.endDate) && (
                   <p className="text-sm text-gray-500 mt-1" data-testid="sprint-dates">
                     {activeSprint.startDate && (
-                      <span data-testid="sprint-start-date">Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
+                      <span className="max-md:block" data-testid="sprint-start-date">Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
                     )}
-                    {activeSprint.startDate && activeSprint.endDate && <span> • </span>}
+                    {activeSprint.startDate && activeSprint.endDate && <span className="max-md:hidden"> • </span>}
                     {activeSprint.endDate && (
-                      <span data-testid="sprint-end-date">Ends: {new Date(activeSprint.endDate).toLocaleDateString()}</span>
+                      <span className="max-md:block" data-testid="sprint-end-date">Ends: {new Date(activeSprint.endDate).toLocaleDateString()}</span>
                     )}
                   </p>
                 )}
@@ -221,7 +212,7 @@ export const ProjectBoard = () => {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-3" data-testid="board-actions">
+          <div className="flex items-center gap-3 max-md:flex-wrap" data-testid="board-actions">
             {!activeSprint ? (
               <Link to={`/projects/${projectId}/backlog`}>
                 <Button variant="secondary" data-testid="start-sprint-button">
@@ -237,16 +228,16 @@ export const ProjectBoard = () => {
                 Complete Sprint
               </Button>
             )}
-            <Link to={`/projects/${projectId}/issues/create`}>
-              <Button data-testid="create-issue-button">
+            <Link to={`/projects/${projectId}/issues/create`} className="max-md:order-first max-md:w-full">
+              <Button className="max-md:w-full max-md:min-h-11" data-testid="create-issue-button">
                 Create Issue
               </Button>
             </Link>
-            <div className="relative">
+            <div className="relative max-md:ml-auto">
               <button
                 type="button"
                 onClick={() => setBoardMenuOpen(open => !open)}
-                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                className="w-8 h-8 max-md:min-h-11 max-md:min-w-11 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                 title="Board actions"
                 aria-label="Board actions"
                 aria-expanded={boardMenuOpen}
@@ -258,7 +249,7 @@ export const ProjectBoard = () => {
               {boardMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setBoardMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-52 bg-white border border-gray-200 rounded-md shadow-lg py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-52 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md shadow-lg py-1">
                     {activeSprint && (
                       <button
                         onClick={() => { setBoardMenuOpen(false); handleCompleteSprint() }}
@@ -287,9 +278,9 @@ export const ProjectBoard = () => {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex items-center gap-4" data-testid="board-controls">
-          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md min-w-0 flex-1 max-w-md" data-testid="search-form">
-            <button type="submit" className="text-gray-400 hover:text-gray-600" data-testid="search-button">
+        <div className="flex flex-col items-start gap-4 md:flex-row md:items-center" data-testid="board-controls">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-md min-w-0 max-md:w-full md:flex-1 md:max-w-md" data-testid="search-form">
+            <button type="submit" className="text-gray-400 hover:text-gray-600 max-md:inline-grid max-md:place-items-center max-md:min-h-11 max-md:min-w-11" data-testid="search-button">
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
@@ -308,7 +299,7 @@ export const ProjectBoard = () => {
           <div className="relative flex items-center gap-2">
             <button
               onClick={() => setQuickFiltersOpen(prev => !prev)}
-              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-md max-md:min-h-11 max-md:min-w-11 ${
                 quickFiltersActive
                   ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -340,7 +331,7 @@ export const ProjectBoard = () => {
                   data-testid="quick-filters-backdrop"
                 />
                 <div
-                  className="absolute left-0 top-full mt-1 z-20 w-56 bg-white border border-gray-200 rounded-md shadow-lg py-1"
+                  className="absolute left-0 top-full mt-1 z-20 w-56 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md shadow-lg py-1"
                   role="menu"
                   data-testid="quick-filters-menu"
                 >
@@ -382,30 +373,21 @@ export const ProjectBoard = () => {
 
       {/* Board Content */}
       <main className="flex-1 px-6 py-6" data-testid="board-content">
-        {shouldShowIssues ? (
-          <div data-testid="kanban-board">
-            <KanbanBoard
-              key={`${currentProject.id}-${refreshKey}`} // Force re-mount when data changes
-              project={currentProject}
-              issues={issues}
-              loading={loading}
-              onIssueUpdate={handleIssueUpdate}
-              onIssueCreate={handleIssueCreate}
-              onIssueEdit={handleIssueEdit}
-              onIssueDelete={handleIssueDelete}
-              filters={boardFilters}
-              onFiltersChange={setBoardFilters}
-              activeSprintId={activeSprint?.id ?? null}
-            />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center py-8" data-testid="board-loading">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading board...</p>
-            </div>
-          </div>
-        )}
+        <div data-testid="kanban-board">
+          <KanbanBoard
+            key={`${currentProject.id}-${refreshKey}`} // Force re-mount when data changes
+            project={currentProject}
+            issues={issues}
+            loading={loading}
+            onIssueUpdate={handleIssueUpdate}
+            onIssueCreate={handleIssueCreate}
+            onIssueEdit={handleIssueEdit}
+            onIssueDelete={handleIssueDelete}
+            filters={boardFilters}
+            onFiltersChange={setBoardFilters}
+            activeSprintId={activeSprint?.id ?? null}
+          />
+        </div>
       </main>
     </div>
   )
