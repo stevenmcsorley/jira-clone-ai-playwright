@@ -266,10 +266,10 @@ const XStateColumn = ({
   }, []);
 
   return (
-    <div className="flex-1 min-w-[80vw] sm:min-w-[45vw] snap-start md:min-w-0" data-testid={`xstate-column-${status}`}>
+    <div className="flex-1 min-w-[80vw] sm:min-w-[18rem] snap-start xl:min-w-0" data-testid={`xstate-column-${status}`}>
       {/* Column Header */}
       <div className="flex items-center justify-between mb-4 px-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <h2 className="flex items-center gap-2 font-semibold text-sm text-gray-600 uppercase tracking-wide">
             <span className={`w-2 h-2 rounded-full ${config.dot}`} />
             {title}
@@ -288,7 +288,7 @@ const XStateColumn = ({
       {/* Drop Zone */}
       <div
         className={`
-          min-h-[500px] p-6 rounded-lg border-2 border-dashed transition-all
+          min-h-[16rem] p-3 xl:min-h-[500px] xl:p-6 rounded-lg border-2 border-dashed transition-all
           ${config.color} ${config.borderColor}
           ${isDragOver ? 'border-blue-400 bg-blue-100 scale-102' : ''}
         `}
@@ -575,7 +575,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
 
       {/* Kanban Board */}
       {!isLoading && (
-        <div className="flex overflow-x-auto snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:snap-none gap-6" data-testid="xstate-kanban-columns">
+        <div className="flex overflow-x-auto snap-x snap-mandatory pb-2 scroll-px-4 xl:grid xl:grid-cols-4 xl:overflow-visible xl:snap-none xl:pb-0 gap-6" data-testid="xstate-kanban-columns">
           <XStateColumn
             title="To Do"
             status="todo"
