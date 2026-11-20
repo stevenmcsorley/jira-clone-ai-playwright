@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { useProjects } from '../../hooks/useProjects'
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useAuth } from '../../contexts/AuthContext'
 import { ActiveTimerDisplay } from '../ActiveTimerDisplay'
 import { QuickActions } from '../QuickActions'
@@ -9,6 +12,7 @@ import { Breadcrumb } from '../Breadcrumb'
 import { GlobalSearch } from '../Search/GlobalSearch'
 import { NotificationBell } from '../Notifications'
 import { WorkspaceIcon } from '../../lib/workspaceIcons'
+import styles from './Layout.module.css'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -20,14 +24,38 @@ export const Layout = ({ children }: LayoutProps) => {
   const { projects } = useProjects()
   const { user, logout, workspaces, currentWorkspace, switchWorkspace } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [overlay, setOverlay] = useState<'navigation' | 'search' | null>(null)
+  const sidebarOpen = overlay === 'navigation'
+  const searchOpen = overlay === 'search'
+  const menuTrigger = useRef<HTMLButtonElement>(null)
+  const searchTrigger = useRef<HTMLButtonElement>(null)
+  const sidebar = useRef<HTMLDivElement>(null)
+  const searchDialog = useRef<HTMLDivElement>(null)
 
   const currentProject = projects.find(p => p.id === Number(projectId))
   const isProjectBoard = location.pathname.includes('/projects/') && projectId
 
   const workspaceName = currentWorkspace?.name || 'Ossicone'
 
-  const closeSidebar = () => setSidebarOpen(false)
+  const closeOverlay = useCallback(() => setOverlay(null), [])
+
+  useEscapeKey(overlay !== null, closeOverlay)
+  useBodyScrollLock(overlay !== null)
+  useFocusTrap(sidebar, sidebarOpen, menuTrigger)
+  useFocusTrap(searchDialog, searchOpen, searchTrigger, 'input')
+
+  useEffect(() => {
+    if (!overlay) return
+
+    const desktop = window.matchMedia(overlay === 'navigation' ? '(min-width: 48rem)' : '(min-width: 40rem)')
+    const closeAtBreakpoint = () => {
+      if (desktop.matches) closeOverlay()
+    }
+
+    closeAtBreakpoint()
+    desktop.addEventListener('change', closeAtBreakpoint)
+    return () => desktop.removeEventListener('change', closeAtBreakpoint)
+  }, [overlay, closeOverlay])
 
   // Project-only nav items: a real link inside a project, disabled otherwise.
   const ProjectNavItem = ({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) => {
@@ -45,7 +73,7 @@ export const Layout = ({ children }: LayoutProps) => {
     return (
       <Link
         to={to}
-        onClick={closeSidebar}
+        onClick={closeOverlay}
         className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
           active
             ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -62,8 +90,8 @@ export const Layout = ({ children }: LayoutProps) => {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
-          onClick={closeSidebar}
+          className="fixed inset-0 z-60 bg-black/40 md:hidden"
+          onClick={closeOverlay}
           aria-hidden="true"
           data-testid="sidebar-backdrop"
         />
@@ -71,15 +99,30 @@ export const Layout = ({ children }: LayoutProps) => {
 
       {/* Left Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out md:static md:z-auto md:translate-x-0 md:transition-none ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        ref={sidebar}
+        role={sidebarOpen ? 'dialog' : undefined}
+        aria-modal={sidebarOpen ? true : undefined}
+        aria-label={sidebarOpen ? 'Navigation' : undefined}
+        tabIndex={sidebarOpen ? -1 : undefined}
+        className={`fixed inset-y-0 left-0 z-70 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out max-md:overflow-y-auto max-md:overscroll-contain md:static md:z-auto md:translate-x-0 md:transition-none ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full max-md:invisible'
         }`}
         data-testid="app-sidebar"
       >
+        {sidebarOpen && (
+          <button
+            type="button"
+            onClick={closeOverlay}
+            className="min-h-11 self-end px-4 text-sm text-gray-700 hover:bg-gray-100 md:hidden"
+            aria-label="Close navigation"
+          >
+            Close
+          </button>
+        )}
         {/* Workspace Header */}
         <Link
           to="/workspace"
-          onClick={closeSidebar}
+          onClick={closeOverlay}
           className="block p-4 border-b border-gray-200 hover:bg-gray-50"
           title="Workspace settings"
         >
@@ -103,7 +146,7 @@ export const Layout = ({ children }: LayoutProps) => {
           <div className="space-y-1">
                         <Link
               to="/projects"
-              onClick={closeSidebar}
+              onClick={closeOverlay}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/projects'
                   ? 'bg-gray-100 text-gray-900'
@@ -118,7 +161,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to="/search"
-              onClick={closeSidebar}
+              onClick={closeOverlay}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/search'
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -183,7 +226,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
             <Link
               to="/ai-agents"
-              onClick={closeSidebar}
+              onClick={closeOverlay}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
                 location.pathname === '/ai-agents'
                   ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
@@ -207,19 +250,26 @@ export const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0" inert={overlay !== null}>
         {/* Active Timer Display */}
         <ActiveTimerDisplay />
 
         {/* Top Header */}
         <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center justify-between max-md:relative">
+            <div className="flex items-center gap-1 sm:gap-4">
               {/* Mobile menu toggle */}
               <button
-                onClick={() => setSidebarOpen(open => !open)}
-                className="md:hidden w-8 h-8 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+                ref={menuTrigger}
+                type="button"
+                onClick={() => {
+                  setUserMenuOpen(false)
+                  setOverlay('navigation')
+                }}
+                className="md:hidden min-w-11 min-h-11 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
                 aria-label="Toggle navigation menu"
+                aria-haspopup="dialog"
+                aria-expanded={sidebarOpen}
                 data-testid="sidebar-toggle"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +278,7 @@ export const Layout = ({ children }: LayoutProps) => {
               </button>
               <Link to="/projects" className="flex items-center gap-2 text-xl font-bold text-blue-600">
                 <img src="/logo.png" alt="" className="w-7 h-7 rounded-md" />
-                Ossicone
+                <span className="sr-only sm:not-sr-only">Ossicone</span>
               </Link>
             </div>
 
@@ -240,11 +290,12 @@ export const Layout = ({ children }: LayoutProps) => {
               />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center gap-1 md:gap-3 ${styles.actions}`}>
               {location.pathname === '/projects' && (
                 <Link to="/projects/create">
                   <Button
                     variant="secondary"
+                    className="max-sm:px-2"
                     data-testid="create-project-button"
                   >
                     <span className="hidden sm:inline">Create Project</span>
@@ -252,14 +303,34 @@ export const Layout = ({ children }: LayoutProps) => {
                   </Button>
                 </Link>
               )}
+              <button
+                ref={searchTrigger}
+                type="button"
+                onClick={() => {
+                  setUserMenuOpen(false)
+                  setOverlay('search')
+                }}
+                className="sm:hidden min-w-11 min-h-11 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+                aria-label="Search"
+                aria-haspopup="dialog"
+                aria-expanded={searchOpen}
+                data-testid="mobile-search-toggle"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
               {/* Quick Actions in Header */}
               <QuickActions />
               <NotificationBell />
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => setUserMenuOpen(open => !open)}
                   className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-300"
                   title={user?.name}
+                  aria-label="User menu"
+                  aria-expanded={userMenuOpen}
                 >
                   <span className="text-sm font-medium text-blue-700">
                     {(user?.name || '?')
@@ -354,6 +425,36 @@ export const Layout = ({ children }: LayoutProps) => {
         {/* Page Content */}
         {children}
       </div>
+
+      {searchOpen && (
+        <div className="fixed inset-0 z-70 sm:hidden">
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" onClick={closeOverlay} />
+          <div
+            ref={searchDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search"
+            tabIndex={-1}
+            className="relative w-full bg-white p-3"
+            data-testid="mobile-search-dialog"
+          >
+            <button
+              type="button"
+              onClick={closeOverlay}
+              className="ml-auto mb-2 block min-h-11 rounded-md px-3 text-sm text-gray-700 hover:bg-gray-100"
+            >
+              Close
+            </button>
+            <GlobalSearch
+              onNavigate={(path) => {
+                closeOverlay()
+                window.location.href = path
+              }}
+              className="w-full"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
