@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { FormActionBar } from '../../components/FormActionBar'
 import { Button } from '../../components/ui/Button'
 import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
 import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
@@ -7,6 +8,12 @@ import { useProjects } from '../../hooks/useProjects'
 import { useUsers } from '../../hooks/useUsers'
 import { IssuesService } from '../../services/api/issues.service'
 import type { Issue, UpdateIssueRequest, IssueStatus, IssuePriority, IssueType } from '../../types/domain.types'
+
+// The breadcrumb is rendered immediately before the page by Layout.
+const mobileBreadcrumbClasses =
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)>ol]:min-w-0 ' +
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)>ol]:flex-wrap ' +
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)_li]:max-w-full'
 
 export const IssueEdit = () => {
   const { projectId, issueId } = useParams<{ projectId: string; issueId: string }>()
@@ -18,6 +25,14 @@ export const IssueEdit = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    }
+  }, [error])
 
   // Form state
   const [title, setTitle] = useState('')
@@ -39,6 +54,7 @@ export const IssueEdit = () => {
 
       try {
         setLoading(true)
+        setError(null)
         const issueData = await IssuesService.getById(Number(issueId))
         setIssue(issueData)
 
@@ -53,6 +69,7 @@ export const IssueEdit = () => {
         setTimeEstimate(issueData.estimate)
         setStoryPoints(issueData.storyPoints)
       } catch (err) {
+        setIssue(null)
         setError('Failed to load issue')
         console.error('Error fetching issue:', err)
       } finally {
@@ -80,6 +97,7 @@ export const IssueEdit = () => {
 
     try {
       setSaving(true)
+      setError(null)
       await IssuesService.update(issue.id, updates)
       navigate(`/projects/${projectId}/issues/${issueId}`)
     } catch (err) {
@@ -127,21 +145,31 @@ export const IssueEdit = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading issue...</p>
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading issue"
+        data-testid="issue-edit-loading"
+        className={`flex-1 bg-gray-50 motion-safe:animate-pulse ${mobileBreadcrumbClasses}`}
+      >
+        <div aria-hidden="true" className="border-b border-gray-200 bg-white px-4 py-3 md:px-6 md:py-4">
+          <div className="h-7 w-40 rounded bg-gray-200" />
+        </div>
+        <div aria-hidden="true" className="mx-auto max-w-4xl space-y-6 px-4 py-4 md:px-6 md:py-8">
+          <div className="h-24 rounded-lg border border-gray-200 bg-gray-100" />
+          <div className="h-48 rounded-lg border border-gray-200 bg-gray-100" />
+          <div className="h-24 rounded-lg border border-gray-200 bg-gray-100" />
         </div>
       </div>
     )
   }
 
-  if (error || !issue) {
+  if (!issue) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className={`min-h-screen bg-gray-50 flex items-center justify-center ${mobileBreadcrumbClasses}`}>
         <div className="text-center">
           <p className="text-red-600 mb-4">{error || 'Issue not found'}</p>
-          <Button onClick={() => navigate(`/projects/${projectId}`)}>
+          <Button className="max-md:min-h-11" onClick={() => navigate(`/projects/${projectId}`)}>
             Back to Board
           </Button>
         </div>
@@ -150,14 +178,14 @@ export const IssueEdit = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
+    <div className={`flex-1 flex flex-col bg-gray-50 ${mobileBreadcrumbClasses}`}>
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold text-gray-900">
+          <span className="min-w-0 wrap-anywhere text-xl font-bold text-gray-900">
             Edit Issue {currentProject?.key || 'TIS'}-{issue.id}
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-md:hidden">
             <Button
               type="button"
               variant="secondary"
@@ -178,11 +206,17 @@ export const IssueEdit = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-4 py-4 max-md:pb-24 md:px-6 md:py-8">
         <div className="max-w-4xl mx-auto">
+        {error && (
+          <div ref={errorRef} role="alert" className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
         <form id="issue-edit-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
               Title *
             </label>
@@ -191,14 +225,14 @@ export const IssueEdit = () => {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               placeholder="Enter issue title..."
               required
             />
           </div>
 
           {/* Description */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
@@ -207,7 +241,7 @@ export const IssueEdit = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               placeholder="Enter issue description..."
             />
           </div>
@@ -215,7 +249,7 @@ export const IssueEdit = () => {
           {/* Issue Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Status */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
@@ -223,7 +257,7 @@ export const IssueEdit = () => {
                 id="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as IssueStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -234,7 +268,7 @@ export const IssueEdit = () => {
             </div>
 
             {/* Priority */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
                 Priority
               </label>
@@ -242,7 +276,7 @@ export const IssueEdit = () => {
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as IssuePriority)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {priorityOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -253,7 +287,7 @@ export const IssueEdit = () => {
             </div>
 
             {/* Type */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
                 Type
               </label>
@@ -261,7 +295,7 @@ export const IssueEdit = () => {
                 id="type"
                 value={type}
                 onChange={(e) => setType(e.target.value as IssueType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {typeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -272,7 +306,7 @@ export const IssueEdit = () => {
             </div>
 
             {/* Assignee */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="assignee" className="block text-sm font-medium text-gray-700 mb-2">
                 Assignee
               </label>
@@ -280,7 +314,7 @@ export const IssueEdit = () => {
                 id="assignee"
                 value={assigneeId || ''}
                 onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -293,7 +327,7 @@ export const IssueEdit = () => {
           </div>
 
           {/* Labels */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Labels
             </label>
@@ -301,13 +335,13 @@ export const IssueEdit = () => {
               {labels.map((label, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-medium"
+                  className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-medium max-md:max-w-full"
                 >
-                  {label}
+                  <span className="max-md:min-w-0 max-md:wrap-anywhere">{label}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveLabel(label)}
-                    className="text-orange-600 hover:text-orange-800"
+                    className="text-orange-600 hover:text-orange-800 max-md:min-h-11"
                   >
                     ×
                   </button>
@@ -317,7 +351,7 @@ export const IssueEdit = () => {
             <input
               type="text"
               placeholder="Add a label and press Enter..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
@@ -329,8 +363,9 @@ export const IssueEdit = () => {
           </div>
 
           {/* Time Estimation */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <TimeInput
+              className="max-md:min-h-11 max-md:text-base"
               value={timeEstimate}
               onChange={setTimeEstimate}
               label="Time Estimate"
@@ -341,8 +376,9 @@ export const IssueEdit = () => {
           </div>
 
           {/* Story Point Estimate */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 max-md:[&_select]:min-h-11 max-md:[&_select]:text-base">
             <StoryPointInput
+              className="max-md:min-h-11 max-md:text-base"
               value={storyPoints}
               onChange={setStoryPoints}
               scale={estimationScale}
@@ -358,6 +394,14 @@ export const IssueEdit = () => {
         </form>
         </div>
       </div>
+      <FormActionBar
+        formId="issue-edit-form"
+        onCancel={handleCancel}
+        submitLabel="Save Changes"
+        savingLabel="Saving..."
+        saving={saving}
+        disabled={saving || !title.trim()}
+      />
     </div>
   )
 }

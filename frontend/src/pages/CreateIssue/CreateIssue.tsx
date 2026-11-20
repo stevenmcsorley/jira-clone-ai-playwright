@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { FormActionBar } from '../../components/FormActionBar'
 import { Button } from '../../components/ui/Button'
 import { StoryPointInput, type EstimationScale } from '../../components/StoryPointInput/StoryPointInput'
 import { TimeInput } from '../../components/ui/TimeInput/TimeInput'
@@ -8,6 +9,12 @@ import { useUsers } from '../../hooks/useUsers'
 import { useIssues } from '../../hooks/useIssues'
 import { useAuth } from '../../contexts/AuthContext'
 import type { IssueStatus, IssuePriority, IssueType } from '../../types/domain.types'
+
+// The breadcrumb is rendered immediately before the page by Layout.
+const mobileBreadcrumbClasses =
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)>ol]:min-w-0 ' +
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)>ol]:flex-wrap ' +
+  'max-md:[nav[aria-label=Breadcrumb]:has(+_&)_li]:max-w-full'
 
 export const CreateIssue = () => {
   const { projectId } = useParams<{ projectId: string }>()
@@ -21,6 +28,14 @@ export const CreateIssue = () => {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    }
+  }, [error])
 
   // Form state
   const [title, setTitle] = useState('')
@@ -107,7 +122,7 @@ export const CreateIssue = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4">Project not found</p>
-          <Button onClick={() => navigate('/')}>
+          <Button className="max-md:min-h-11" onClick={() => navigate('/')}>
             Back to Projects
           </Button>
         </div>
@@ -116,14 +131,14 @@ export const CreateIssue = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
+    <div className={`flex-1 flex flex-col bg-gray-50 ${mobileBreadcrumbClasses}`}>
       {/* Page Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="min-w-0 wrap-anywhere text-xl md:text-2xl font-bold text-gray-900">
             Create Issue
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-md:hidden">
             <Button
               type="button"
               variant="secondary"
@@ -145,17 +160,17 @@ export const CreateIssue = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto px-6 py-8">
+      <div className="flex-1 overflow-auto px-4 py-4 max-md:pb-24 md:px-6 md:py-8">
         <div className="max-w-4xl mx-auto">
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div ref={errorRef} role="alert" className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <p className="text-red-600">{error}</p>
           </div>
         )}
 
         <form id="create-issue-form" onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
               Title *
             </label>
@@ -164,7 +179,7 @@ export const CreateIssue = () => {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               placeholder="Enter issue title..."
               required
               autoFocus
@@ -172,7 +187,7 @@ export const CreateIssue = () => {
           </div>
 
           {/* Description */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
@@ -181,7 +196,7 @@ export const CreateIssue = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               placeholder="Enter issue description..."
             />
           </div>
@@ -189,7 +204,7 @@ export const CreateIssue = () => {
           {/* Issue Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Status */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
@@ -197,7 +212,7 @@ export const CreateIssue = () => {
                 id="status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as IssueStatus)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -208,7 +223,7 @@ export const CreateIssue = () => {
             </div>
 
             {/* Priority */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
                 Priority
               </label>
@@ -216,7 +231,7 @@ export const CreateIssue = () => {
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as IssuePriority)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {priorityOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -227,7 +242,7 @@ export const CreateIssue = () => {
             </div>
 
             {/* Type */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
                 Type
               </label>
@@ -235,7 +250,7 @@ export const CreateIssue = () => {
                 id="type"
                 value={type}
                 onChange={(e) => setType(e.target.value as IssueType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 {typeOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -246,7 +261,7 @@ export const CreateIssue = () => {
             </div>
 
             {/* Assignee */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
               <label htmlFor="assignee" className="block text-sm font-medium text-gray-700 mb-2">
                 Assignee
               </label>
@@ -254,7 +269,7 @@ export const CreateIssue = () => {
                 id="assignee"
                 value={assigneeId || ''}
                 onChange={(e) => setAssigneeId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               >
                 <option value="">Unassigned</option>
                 {users.map((user) => (
@@ -267,7 +282,7 @@ export const CreateIssue = () => {
           </div>
 
           {/* Labels */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Labels
             </label>
@@ -275,13 +290,13 @@ export const CreateIssue = () => {
               {labels.map((label, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-medium"
+                  className="inline-flex items-center gap-1 text-sm px-3 py-1 rounded-full bg-orange-100 text-orange-800 font-medium max-md:max-w-full"
                 >
-                  {label}
+                  <span className="max-md:min-w-0 max-md:wrap-anywhere">{label}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveLabel(label)}
-                    className="text-orange-600 hover:text-orange-800"
+                    className="text-orange-600 hover:text-orange-800 max-md:min-h-11"
                   >
                     ×
                   </button>
@@ -291,7 +306,7 @@ export const CreateIssue = () => {
             <input
               type="text"
               placeholder="Add a label and press Enter..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:text-base"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
@@ -303,8 +318,9 @@ export const CreateIssue = () => {
           </div>
 
           {/* Time Estimation */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6">
             <TimeInput
+              className="max-md:min-h-11 max-md:text-base"
               value={timeEstimate}
               onChange={setTimeEstimate}
               label="Time Estimate"
@@ -314,8 +330,9 @@ export const CreateIssue = () => {
           </div>
 
           {/* Story Point Estimate */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-4 md:p-6 max-md:[&_select]:min-h-11 max-md:[&_select]:text-base">
             <StoryPointInput
+              className="max-md:min-h-11 max-md:text-base"
               value={storyPoints}
               onChange={setStoryPoints}
               scale={estimationScale}
@@ -330,6 +347,14 @@ export const CreateIssue = () => {
         </form>
         </div>
       </div>
+      <FormActionBar
+        formId="create-issue-form"
+        onCancel={handleCancel}
+        submitLabel="Create Issue"
+        savingLabel="Creating..."
+        saving={saving}
+        disabled={saving || !title.trim()}
+      />
     </div>
   )
 }
