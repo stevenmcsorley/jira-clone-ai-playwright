@@ -1,16 +1,14 @@
-import { hueFromKey, initials } from "../../utils/projectStats";
+import { initials } from "../../utils/projectStats";
 
 interface ProjectAvatarProps {
-  projectKey: string;
   name: string;
   className?: string;
 }
 
-export const ProjectAvatar = ({ projectKey, name, className }: ProjectAvatarProps) => (
+export const ProjectAvatar = ({ name, className }: ProjectAvatarProps) => (
   <span
     aria-hidden="true"
-    className={["flex size-10 shrink-0 items-center justify-center rounded-lg px-1 text-xs font-semibold text-white", className].filter(Boolean).join(" ")}
-    style={{ backgroundColor: `hsl(${hueFromKey(projectKey)} 60% 38%)` }}
+    className={["flex size-9 shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700", className].filter(Boolean).join(" ")}
   >
     {initials(name)}
   </span>

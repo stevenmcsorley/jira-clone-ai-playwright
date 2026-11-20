@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, '../src/utils/projectStats.t
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
 const context = { exports: {} }
 vm.runInNewContext(compiled, context)
-const { statusCounts, doneRatio, activitySeries, hueFromKey, initials, sparklinePoints, updatedLabel } = context.exports
+const { statusCounts, doneRatio, activitySeries, hueFromKey, initials, sparklinePoints, updatedLabel, displayName, formatUpdated, progressSegments } = context.exports
 
 test('empty and missing issues produce zero counts, progress and activity', () => {
   for (const issues of [undefined, []]) {
@@ -78,4 +78,46 @@ test('updated labels use the supplied clock and fall back to a local date at one
     assert.equal(updatedLabel(date.toISOString(), date.getTime() + elapsed), expected)
   }
   assert.equal(updatedLabel('invalid', date.getTime()), '')
+})
+
+test('lead display names preserve names and humanize email local parts', () => {
+  assert.equal(displayName({ email: 'smcsorl@sky.com' }), 'Smcsorl')
+  assert.equal(displayName({ email: 'jane.doe@x.com' }), 'Jane Doe')
+  assert.equal(displayName({ name: '  Steven McSorley  ', email: 'other@x.com' }), 'Steven McSorley')
+  assert.equal(displayName({ name: 'jane_mary-doe@x.com' }), 'Jane Mary Doe')
+  assert.equal(displayName({ name: '@x.com', email: 'jane.doe@x.com' }), 'Jane Doe')
+  for (const person of [{ name: ' ', email: '' }, {}, null, undefined]) {
+    assert.equal(displayName(person), '')
+  }
+})
+
+test('updated dates switch from relative to abbreviated calendar dates at seven days', () => {
+  const date = new Date(2026, 9, 7, 12)
+  const day = 86_400_000
+  for (const [elapsed, expected] of [
+    [59_999, 'just now'],
+    [5 * 60_000, '5m ago'],
+    [3 * 3_600_000, '3h ago'],
+    [4 * day, '4d ago'],
+    [7 * day - 1, '6d ago'],
+    [7 * day, 'Oct 7'],
+  ]) {
+    assert.equal(formatUpdated(date, date.getTime() + elapsed), expected)
+  }
+  const nextYear = new Date(2027, 0, 1, 12).getTime()
+  assert.equal(formatUpdated(date.toISOString(), nextYear), 'Oct 7, 2026')
+  assert.equal(formatUpdated('invalid', nextYear), '')
+})
+
+test('progress segments assign the rounding remainder to the track', () => {
+  const segments = progressSegments({ total: 6, done: 1, code_review: 1, in_progress: 1, todo: 3 })
+  assert.deepEqual({ ...segments }, { done: 16, review: 16, progress: 16, rest: 52 })
+  assert.equal(Object.values(segments).reduce((sum, segment) => sum + segment, 0), 100)
+  for (const [total, done, expected] of [
+    [0, 0, { done: 0, review: 0, progress: 0, rest: 0 }],
+    [5, 5, { done: 100, review: 0, progress: 0, rest: 0 }],
+    [5, 0, { done: 0, review: 0, progress: 0, rest: 100 }],
+  ]) {
+    assert.deepEqual({ ...progressSegments({ total, done, code_review: 0, in_progress: 0 }) }, expected)
+  }
 })

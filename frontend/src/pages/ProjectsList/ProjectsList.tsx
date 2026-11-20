@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigationType, useSearchParams } from "react-router-dom";
 import { Pagination } from "../../components/Pagination";
-import { ProjectCard } from "../../components/ProjectCard";
+import { ProjectCard, ProjectListHeader, projectListClass } from "../../components/ProjectCard";
 import { ProjectsSkeleton } from "../../components/ProjectsToolbar/ProjectsSkeleton";
 import { ProjectsToolbar } from "../../components/ProjectsToolbar/ProjectsToolbar";
 import { Button } from "../../components/ui/Button";
@@ -12,10 +12,9 @@ import type { ProjectSortId } from "../../utils/projectSort";
 
 // Scope shared header adjustments to the Projects page.
 const mobileHeader =
-  "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2 max-md:[header:has(~_&)_[data-testid=create-project-button]]:min-h-11";
+  "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2";
 
 const PROJECTS_PAGE_SIZE = 12;
-const projectGrid = "grid grid-cols-1 gap-4";
 const sortStorageKey = "ossicone.projects.sort";
 
 const readStoredSort = () => {
@@ -92,9 +91,9 @@ export const ProjectsList = () => {
         <div className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Projects</h1>
               <p className="mt-2 text-gray-600">
-                Choose a project to view its kanban board and manage issues.
+                Pick a project to open its board.
               </p>
             </div>
             <Link to="/projects/create">
@@ -105,10 +104,10 @@ export const ProjectsList = () => {
           </div>
         </div>
 
-        {loading && <ProjectsSkeleton className={projectGrid} />}
+        {loading && <ProjectsSkeleton />}
 
         {!loading && error && (
-          <div role="alert" className="rounded-xl border border-red-200 bg-white p-4">
+          <div role="alert" className="rounded-xl border border-gray-200 bg-white p-4">
             <p className="mb-3 text-gray-900">Could not load projects. Please try again.</p>
             <Button data-testid="projects-retry" onClick={() => void refetch()}>Try again</Button>
           </div>
@@ -127,8 +126,11 @@ export const ProjectsList = () => {
 
         {!loading && !error && visibleProjects.length > 0 && (
           <>
-            <div ref={listRef} className={projectGrid}>
-              {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+            <div ref={listRef} className={projectListClass}>
+              <ProjectListHeader />
+              <div className="divide-y divide-gray-200">
+                {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+              </div>
             </div>
             <Pagination page={page} pageCount={pageCount} onPageChange={changePage} className="mt-4" />
           </>
@@ -164,9 +166,6 @@ export const ProjectsList = () => {
             <p className="mb-4 text-gray-600">
               Get started by creating your first project.
             </p>
-            <Link to="/projects/create">
-              <Button>Create Your First Project</Button>
-            </Link>
           </div>
         )}
       </main>
