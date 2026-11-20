@@ -5,10 +5,10 @@ const path = require('node:path')
 const ts = require('typescript')
 const vm = require('node:vm')
 
-const loadHelper = (name, imports = {}) => {
+const loadHelper = (name, imports = {}, searchParams = URLSearchParams) => {
   const source = fs.readFileSync(path.join(__dirname, '../src/utils', name + '.ts'), 'utf8')
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
-  const context = { exports: {}, URLSearchParams, require: (id) => imports[id] }
+  const context = { exports: {}, URLSearchParams: searchParams, require: (id) => imports[id] }
   vm.runInNewContext(compiled, context)
   return context.exports
 }
@@ -121,4 +121,27 @@ test('serializes URL state without defaults', () => {
   assert.equal(listStateToSearch({ q: 'api tools', sort: 'updated' }), '?q=api+tools')
   assert.equal(listStateToSearch({ q: '', sort: 'active' }), '?sort=active')
   assert.equal(listStateToSearch({ q: 'a&b', sort: 'open' }), '?q=a%26b&sort=open')
+})
+
+test('serializes URL state using set and toString when URLSearchParams has no size', () => {
+  class LegacySearchParams {
+    #params = new URLSearchParams()
+
+    set(name, value) {
+      this.#params.set(name, value)
+    }
+
+    toString() {
+      return this.#params.toString()
+    }
+
+    [Symbol.toPrimitive]() {
+      assert.fail('expected an explicit call to toString()')
+    }
+  }
+
+  assert.equal('size' in new LegacySearchParams(), false)
+  const { listStateToSearch } = loadHelper('projectSort', { './projectStats': loadHelper('projectStats') }, LegacySearchParams)
+  assert.equal(listStateToSearch({ q: 'a&b', sort: 'open' }), '?q=a%26b&sort=open')
+  assert.equal(listStateToSearch({ q: '', sort: 'updated' }), '')
 })

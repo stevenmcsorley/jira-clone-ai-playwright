@@ -14,6 +14,7 @@ export const Sparkline = ({ values, className }: SparklineProps) => {
       width={80}
       height={24}
       viewBox="0 0 80 24"
+      preserveAspectRatio="none"
       role="img"
       aria-label={`Issue activity over the last ${values.length} days: ${changes} ${changes === 1 ? "change" : "changes"}`}
     >

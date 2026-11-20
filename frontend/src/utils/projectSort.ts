@@ -101,5 +101,6 @@ export const listStateToSearch = ({ q, sort }: ListState): string => {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (sort !== "updated") params.set("sort", sort);
-  return params.size ? `?${params}` : "";
+  const text = params.toString();
+  return text ? `?${text}` : "";
 };

@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, '../src/utils/projectStats.t
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
 const context = { exports: {} }
 vm.runInNewContext(compiled, context)
-const { statusCounts, doneRatio, activitySeries, hueFromKey, initials, sparklinePoints } = context.exports
+const { statusCounts, doneRatio, activitySeries, hueFromKey, initials, sparklinePoints, updatedLabel } = context.exports
 
 test('empty and missing issues produce zero counts, progress and activity', () => {
   for (const issues of [undefined, []]) {
@@ -62,4 +62,20 @@ test('sparkline scales to the peak and returns flat lines for zero and single sa
   assert.equal(sparklinePoints([5], 80, 24), '2,2 78,2')
   assert.equal(sparklinePoints([0, 2, 4], 80, 24), '2,22 40,12 78,2')
   assert.doesNotMatch(sparklinePoints([NaN, Infinity, 4], 80, 24), /NaN/)
+})
+
+test('updated labels use the supplied clock and fall back to a local date at one week', () => {
+  const date = new Date('2026-11-20T14:00:00Z')
+  for (const [elapsed, expected] of [
+    [59_999, 'just now'],
+    [60_000, '1m ago'],
+    [3_600_000, '1h ago'],
+    [3 * 86_400_000, '3d ago'],
+    [7 * 86_400_000 - 1, '6d ago'],
+    [7 * 86_400_000, date.toLocaleDateString()],
+    [8 * 86_400_000, date.toLocaleDateString()],
+  ]) {
+    assert.equal(updatedLabel(date.toISOString(), date.getTime() + elapsed), expected)
+  }
+  assert.equal(updatedLabel('invalid', date.getTime()), '')
 })
