@@ -1,0 +1,17 @@
+@media (width < 48rem) {
+  /* Anchor the existing action menus to the header row on narrow screens. */
+  .actions > div {
+    position: static;
+  }
+
+  .actions > div > button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .actions > div > div {
+    right: 0;
+    max-width: calc(100vw - 1.5rem);
+    overflow-wrap: anywhere;
+  }
+}
