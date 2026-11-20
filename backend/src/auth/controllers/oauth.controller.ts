@@ -13,11 +13,6 @@ export class OAuthController {
     return { resource: oauthResource(), authorization_servers: [oauthSite()], scopes_supported: ['mcp'], bearer_methods_supported: ['header'] }
   }
   @Public()
-  @Get('.well-known/oauth-protected-resource/mcp-code')
-  resourceCode() {
-    return { resource: `${oauthSite()}/mcp-code`, authorization_servers: [oauthSite()], scopes_supported: ['mcp'], bearer_methods_supported: ['header'] }
-  }
-  @Public()
   @Get('.well-known/oauth-authorization-server')
   metadata() {
     return { issuer: oauthSite(), authorization_endpoint: `${oauthSite()}/oauth/authorize`,
