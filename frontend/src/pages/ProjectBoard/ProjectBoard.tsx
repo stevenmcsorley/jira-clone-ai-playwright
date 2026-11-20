@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ProjectDescription } from '../../components/ProjectDescription/ProjectDescription'
+import { tidyDescription } from '../../utils/projectDescription'
 import { BoardSkeleton } from '../../components/BoardSkeleton'
 import { KanbanBoard } from '../../components/KanbanBoard'
 import {
@@ -187,11 +189,21 @@ export const ProjectBoard = () => {
             </h1>
             {activeSprint ? (
               <div data-testid="active-sprint-info">
-                <p className="text-sm text-gray-600 mt-1 max-md:wrap-anywhere" data-testid="sprint-details">
-                  {activeSprint.goal && `Goal: ${activeSprint.goal}`}
+                {tidyDescription(activeSprint.goal) && (
+                  <div className="mt-2 min-w-0 max-w-prose wrap-anywhere">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Sprint goal</p>
+                    <ProjectDescription
+                      idPrefix="sprint-goal"
+                      projectId={activeSprint.id}
+                      lines={2}
+                      description={activeSprint.goal}
+                    />
+                  </div>
+                )}
+                <p className="text-sm text-gray-600 mt-1" data-testid="sprint-details">
                   {activeSprint.issues.length === 0
-                    ? ' • No issues in this sprint'
-                    : ` • ${activeSprint.issues.length} issues`
+                    ? 'No issues in this sprint'
+                    : `${activeSprint.issues.length} issues`
                   }
                 </p>
                 {(activeSprint.startDate || activeSprint.endDate) && (
