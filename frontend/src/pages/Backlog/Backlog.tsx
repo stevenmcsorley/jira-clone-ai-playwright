@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { ProjectDescription } from '../../components/ProjectDescription/ProjectDescription'
+import { tidyDescription } from '../../utils/projectDescription'
+import { goalCounter, SPRINT_GOAL_MAX } from '../../utils/sprintGoal'
 import { Button } from '../../components/ui/Button'
 import { SprintsService, type Sprint } from '../../services/api/sprints.service'
 import { useProjects } from '../../hooks/useProjects'
@@ -32,6 +35,7 @@ export const Backlog = () => {
   const [customDuration, setCustomDuration] = useState('')
   const [showClosedSprints, setShowClosedSprints] = useState(false)
 
+  const sprintGoalCounter = goalCounter(newSprintGoal)
   const currentProject = projects.find(p => p.id === Number(projectId))
 
   const fetchData = async (showLoadingState = true) => {
@@ -362,9 +366,18 @@ export const Backlog = () => {
                     id="sprintGoal"
                     value={newSprintGoal}
                     onChange={(e) => setNewSprintGoal(e.target.value)}
-                    placeholder="What is the goal of this sprint?"
+                    placeholder="One short sentence, e.g. Ship the new onboarding flow"
+                    maxLength={SPRINT_GOAL_MAX}
+                    aria-describedby="sprintGoalCounter"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <p
+                    id="sprintGoalCounter"
+                    aria-live="polite"
+                    className={`mt-1 text-xs ${sprintGoalCounter.nearLimit ? 'text-amber-600' : 'text-gray-500'}`}
+                  >
+                    {sprintGoalCounter.text}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button type="submit" disabled={creating || !newSprintName.trim()}>
@@ -430,10 +443,16 @@ export const Backlog = () => {
                     )}
                   </div>
                 </div>
-                {sprint.goal && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    <strong>Goal:</strong> {sprint.goal}
-                  </p>
+                {tidyDescription(sprint.goal) && (
+                  <div className="mt-2 min-w-0 max-w-prose wrap-anywhere">
+                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Sprint goal</p>
+                    <ProjectDescription
+                      idPrefix="backlog-sprint-goal"
+                      projectId={sprint.id}
+                      lines={2}
+                      description={sprint.goal}
+                    />
+                  </div>
                 )}
                 {(sprint.startDate || sprint.endDate) && (
                   <p className="text-sm text-gray-600 mt-1">
@@ -811,7 +830,7 @@ export const Backlog = () => {
                               </span>
                             )}
                             {sprint.goal && (
-                              <span className="italic">"{sprint.goal}"</span>
+                              <span className="min-w-0 truncate" title={sprint.goal}>{sprint.goal}</span>
                             )}
                           </div>
                         </div>

@@ -6,15 +6,19 @@ interface ProjectDescriptionProps {
   projectId: string | number;
   description?: string | null;
   className?: string;
+  idPrefix?: string;
+  lines?: 2 | 3;
 }
 
 export const ProjectDescription = ({
   projectId,
   description,
   className,
+  idPrefix = "project-description",
+  lines = 3,
 }: ProjectDescriptionProps) => {
   const text = tidyDescription(description);
-  const descriptionId = `project-description-${projectId}`;
+  const descriptionId = `${idPrefix}-${projectId}`;
   const previewRef = useRef<HTMLParagraphElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [truncated, setTruncated] = useState(false);
@@ -30,7 +34,7 @@ export const ProjectDescription = ({
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [text, expanded]);
+  }, [text, expanded, lines]);
 
   if (!text) return null;
 
@@ -50,7 +54,7 @@ export const ProjectDescription = ({
             ))}
           </div>
         ) : (
-          <p ref={previewRef} className="line-clamp-2">{text}</p>
+          <p ref={previewRef} className={lines === 2 ? "line-clamp-2" : "line-clamp-3"}>{text}</p>
         )}
       </div>
       {(expanded || truncated) && (
@@ -58,7 +62,7 @@ export const ProjectDescription = ({
           type="button"
           aria-expanded={expanded}
           aria-controls={descriptionId}
-          data-testid={`project-description-toggle-${projectId}`}
+          data-testid={`${idPrefix}-toggle-${projectId}`}
           onClick={handleToggle}
           className="min-h-11 rounded px-1 text-blue-700 hover:underline focus-visible:ring-2 focus-visible:ring-blue-600 sm:min-h-0"
         >
