@@ -13,6 +13,8 @@ import { useTimerManager } from '../../hooks/useTimerManager';
 import { TimeTrackingService } from '../../services/api/time-tracking.service';
 import { TimeProgressIndicator } from '../TimeProgressBar';
 import { IssueTypeIcon } from '../IssueTypeIcon';
+import { CardMoveMenu } from './CardMoveMenu';
+import { BOARD_STATUSES, moveAnnouncement } from '../../utils/boardMove';
 import {
   BoardFilterBar,
   issueMatchesFilters,
@@ -46,6 +48,7 @@ const XStateIssueCard = ({
   isOptimistic,
   onDragStart,
   onDragEnd,
+  onMove,
   projectId
 }: {
   issue: Issue;
@@ -53,6 +56,7 @@ const XStateIssueCard = ({
   isOptimistic: boolean;
   onDragStart: (issue: Issue) => void;
   onDragEnd: () => void;
+  onMove: (issue: Issue, targetStatus: IssueStatus) => void;
   projectId: string;
 }) => {
   const metrics = useIssueMetrics(issue.id);
@@ -104,11 +108,14 @@ const XStateIssueCard = ({
       )}
 
       {/* Title */}
-      <Link to={`/projects/${projectId}/issues/${issue.id}`}>
-        <h3 className="font-medium text-gray-900 mb-3 hover:text-blue-600 text-sm cursor-pointer">
-          {issue.title}
-        </h3>
-      </Link>
+      <div className="flex items-start justify-between gap-2">
+        <Link to={`/projects/${projectId}/issues/${issue.id}`} className="min-w-0 flex-1">
+          <h3 className="font-medium text-gray-900 mb-3 hover:text-blue-600 text-sm cursor-pointer break-words">
+            {issue.title}
+          </h3>
+        </Link>
+        <CardMoveMenu issue={issue} onMove={onMove} className="shrink-0" />
+      </div>
 
       {/* Labels */}
       {issue.labels && issue.labels.length > 0 && (
@@ -228,6 +235,7 @@ const XStateColumn = ({
   onDrop,
   onDragStart,
   onDragEnd,
+  onMove,
   projectId,
   columnStats
 }: {
@@ -239,6 +247,7 @@ const XStateColumn = ({
   onDrop: (status: IssueStatus, targetIndex?: number) => void;
   onDragStart: (issue: Issue) => void;
   onDragEnd: () => void;
+  onMove: (issue: Issue, targetStatus: IssueStatus) => void;
   projectId: string;
   columnStats: { count: number; optimistic: number };
 }) => {
@@ -333,6 +342,7 @@ const XStateColumn = ({
               isOptimistic={optimisticUpdates.has(issue.id)}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
+              onMove={onMove}
               projectId={projectId}
             />
 
@@ -378,6 +388,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
 }) => {
   const { projectId: urlProjectId } = useParams<{ projectId: string }>();
   const projectIdStr = urlProjectId || projectId.toString();
+  const [announcement, setAnnouncement] = React.useState('');
 
   // Initialize XState Kanban machine
   const {
@@ -424,8 +435,8 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
   }), [issuesByStatus, filters]);
 
   // Enhanced drop function that integrates timer tracking
-  const enhancedDropIssue = useCallback(async (targetStatus: IssueStatus, targetIndex?: number) => {
-    const draggedIssue = machine.context.draggedIssue;
+  const enhancedDropIssue = useCallback(async (targetStatus: IssueStatus, targetIndex?: number, issue?: Issue) => {
+    const draggedIssue = issue ?? machine.context.draggedIssue;
     if (!draggedIssue) return;
 
     // When filters hide cards, the drop index refers to the *visible* list —
@@ -448,8 +459,19 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
     handleIssueStatusChange(draggedIssue.id, targetStatus, draggedIssue.estimate);
 
     // Perform the actual drop operation
-    await dropIssue(targetStatus, mappedIndex);
+    return dropIssue(targetStatus, mappedIndex, issue);
   }, [dropIssue, handleIssueStatusChange, machine.context.draggedIssue, filtersActive, issuesByStatus, visibleIssuesByStatus]);
+
+  const handleMove = async (issue: Issue, targetStatus: IssueStatus) => {
+    if (!machine.state.can({ type: 'DRAG_START', issue })) return;
+    const target = BOARD_STATUSES.find(({ id }) => id === targetStatus);
+    if (!target) return;
+
+    setAnnouncement('');
+    if (await enhancedDropIssue(targetStatus, visibleIssuesByStatus[targetStatus].length, issue)) {
+      setAnnouncement(moveAnnouncement(issue.title, target.label));
+    }
+  };
 
   // Handle external issue updates (from props)
   useEffect(() => {
@@ -466,6 +488,9 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
 
   return (
     <div className={`${className}`} data-testid="xstate-kanban">
+      <div className="sr-only" role="status" aria-live="polite" data-testid="board-move-status">
+        {announcement}
+      </div>
       {/* Project Header with State Information */}
       <div className="mb-6" data-testid="xstate-project-header">
         <div className="flex items-center justify-between mb-2">
@@ -583,6 +608,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
+            onMove={handleMove}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
@@ -595,6 +621,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
+            onMove={handleMove}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
@@ -607,6 +634,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
+            onMove={handleMove}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}
@@ -619,6 +647,7 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
             draggedIssue={draggedIssue}
             optimisticUpdates={optimisticUpdates}
             onDrop={enhancedDropIssue}
+            onMove={handleMove}
             onDragStart={startDrag}
             onDragEnd={endDrag}
             projectId={projectIdStr}

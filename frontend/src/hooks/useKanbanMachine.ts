@@ -38,7 +38,7 @@ export const useKanbanMachine = ({
   // (a v4-era pattern); it was already ignored at runtime — the machine starts
   // with its own initial context and issues are fed in via LOAD_ISSUES below.
   // The cast keeps the legacy call shape without changing behavior.
-  const [state, send] = useMachine(kanbanMachine, {
+  const [state, send, actor] = useMachine(kanbanMachine, {
     context: {
       issues: initialIssues,
       draggedIssue: null,
@@ -107,9 +107,24 @@ export const useKanbanMachine = ({
       send({ type: 'DRAG_END' });
     },
 
-    dropIssue: async (targetStatus: IssueStatus, targetIndex?: number) => {
-      const draggedIssue = state.context.draggedIssue;
-      if (!draggedIssue) return;
+    dropIssue: async (targetStatus: IssueStatus, targetIndex?: number, issue?: Issue) => {
+      const draggedIssue = issue ?? state.context.draggedIssue;
+      if (!draggedIssue) return false;
+
+      let position: number | undefined;
+      if (issue) {
+        const snapshot = actor.getSnapshot();
+        const start = { type: 'DRAG_START', issue } as const;
+        if (!snapshot.can(start)) return false;
+
+        // The machine preserves array order and ignores targetIndex. Menu moves
+        // append to the destination, including cards hidden by board filters.
+        const precedingIssues: (Issue & { position?: number })[] = snapshot.context.issues
+          .filter(card => card.status === targetStatus)
+          .slice(0, targetIndex);
+        position = precedingIssues.reduce((max, card) => Math.max(max, card.position ?? 0), 0) + 1;
+        send(start);
+      }
 
       // Flag this as a local mutation so the websocket echo of our own PUT
       // doesn't trigger a disruptive board refetch/remount (see ProjectBoard).
@@ -123,9 +138,8 @@ export const useKanbanMachine = ({
       });
 
       try {
-        const updatedIssue = await IssuesService.update(draggedIssue.id, {
-          status: targetStatus
-        });
+        const updates = position === undefined ? { status: targetStatus } : { status: targetStatus, position };
+        const updatedIssue = await IssuesService.update(draggedIssue.id, updates);
 
         // Re-mark after the PUT resolves — the echo arrives after this point.
         markLocalMutation();
@@ -136,6 +150,11 @@ export const useKanbanMachine = ({
           issueId: draggedIssue.id,
           updatedIssue
         });
+        if (issue) {
+          const issues = actor.getSnapshot().context.issues.filter(card => card.id !== issue.id);
+          send({ type: 'LOAD_ISSUES', issues: [...issues, updatedIssue] });
+        }
+        return true;
       } catch (error) {
         // Handle failure in state machine
         send({
@@ -143,6 +162,7 @@ export const useKanbanMachine = ({
           issueId: draggedIssue.id,
           error: error instanceof Error ? error.message : 'Update failed'
         });
+        return false;
       }
     },
 
@@ -208,7 +228,7 @@ export const useKanbanMachine = ({
         });
       }
     }
-  }), [state.context.draggedIssue, send, refetch]);
+  }), [state.context.draggedIssue, actor, send, refetch]);
 
   // Enhanced state selectors
   const selectors = useMemo(() => ({
