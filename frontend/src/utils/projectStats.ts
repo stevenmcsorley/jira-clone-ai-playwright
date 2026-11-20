@@ -29,6 +29,22 @@ export const doneRatio = (issues?: readonly { status: string }[]) => {
 
 const millisecondsPerDay = 86_400_000;
 
+export const updatedLabel = (dateString: string | Date, now = Date.now()): string => {
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const elapsed = now - date.getTime();
+  const minutes = Math.floor(elapsed / 60_000);
+  const hours = Math.floor(elapsed / 3_600_000);
+  const days = Math.floor(elapsed / millisecondsPerDay);
+
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString();
+};
+
 const utcDay = (date: string | Date | undefined) =>
   date == null ? NaN : Math.floor(new Date(date).getTime() / millisecondsPerDay);
 

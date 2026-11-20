@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Project } from "../../types/domain.types";
-import { activitySeries, initials, statusCounts } from "../../utils/projectStats";
-import { formatRelativeTime } from "../../utils/relativeTime";
+import { activitySeries, initials, statusCounts, updatedLabel } from "../../utils/projectStats";
 import { ProjectDescription } from "../ProjectDescription";
 import { Card } from "../ui/Card";
 import { ProjectAvatar } from "./ProjectAvatar";
@@ -16,21 +15,22 @@ interface ProjectCardProps {
 export const ProjectCard = ({ project, className }: ProjectCardProps) => {
   const counts = statusCounts(project.issues);
   const leadName = project.lead?.name?.trim();
+  const updated = updatedLabel(project.updatedAt);
   const nameId = `project-name-${project.id}`;
 
   return (
     <Card
       padding={false}
-      className={["relative grid min-w-0 grid-rows-[auto_auto_1fr] shadow-sm transition-shadow hover:shadow-md", className].filter(Boolean).join(" ")}
+      className={["relative grid min-w-0 grid-rows-[auto_auto_auto_1fr] shadow-sm transition-[translate,box-shadow] hover:shadow-md motion-safe:hover:-translate-y-0.5 lg:grid-cols-[minmax(0,8fr)_minmax(0,7fr)_minmax(0,5fr)] lg:grid-rows-[auto_1fr] lg:gap-x-6", className].filter(Boolean).join(" ")}
     >
       <Link
         to={`/projects/${project.id}`}
         data-testid={`project-card-${project.id}`}
         aria-labelledby={nameId}
-        className="col-start-1 row-span-3 row-start-1 grid min-w-0 grid-rows-subgrid rounded-xl p-4 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+        className="col-start-1 row-span-4 row-start-1 grid min-w-0 grid-rows-subgrid rounded-xl p-4 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 lg:col-span-3 lg:row-span-2 lg:grid-cols-subgrid"
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <ProjectAvatar projectKey={project.key} />
+        <div className="flex min-w-0 items-center gap-3 lg:col-start-1 lg:row-start-1">
+          <ProjectAvatar projectKey={project.key} name={project.name} />
           <div className="min-w-0">
             <h2 id={nameId} className="truncate font-semibold text-gray-900" title={project.name}>
               {project.name}
@@ -41,7 +41,7 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
           </div>
         </div>
 
-        <div className="row-start-3 flex min-w-0 flex-col gap-3 pt-3">
+        <div className="row-start-3 flex min-w-0 flex-col gap-3 pt-3 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:w-full lg:max-w-md lg:self-center lg:pt-0">
           {counts.total > 0 ? (
             <>
               <div className="space-y-1.5">
@@ -62,21 +62,23 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
           ) : (
             <p className="text-sm text-gray-500">No issues yet</p>
           )}
+        </div>
 
-          <div className="mt-auto flex min-w-0 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-600">
-            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-              {leadName && (
-                <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800">
-                  {initials(leadName)}
-                </span>
-              )}
-              <span className="truncate" title={leadName}>{leadName || "No lead"}</span>
-            </div>
-            {counts.total > 0 && <Sparkline values={activitySeries(project.issues)} />}
-            <time className="shrink-0" title={new Date(project.updatedAt).toLocaleString()}>
-              Updated {formatRelativeTime(project.updatedAt)}
-            </time>
+        <div className="row-start-4 mt-3 flex min-w-0 items-center gap-2 border-t border-gray-100 pt-3 text-xs text-gray-600 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:flex-col lg:mt-0 lg:items-end lg:justify-center lg:border-0 lg:pt-0">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 lg:max-w-full lg:flex-none">
+            {leadName && (
+              <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-100 font-medium text-blue-800">
+                {initials(leadName)}
+              </span>
+            )}
+            <span className="truncate" title={leadName}>{leadName || "No lead"}</span>
           </div>
+          {counts.total > 0 && <Sparkline values={activitySeries(project.issues)} className="lg:order-first lg:h-9 lg:w-35 lg:max-w-full" />}
+          {updated && (
+            <time className="shrink-0" title={new Date(project.updatedAt).toLocaleString()}>
+              Updated {updated}
+            </time>
+          )}
         </div>
       </Link>
 
@@ -84,7 +86,7 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
       <ProjectDescription
         projectId={project.id}
         description={project.description}
-        className="pointer-events-none relative col-start-1 row-start-2 min-w-0 px-4 [&_button]:pointer-events-auto"
+        className="pointer-events-none relative col-start-1 row-start-2 min-w-0 px-4 lg:pr-0 [&_button]:pointer-events-auto"
       />
     </Card>
   );

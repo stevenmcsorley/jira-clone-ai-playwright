@@ -8,11 +8,11 @@ import { useProjects } from "../../hooks/useProjects";
 import { filterProjects, listStateToSearch, parseListState, sortProjects } from "../../utils/projectSort";
 import type { ProjectSortId } from "../../utils/projectSort";
 
-// Allow the shared header controls to wrap on narrow Projects screens.
-const wrapMobileHeader =
-  "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2";
+// Scope shared header adjustments to the Projects page.
+const mobileHeader =
+  "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2 max-md:[header:has(~_&)_[data-testid=create-project-button]]:min-h-11";
 
-const projectGrid = "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3";
+const projectGrid = "grid grid-cols-1 gap-4";
 const sortStorageKey = "ossicone.projects.sort";
 
 const readStoredSort = () => {
@@ -61,7 +61,7 @@ export const ProjectsList = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${wrapMobileHeader}`}>
+    <div className={`min-h-screen bg-gray-50 ${mobileHeader}`}>
       <main className="flex-1 px-4 py-6 sm:px-6">
         <div className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -72,7 +72,7 @@ export const ProjectsList = () => {
               </p>
             </div>
             <Link to="/projects/create">
-              <Button data-testid="create-project-button">
+              <Button className="max-md:min-h-11" data-testid="create-project-button">
                 Create Project
               </Button>
             </Link>
