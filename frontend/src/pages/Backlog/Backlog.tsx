@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ProjectDescription } from '../../components/ProjectDescription/ProjectDescription'
 import { tidyDescription } from '../../utils/projectDescription'
+import { moveAnnouncement, sprintMoveTargets } from '../../utils/sprintMove'
 import { goalCounter, SPRINT_GOAL_MAX } from '../../utils/sprintGoal'
 import { Button } from '../../components/ui/Button'
 import { SprintsService, type Sprint } from '../../services/api/sprints.service'
@@ -12,6 +13,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { TimeProgressBar, TimeProgressIndicator } from '../../components/TimeProgressBar'
 import { ActiveTimerDisplay } from '../../components/ActiveTimerDisplay'
 import { BacklogIssueCard } from '../../components/BacklogIssueCard/BacklogIssueCard'
+import { BacklogMoveMenu } from '../../components/BacklogIssueCard/BacklogMoveMenu'
 import { getPriorityColor, getPriorityIcon } from '../../components/BacklogIssueCard/issuePriority'
 import { BacklogSkeleton } from '../../components/BacklogSkeleton/BacklogSkeleton'
 import type { Issue } from '../../types/domain.types'
@@ -23,8 +25,13 @@ export const Backlog = () => {
   const { user: currentUser } = useAuth()
   const { handleIssueStatusChange } = useTimerManager()
 
-  const [sprints, setSprints] = useState<Sprint[]>([])
-  const [backlogIssues, setBacklogIssues] = useState<Issue[]>([])
+  const [{ sprints, backlogIssues }, setPlanning] = useState<{ sprints: Sprint[]; backlogIssues: Issue[] }>({
+    sprints: [],
+    backlogIssues: [],
+  })
+  const [moveStatus, setMoveStatus] = useState('')
+  const pendingMoves = useRef(new Set<number>())
+  const moveRevision = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateSprint, setShowCreateSprint] = useState(false)
@@ -69,8 +76,7 @@ export const Backlog = () => {
         return 0
       })
 
-      setSprints(sortedSprints)
-      setBacklogIssues(backlogData)
+      setPlanning({ sprints: sortedSprints, backlogIssues: backlogData })
     } catch (err) {
       setError('Failed to load backlog data')
       console.error('Error fetching backlog:', err)
@@ -87,15 +93,19 @@ export const Backlog = () => {
 
   // Listen for WebSocket real-time updates
   useEffect(() => {
+    let active = true
     const handleRefresh = (event: CustomEvent) => {
       const { type } = event.detail
       if (type === 'issues' || type === 'sprints') {
-        if (projectId) {
+        if (projectId && pendingMoves.current.size === 0) {
+          const revision = moveRevision.current
           // Directly call the fetch logic here to ensure it runs
           Promise.all([
             SprintsService.getByProject(parseInt(projectId)),
             SprintsService.getBacklogIssues(parseInt(projectId))
           ]).then(([sprintsData, backlogData]) => {
+            // A menu move can emit refresh events between its remove and add requests.
+            if (!active || revision !== moveRevision.current) return
             const sortedSprints = sprintsData.sort((a, b) => {
               if (a.status === 'future' && b.status !== 'future') return -1
               if (b.status === 'future' && a.status !== 'future') return 1
@@ -106,8 +116,7 @@ export const Backlog = () => {
               }
               return 0
             })
-            setSprints(sortedSprints)
-            setBacklogIssues(backlogData)
+            setPlanning({ sprints: sortedSprints, backlogIssues: backlogData })
           }).catch(error => {
             console.error('Error refreshing backlog data:', error)
           })
@@ -117,6 +126,7 @@ export const Backlog = () => {
 
     window.addEventListener('ossicone-refresh', handleRefresh as EventListener)
     return () => {
+      active = false
       window.removeEventListener('ossicone-refresh', handleRefresh as EventListener)
     }
   }, [projectId])
@@ -134,7 +144,7 @@ export const Backlog = () => {
         createdById: currentUser!.id
       })
 
-      setSprints(prev => [...prev, newSprint])
+      setPlanning(prev => ({ ...prev, sprints: [...prev.sprints, newSprint] }))
       setNewSprintName('')
       setNewSprintGoal('')
       setShowCreateSprint(false)
@@ -174,9 +184,10 @@ export const Backlog = () => {
         endDate
       })
 
-      setSprints(prev => prev.map(sprint =>
-        sprint.id === selectedSprintId ? updatedSprint : sprint
-      ))
+      setPlanning(prev => ({
+        ...prev,
+        sprints: prev.sprints.map(sprint => sprint.id === selectedSprintId ? updatedSprint : sprint),
+      }))
 
       setShowStartSprintModal(false)
       setSelectedSprintId(null)
@@ -191,9 +202,10 @@ export const Backlog = () => {
     try {
       const updatedSprint = await SprintsService.completeSprint(sprintId)
 
-      setSprints(prev => prev.map(sprint =>
-        sprint.id === sprintId ? updatedSprint : sprint
-      ))
+      setPlanning(prev => ({
+        ...prev,
+        sprints: prev.sprints.map(sprint => sprint.id === sprintId ? updatedSprint : sprint),
+      }))
     } catch (error) {
       console.error('Failed to complete sprint:', error)
     }
@@ -206,12 +218,14 @@ export const Backlog = () => {
       // Move issue from backlog to sprint
       const issue = backlogIssues.find(i => i.id === issueId)
       if (issue) {
-        setBacklogIssues(prev => prev.filter(i => i.id !== issueId))
-        setSprints(prev => prev.map(sprint =>
-          sprint.id === sprintId
-            ? { ...sprint, issues: [...(sprint.issues || []), issue] }
-            : sprint
-        ))
+        setPlanning(prev => ({
+          backlogIssues: prev.backlogIssues.filter(i => i.id !== issueId),
+          sprints: prev.sprints.map(sprint =>
+            sprint.id === sprintId
+              ? { ...sprint, issues: [...(sprint.issues || []), { ...issue, sprintId }] }
+              : sprint
+          ),
+        }))
       }
     } catch (error) {
       console.error('Failed to add issue to sprint:', error)
@@ -222,25 +236,61 @@ export const Backlog = () => {
     try {
       await SprintsService.removeIssueFromSprint(issueId)
 
-      // Move issue from sprint back to backlog
-      let movedIssue: Issue | null = null
-      setSprints(prev => prev.map(sprint => {
-        const issueIndex = (sprint.issues || []).findIndex(i => i.id === issueId)
-        if (issueIndex >= 0) {
-          movedIssue = (sprint.issues || [])[issueIndex]
-          return {
-            ...sprint,
-            issues: (sprint.issues || []).filter(i => i.id !== issueId)
-          }
-        }
-        return sprint
-      }))
+      setPlanning(prev => {
+        const movedIssue = prev.sprints.flatMap(sprint => sprint.issues || []).find(i => i.id === issueId)
+        if (!movedIssue) return prev
 
-      if (movedIssue) {
-        setBacklogIssues(prev => [...prev, movedIssue!])
-      }
+        return {
+          backlogIssues: [...prev.backlogIssues, { ...movedIssue, sprintId: null }],
+          sprints: prev.sprints.map(sprint =>
+            sprint.issues?.some(i => i.id === issueId)
+              ? { ...sprint, issues: sprint.issues.filter(i => i.id !== issueId) }
+              : sprint
+          ),
+        }
+      })
     } catch (error) {
       console.error('Failed to remove issue from sprint:', error)
+    }
+  }
+
+  const moveIssueToSprint = async (issue: Issue, targetSprintId: number | null) => {
+    const target = sprintMoveTargets(issue.sprintId ?? null, sprints).find(({ id }) => id === targetSprintId)
+    if (!target || pendingMoves.current.has(issue.id)) return
+
+    pendingMoves.current.add(issue.id)
+    moveRevision.current += 1
+    setMoveStatus('')
+    try {
+      if (issue.sprintId != null) {
+        await SprintsService.removeIssueFromSprint(issue.id)
+      }
+      if (targetSprintId !== null) {
+        await SprintsService.addIssueToSprint(targetSprintId, issue.id)
+      }
+
+      const movedIssue = { ...issue, sprintId: targetSprintId }
+      setPlanning(prev => {
+        const remainingBacklog = prev.backlogIssues.filter(i => i.id !== issue.id)
+        return {
+          backlogIssues: targetSprintId === null ? [...remainingBacklog, movedIssue] : remainingBacklog,
+          sprints: prev.sprints.map(sprint => {
+            if (sprint.id !== targetSprintId && !sprint.issues?.some(i => i.id === issue.id)) return sprint
+
+            const remainingIssues = (sprint.issues || []).filter(i => i.id !== issue.id)
+            return {
+              ...sprint,
+              issues: sprint.id === targetSprintId ? [...remainingIssues, movedIssue] : remainingIssues,
+            }
+          }),
+        }
+      })
+      setMoveStatus(moveAnnouncement(issue.title, target.label))
+    } catch (error) {
+      console.error('Failed to move issue:', error)
+      setMoveStatus('Could not move the issue')
+    } finally {
+      pendingMoves.current.delete(issue.id)
     }
   }
 
@@ -285,6 +335,9 @@ export const Backlog = () => {
 
   return (
     <div className="min-w-0 flex-1 flex flex-col bg-gray-50">
+      <div className="sr-only" role="status" aria-live="polite" data-testid="backlog-move-status">
+        {moveStatus}
+      </div>
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -466,6 +519,8 @@ export const Backlog = () => {
                   </div>
                 ) : (
                   <BacklogIssueList
+                    sprints={sprints}
+                    onMove={moveIssueToSprint}
                     issues={sprint.issues || []}
                     projectId={projectId}
                     projectKey={projectKey}
@@ -508,6 +563,8 @@ export const Backlog = () => {
                 </div>
               ) : (
                 <BacklogIssueList
+                  sprints={sprints}
+                  onMove={moveIssueToSprint}
                   issues={backlogIssues}
                   projectId={projectId}
                   projectKey={projectKey}
@@ -591,6 +648,8 @@ export const Backlog = () => {
                           {totalIssues > 0 && (
                             <div className="mt-3">
                               <BacklogIssueList
+                                sprints={sprints}
+                                onMove={moveIssueToSprint}
                                 issues={sprint.issues}
                                 projectId={projectId}
                                 projectKey={projectKey}
@@ -733,6 +792,8 @@ export const Backlog = () => {
 
 interface BacklogIssueListProps {
   issues: Issue[]
+  sprints: Sprint[]
+  onMove: (issue: Issue, targetSprintId: number | null) => void
   projectId?: string
   projectKey: string
   showUpdated?: boolean
@@ -742,12 +803,22 @@ interface BacklogIssueListProps {
 
 const BacklogIssueList = ({
   issues,
+  sprints,
+  onMove,
   projectId,
   projectKey,
   showUpdated,
   onDragStart,
   onRemove,
 }: BacklogIssueListProps) => {
+  const moveMenu = (issue: Issue) => (
+    <BacklogMoveMenu
+      issue={issue}
+      targets={sprintMoveTargets(issue.sprintId ?? null, sprints)}
+      onMove={target => onMove(issue, target.id)}
+    />
+  )
+
   const removeButton = (issueId: number) => (
     <button
       onClick={() => onRemove?.(issueId)}
@@ -769,7 +840,7 @@ const BacklogIssueList = ({
           <div className="col-span-2">Status</div>
           <div className="col-span-1">Priority</div>
           <div className="col-span-2">Assignee</div>
-          {onRemove ? <div className="col-span-1">Actions</div> : showUpdated && <div className="col-span-1">Updated</div>}
+          <div className="col-span-1">{showUpdated ? 'Updated' : 'Actions'}</div>
         </div>
 
         {/* Table Rows */}
@@ -863,9 +934,7 @@ const BacklogIssueList = ({
                 )}
               </div>
 
-              {onRemove ? (
-                <div className="col-span-1 flex items-center">{removeButton(issue.id)}</div>
-              ) : showUpdated && (
+              {showUpdated ? (
                 <div className="col-span-1 flex items-center">
                   <span className="text-sm text-gray-500">
                     {new Date(issue.updatedAt).toLocaleString('en-US', {
@@ -877,6 +946,11 @@ const BacklogIssueList = ({
                       hour12: true
                     })}
                   </span>
+                </div>
+              ) : (
+                <div className="col-span-1 flex flex-col items-start justify-center gap-1">
+                  {moveMenu(issue)}
+                  {onRemove && removeButton(issue.id)}
                 </div>
               )}
             </div>
@@ -892,7 +966,12 @@ const BacklogIssueList = ({
             projectId={projectId}
             showUpdated={showUpdated}
             onDragStart={onDragStart && (() => onDragStart(issue))}
-            actions={onRemove && removeButton(issue.id)}
+            actions={
+              <div className="flex items-center gap-1">
+                {moveMenu(issue)}
+                {onRemove && removeButton(issue.id)}
+              </div>
+            }
           />
         ))}
       </div>
