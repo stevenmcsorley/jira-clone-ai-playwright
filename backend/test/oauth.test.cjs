@@ -75,6 +75,12 @@ async function rpc(token, method, params, id = 1) {
   const payload = text.startsWith('event:') ? JSON.parse(text.split('\n').find(l => l.startsWith('data:')).slice(5)) : JSON.parse(text)
   return { response, payload }
 }
+// /mcp serves Code Mode: two tools (search, execute); every Ossicone operation runs through execute's `ossicone.*` namespace.
+async function execute(token, code) {
+  const { response, payload } = await rpc(token, 'tools/call', { name: 'execute', arguments: { code } })
+  const text = payload.result?.content?.[0]?.text
+  return { response, payload, outcome: text ? JSON.parse(text) : undefined }
+}
 
 before(async () => {
   const reset = new Client({ connectionString: database }); await reset.connect()
@@ -207,17 +213,18 @@ test('MCP challenges invalid credentials and accepts both OAuth and existing API
     const init = await rpc(token, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'test', version: '1' } })
     assert.equal(init.response.status, 200)
     const tools = await rpc(token, 'tools/list', {})
-    assert.ok(tools.payload.result.tools.some(t => t.name === 'create_issue'))
-    const projects = await rpc(token, 'tools/call', { name: 'list_projects', arguments: {} })
+    assert.deepEqual(tools.payload.result.tools.map(t => t.name).sort(), ['execute', 'search'])
+    const projects = await execute(token, 'async () => await ossicone.list_projects({})')
     assert.equal(projects.payload.result.isError, undefined)
-    assert.ok(!JSON.parse(projects.payload.result.content[0].text).some(p => p.id === project))
+    assert.ok(Array.isArray(projects.outcome.result))
+    assert.ok(!projects.outcome.result.some(p => p.id === project))
   }
-  const created = await rpc(tokens.access_token, 'tools/call', { name: 'create_project', arguments: { name: 'OAuth test', key: 'OAUTH' } })
+  const created = await execute(tokens.access_token, "async () => await ossicone.create_project({ name: 'OAuth test', key: 'OAUTH' })")
   assert.equal(created.payload.result.isError, undefined)
-  const record = JSON.parse(created.payload.result.content[0].text)
+  const record = created.outcome.result
   assert.equal((await call('/api/projects/' + record.id, { token: tokens.access_token })).status, 200)
   const readOnly = (await exchange(await code('read'))).data.access_token
-  const denied = await rpc(readOnly, 'tools/call', { name: 'create_project', arguments: { name: 'Denied', key: 'DENIED' } })
+  const denied = await execute(readOnly, "async () => await ossicone.create_project({ name: 'Denied', key: 'DENIED' })")
   assert.equal(denied.payload.result.isError, true)
   assert.ok(!(await call('/api/projects', { token: tokens.access_token })).data.some(p => p.key === 'DENIED'))
 })
