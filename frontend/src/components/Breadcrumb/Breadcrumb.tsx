@@ -4,192 +4,39 @@
  * Jira-style breadcrumb navigation for better user orientation
  */
 
-import React from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useProjects } from '../../hooks/useProjects';
+import { buildBreadcrumbs, visibleCrumbIndexes } from '../../utils/breadcrumbs';
 
-interface BreadcrumbItem {
-  label: string;
-  href?: string;
-  isActive?: boolean;
-}
+const labelClassName = 'truncate max-w-[9rem] sm:max-w-[14rem] md:max-w-xs';
 
-export const Breadcrumb: React.FC = () => {
-  const location = useLocation();
-  const { projectId, issueId } = useParams<{ projectId: string; issueId: string }>();
-  const { projects } = useProjects();
-
-  const currentProject = projects.find(p => p.id === Number(projectId));
-
-  const generateBreadcrumbs = (): BreadcrumbItem[] => {
-    const breadcrumbs: BreadcrumbItem[] = [];
-    const path = location.pathname;
-
-    // Always start with Projects if we're in a project context
-    if (projectId && currentProject) {
-      breadcrumbs.push({
-        label: 'Projects',
-        href: '/projects'
-      });
-
-      breadcrumbs.push({
-        label: currentProject.name,
-        href: `/projects/${projectId}`
-      });
-
-      // Determine current section based on path
-      if (path.includes('/backlog')) {
-        breadcrumbs.push({
-          label: 'Backlog',
-          isActive: true
-        });
-      } else if (path.includes('/issues') && !issueId) {
-        breadcrumbs.push({
-          label: 'Issues',
-          isActive: true
-        });
-      } else if (path.includes('/issues') && issueId) {
-        breadcrumbs.push({
-          label: 'Issues',
-          href: `/projects/${projectId}/issues`
-        });
-        breadcrumbs.push({
-          label: `${currentProject.key}-${issueId}`,
-          isActive: true
-        });
-
-        // If editing an issue
-        if (path.includes('/edit')) {
-          breadcrumbs[breadcrumbs.length - 1].href = `/projects/${projectId}/issues/${issueId}`;
-          breadcrumbs.push({
-            label: 'Edit',
-            isActive: true
-          });
-        }
-      } else if (path.includes('/reports')) {
-        // Handle specific report pages
-        if (path.includes('/reports/burndown')) {
-          breadcrumbs.push({
-            label: 'Reports',
-            href: `/projects/${projectId}/reports`
-          });
-          breadcrumbs.push({
-            label: 'Burndown Chart',
-            isActive: true
-          });
-        } else if (path.includes('/reports/burnup')) {
-          breadcrumbs.push({
-            label: 'Reports',
-            href: `/projects/${projectId}/reports`
-          });
-          breadcrumbs.push({
-            label: 'Burnup Report',
-            isActive: true
-          });
-        } else if (path.includes('/reports/velocity')) {
-          breadcrumbs.push({
-            label: 'Reports',
-            href: `/projects/${projectId}/reports`
-          });
-          breadcrumbs.push({
-            label: 'Velocity Report',
-            isActive: true
-          });
-        } else if (path.includes('/reports/cumulative-flow')) {
-          breadcrumbs.push({
-            label: 'Reports',
-            href: `/projects/${projectId}/reports`
-          });
-          breadcrumbs.push({
-            label: 'Cumulative Flow Diagram',
-            isActive: true
-          });
-        } else {
-          // Main reports page
-          breadcrumbs.push({
-            label: 'Reports',
-            isActive: true
-          });
-        }
-      } else if (path.includes('/history')) {
-        breadcrumbs.push({
-          label: 'Sprint History',
-          isActive: true
-        });
-      } else if (path.includes('/components')) {
-        breadcrumbs.push({
-          label: 'Components',
-          isActive: true
-        });
-      } else if (path.includes('/releases')) {
-        breadcrumbs.push({
-          label: 'Releases',
-          isActive: true
-        });
-      } else if (path.includes('/settings')) {
-        breadcrumbs.push({
-          label: 'Settings',
-          isActive: true
-        });
-      } else if (path.includes('/search')) {
-        breadcrumbs.push({
-          label: 'Search Results',
-          isActive: true
-        });
-      } else if (path.includes('/create')) {
-        if (path.includes('/issues/create')) {
-          breadcrumbs.push({
-            label: 'Issues',
-            href: `/projects/${projectId}/issues`
-          });
-          breadcrumbs.push({
-            label: 'Create Issue',
-            isActive: true
-          });
-        }
-      } else if (path === `/projects/${projectId}`) {
-        breadcrumbs.push({
-          label: 'Board',
-          isActive: true
-        });
-      }
-    } else if (path === '/projects') {
-      breadcrumbs.push({
-        label: 'Projects',
-        isActive: true
-      });
-    } else if (path.includes('/projects/create')) {
-      breadcrumbs.push({
-        label: 'Projects',
-        href: '/projects'
-      });
-      breadcrumbs.push({
-        label: 'Create Project',
-        isActive: true
-      });
-    }
-
-    return breadcrumbs;
-  };
-
-  const breadcrumbs = generateBreadcrumbs();
+export const Breadcrumb = () => {
+  const { currentPath, projectId, issueId, currentProject } = useBreadcrumbData();
+  const breadcrumbs = buildBreadcrumbs({ pathname: currentPath, projectId, issueId, project: currentProject });
 
   // Don't show breadcrumbs if there's only one item or none
   if (breadcrumbs.length <= 1) {
     return null;
   }
 
+  const mobileIndexes = visibleCrumbIndexes(breadcrumbs.length);
+
   return (
     <nav
-      className="flex items-center space-x-1 text-sm text-gray-500 px-6 py-3 bg-white border-b border-gray-200"
+      className="flex items-center space-x-1 text-sm text-gray-500 min-w-0 overflow-hidden px-4 md:px-6 py-3 bg-white border-b border-gray-200"
       aria-label="Breadcrumb"
+      data-testid="breadcrumb"
     >
-      <ol className="flex items-center space-x-1">
+      <ol className="flex min-w-0 flex-nowrap items-center gap-1">
         {breadcrumbs.map((item, index) => (
-          <li key={index} className="flex items-center">
+          <li
+            key={index}
+            className={`flex min-w-0 items-center ${mobileIndexes.includes(index) ? '' : 'max-md:hidden'}`}
+            data-testid="breadcrumb-item"
+          >
             {index > 0 && (
               <svg
-                className="w-4 h-4 text-gray-400 mx-2"
+                className={`w-4 h-4 shrink-0 text-gray-400 mx-2 ${index === mobileIndexes[0] ? 'max-md:hidden' : ''}`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-hidden="true"
@@ -204,7 +51,8 @@ export const Breadcrumb: React.FC = () => {
 
             {item.isActive ? (
               <span
-                className="font-medium text-gray-900 truncate max-w-xs"
+                className={`font-medium text-gray-900 ${labelClassName}`}
+                title={item.label}
                 aria-current="page"
               >
                 {item.label}
@@ -212,10 +60,10 @@ export const Breadcrumb: React.FC = () => {
             ) : (
               <Link
                 to={item.href!}
-                className="hover:text-blue-600 hover:underline transition-colors truncate max-w-xs font-medium"
+                className={`hover:text-blue-600 hover:underline transition-colors font-medium max-md:inline-flex max-md:min-h-11 max-md:items-center ${labelClassName}`}
                 title={item.label}
               >
-                {item.label}
+                <span className="truncate">{item.label}</span>
               </Link>
             )}
           </li>
