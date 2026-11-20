@@ -27,7 +27,7 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
         to={`/projects/${project.id}`}
         data-testid={`project-card-${project.id}`}
         aria-labelledby={nameId}
-        className="col-start-1 row-span-4 row-start-1 grid min-w-0 grid-rows-subgrid rounded-xl p-4 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 lg:col-span-3 lg:row-span-2 lg:grid-cols-subgrid"
+        className="col-start-1 row-span-4 row-start-1 grid min-w-0 grid-rows-subgrid rounded-xl p-4 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 lg:col-span-3 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:grid-cols-subgrid"
       >
         <div className="flex min-w-0 items-center gap-3 lg:col-start-1 lg:row-start-1">
           <ProjectAvatar projectKey={project.key} name={project.name} />
@@ -86,7 +86,7 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
       <ProjectDescription
         projectId={project.id}
         description={project.description}
-        className="pointer-events-none relative col-start-1 row-start-2 min-w-0 px-4 lg:pr-0 [&_button]:pointer-events-auto"
+        className="pointer-events-none relative col-start-1 row-start-2 min-w-0 px-4 lg:mb-4 lg:self-start lg:pr-0 [&_button]:pointer-events-auto"
       />
     </Card>
   );
