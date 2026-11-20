@@ -15,6 +15,7 @@ export type ProjectSortId = typeof SORT_OPTIONS[number]["id"];
 interface ListState {
   q: string;
   sort: ProjectSortId;
+  page: number;
 }
 
 interface SearchableProject {
@@ -91,16 +92,20 @@ const isSortId = (value?: string | null): value is ProjectSortId =>
 export const parseListState = (search: string, storedSort?: string | null): ListState => {
   const params = new URLSearchParams(search);
   const sort = params.get("sort");
+  const rawPage = params.get("page") ?? "";
+  const page = /^\d+$/.test(rawPage) ? Number(rawPage) : 1;
   return {
+    page: Number.isInteger(page) && page > 0 ? page : 1,
     q: (params.get("q") ?? "").trim().slice(0, 100),
     sort: isSortId(sort) ? sort : isSortId(storedSort) ? storedSort : "updated",
   };
 };
 
-export const listStateToSearch = ({ q, sort }: ListState): string => {
+export const listStateToSearch = ({ q, sort, page = 1 }: Omit<ListState, "page"> & { page?: number }): string => {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (sort !== "updated") params.set("sort", sort);
+  if (Number.isInteger(page) && page > 1) params.set("page", String(page));
   const text = params.toString();
   return text ? `?${text}` : "";
 };

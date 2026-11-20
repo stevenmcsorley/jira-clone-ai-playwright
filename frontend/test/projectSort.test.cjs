@@ -109,10 +109,10 @@ test('finds substrings in name, key, description and lead name, ignoring case', 
 
 test('parses URL state, validates stored sorts and limits the trimmed query', () => {
   const state = (search, storedSort) => ({ ...parseListState(search, storedSort) })
-  assert.deepEqual(state('?q=+api+&sort=active', 'open'), { q: 'api', sort: 'active' })
-  assert.deepEqual(state('?sort=unknown', 'open'), { q: '', sort: 'open' })
-  assert.deepEqual(state('?sort=unknown', 'invalid'), { q: '', sort: 'updated' })
-  assert.deepEqual(state('', 'name'), { q: '', sort: 'name' })
+  assert.deepEqual(state('?q=+api+&sort=active', 'open'), { q: 'api', sort: 'active', page: 1 })
+  assert.deepEqual(state('?sort=unknown', 'open'), { q: '', sort: 'open', page: 1 })
+  assert.deepEqual(state('?sort=unknown', 'invalid'), { q: '', sort: 'updated', page: 1 })
+  assert.deepEqual(state('', 'name'), { q: '', sort: 'name', page: 1 })
   assert.equal(state('?q=++' + 'x'.repeat(120)).q, 'x'.repeat(100))
 })
 
@@ -144,4 +144,18 @@ test('serializes URL state using set and toString when URLSearchParams has no si
   const { listStateToSearch } = loadHelper('projectSort', { './projectStats': loadHelper('projectStats') }, LegacySearchParams)
   assert.equal(listStateToSearch({ q: 'a&b', sort: 'open' }), '?q=a%26b&sort=open')
   assert.equal(listStateToSearch({ q: '', sort: 'updated' }), '')
+})
+
+test('validates the page query parameter', () => {
+  assert.equal(parseListState('?page=3').page, 3)
+  for (const page of ['', '0', '-2', '2.5', 'Infinity', 'abc', '2abc', '1e2']) {
+    assert.equal(parseListState('?page=' + page).page, 1, page)
+  }
+})
+
+test('round-trips page with search and sort and omits page 1', () => {
+  const state = { q: 'api tools', sort: 'active', page: 3 }
+  assert.equal(listStateToSearch(state), '?q=api+tools&sort=active&page=3')
+  assert.deepEqual({ ...parseListState(listStateToSearch(state)) }, state)
+  assert.equal(listStateToSearch({ ...state, page: 1 }), '?q=api+tools&sort=active')
 })
