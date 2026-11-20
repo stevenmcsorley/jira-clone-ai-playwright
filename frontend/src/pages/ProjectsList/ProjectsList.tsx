@@ -1,25 +1,64 @@
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigationType, useSearchParams } from "react-router-dom";
 import { ProjectCard } from "../../components/ProjectCard";
+import { ProjectsSkeleton } from "../../components/ProjectsToolbar/ProjectsSkeleton";
+import { ProjectsToolbar } from "../../components/ProjectsToolbar/ProjectsToolbar";
 import { Button } from "../../components/ui/Button";
 import { useProjects } from "../../hooks/useProjects";
+import { filterProjects, listStateToSearch, parseListState, sortProjects } from "../../utils/projectSort";
+import type { ProjectSortId } from "../../utils/projectSort";
 
 // Allow the shared header controls to wrap on narrow Projects screens.
 const wrapMobileHeader =
   "max-sm:[header:has(~_&)>div]:flex-wrap max-sm:[header:has(~_&)>div]:gap-2";
 
-export const ProjectsList = () => {
-  const { projects, loading } = useProjects();
+const projectGrid = "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3";
+const sortStorageKey = "ossicone.projects.sort";
 
-  if (loading) {
-    return (
-      <div className={`flex items-center justify-center min-h-screen bg-gray-50 ${wrapMobileHeader}`}>
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 border-b-2 border-blue-600 rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading projects...</p>
-        </div>
-      </div>
-    );
+const readStoredSort = () => {
+  try {
+    return localStorage.getItem(sortStorageKey);
+  } catch {
+    return null;
   }
+};
+
+export const ProjectsList = () => {
+  const { projects, loading, error, refetch } = useProjects();
+  const [params, setParams] = useSearchParams();
+  const [storedSort, setStoredSort] = useState(readStoredSort);
+  const navigationType = useNavigationType();
+  const { sort } = parseListState(params.toString(), storedSort);
+  const urlQuery = (params.get("q") ?? "").trimStart().slice(0, 100);
+  const [searchText, setSearchText] = useState(urlQuery);
+  const q = searchText.trim();
+
+  // Router transitions may finish after the next keystroke. Only sync the
+  // input from navigation that did not come from typing in this field.
+  useEffect(() => {
+    if (navigationType !== "REPLACE") setSearchText(urlQuery);
+  }, [navigationType, urlQuery]);
+  const sortedProjects = useMemo(() => sortProjects(projects, sort), [projects, sort]);
+  const visibleProjects = filterProjects(sortedProjects, q);
+
+  const changeQuery = (query: string) => {
+    setSearchText(query);
+    const search = new URLSearchParams(listStateToSearch({ q: query, sort }));
+    if (sort === "updated" && parseListState("", storedSort).sort !== "updated") {
+      search.set("sort", sort);
+    }
+    setParams(search, { replace: true });
+  };
+
+  const changeSort = (nextSort: ProjectSortId) => {
+    setStoredSort(nextSort);
+    try {
+      localStorage.setItem(sortStorageKey, nextSort);
+    } catch {
+      // The URL and in-memory preference still work when storage is unavailable.
+    }
+    setParams(listStateToSearch({ q: searchText, sort: nextSort }));
+  };
 
   return (
     <div className={`min-h-screen bg-gray-50 ${wrapMobileHeader}`}>
@@ -40,13 +79,40 @@ export const ProjectsList = () => {
           </div>
         </div>
 
-        {projects.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {projects.map((project) => <ProjectCard key={project.id} project={project} />)}
+        {loading && <ProjectsSkeleton className={projectGrid} />}
+
+        {!loading && error && (
+          <div role="alert" className="rounded-xl border border-red-200 bg-white p-4">
+            <p className="mb-3 text-gray-900">Could not load projects. Please try again.</p>
+            <Button data-testid="projects-retry" onClick={() => void refetch()}>Try again</Button>
           </div>
         )}
 
-        {projects.length === 0 && (
+        {!loading && !error && (
+          <ProjectsToolbar
+            query={searchText}
+            sort={sort}
+            shown={visibleProjects.length}
+            total={projects.length}
+            onQueryChange={changeQuery}
+            onSortChange={changeSort}
+          />
+        )}
+
+        {!loading && !error && visibleProjects.length > 0 && (
+          <div className={projectGrid}>
+            {visibleProjects.map((project) => <ProjectCard key={project.id} project={project} />)}
+          </div>
+        )}
+
+        {!loading && !error && projects.length > 0 && visibleProjects.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="mb-4 wrap-anywhere text-gray-900">No projects match "{q}"</p>
+            <Button onClick={() => changeQuery("")}>Clear search</Button>
+          </div>
+        )}
+
+        {!loading && !error && projects.length === 0 && (
           <div className="py-12 text-center">
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
               <svg
