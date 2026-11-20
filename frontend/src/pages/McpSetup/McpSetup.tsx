@@ -290,10 +290,10 @@ export const McpSetup = () => {
 
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Claude Code (CLI) — one command</p>
         <div className="relative">
-          <pre className="bg-gray-900 text-gray-100 rounded-md p-4 text-xs overflow-x-auto">{registerCommand}</pre>
+          <pre className="bg-slate-900 text-slate-100 rounded-md p-4 text-xs overflow-x-auto">{registerCommand}</pre>
           <button
             onClick={() => copy(registerCommand.replace(/\\\n\s*/g, ' '), 'cmd')}
-            className="absolute top-2 right-2 text-xs text-gray-300 hover:text-white bg-gray-700 rounded px-2 py-1"
+            className="absolute top-2 right-2 text-xs text-slate-300 hover:text-white bg-slate-700 rounded px-2 py-1"
           >
             {copied === 'cmd' ? 'Copied ✓' : 'Copy'}
           </button>
@@ -303,10 +303,10 @@ export const McpSetup = () => {
           Claude Desktop / Clawx — config (uses the <code className="normal-case">mcp-remote</code> bridge, auto-downloaded by npx)
         </p>
         <div className="relative">
-          <pre className="bg-gray-900 text-gray-100 rounded-md p-4 text-xs overflow-x-auto">{bridgeConfig}</pre>
+          <pre className="bg-slate-900 text-slate-100 rounded-md p-4 text-xs overflow-x-auto">{bridgeConfig}</pre>
           <button
             onClick={() => copy(bridgeConfig, 'cfg')}
-            className="absolute top-2 right-2 text-xs text-gray-300 hover:text-white bg-gray-700 rounded px-2 py-1"
+            className="absolute top-2 right-2 text-xs text-slate-300 hover:text-white bg-slate-700 rounded px-2 py-1"
           >
             {copied === 'cfg' ? 'Copied ✓' : 'Copy'}
           </button>

@@ -128,7 +128,7 @@ const TimeProgressBarInner: React.FC<TimeProgressBarProps> = ({
       </div>
 
       {/* Tooltip with detailed info */}
-      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
         <div className={`${percentage > 100 ? 'text-red-300' : 'text-green-300'}`}>
           Time Progress: {Math.round(percentage)}%
           {percentage > 100 && ` (${Math.round(percentage - 100)}% over)`}

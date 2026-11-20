@@ -5,8 +5,11 @@
  * Helps with sprint planning and capacity forecasting.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { ReportsLayout } from '../../../pages/Reports/Reports'
+import { applyChartTheme } from '../../../utils/chartTheme'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,7 +53,14 @@ interface VelocityMetrics {
   predictedNext: number
 }
 
-export const VelocityReport = () => {
+export const VelocityReport = () => (
+  <ReportsLayout>
+    <VelocityReportContent />
+  </ReportsLayout>
+)
+
+const VelocityReportContent = () => {
+  const { resolved } = useTheme()
   const { projectId } = useParams<{ projectId: string }>()
   const [velocityData, setVelocityData] = useState<VelocityData[]>([])
   const [metrics, setMetrics] = useState<VelocityMetrics | null>(null)
@@ -177,68 +187,76 @@ export const VelocityReport = () => {
     ]
   }
 
-  const chartOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Team Velocity by Sprint',
-        font: {
-          size: 16,
-          weight: 'bold'
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            const dataIndex = context.dataIndex
-            const data = velocityData[dataIndex]
-            const label = context.dataset.label
-            const value = context.parsed.y
+  const chartOptions = useMemo<ChartOptions<'bar'>>(() => {
+    const isPhone = window.matchMedia('(max-width: 639px)').matches
 
-            if (label === 'Completed') {
-              const completionRate = data.planned > 0 ? ((data.completed / data.planned) * 100).toFixed(1) : '0'
-              return `${label}: ${value} story points (${completionRate}% of planned)`
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: isPhone ? 'bottom' : 'top',
+          },
+          title: {
+            display: true,
+            text: 'Team Velocity by Sprint',
+            font: {
+              size: 16,
+              weight: 'bold'
             }
-            return `${label}: ${value} story points`
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context: any) {
+                const dataIndex = context.dataIndex
+                const data = velocityData[dataIndex]
+                const label = context.dataset.label
+                const value = context.parsed.y
+
+                if (label === 'Completed') {
+                  const completionRate = data.planned > 0 ? ((data.completed / data.planned) * 100).toFixed(1) : '0'
+                  return `${label}: ${value} story points (${completionRate}% of planned)`
+                }
+                return `${label}: ${value} story points`
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Story Points'
+            }
+          },
+          x: {
+            ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
+            title: {
+              display: true,
+              text: 'Sprint'
+            }
           }
         }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Story Points'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Sprint'
-        }
-      }
     }
-  }
+  }, [velocityData])
+  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading velocity data...</span>
-      </div>
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading report"
+        className="h-64 motion-safe:animate-pulse rounded-lg bg-gray-100"
+      />
     )
   }
 
   return (
-    <div className="flex-1 px-6 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Velocity Report</h1>
           <p className="text-gray-600 mt-1">
@@ -255,7 +273,7 @@ export const VelocityReport = () => {
             id="time-range"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="min-w-0 border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="last6">Last 6 Sprints</option>
             <option value="last12">Last 12 Sprints</option>
@@ -305,15 +323,15 @@ export const VelocityReport = () => {
       )}
 
       {/* Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <div style={{ height: '400px' }}>
-          <Bar data={chartData} options={chartOptions} />
+      <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+        <div className="relative h-72 sm:h-96">
+          <Bar data={chartData} options={themedOptions} />
         </div>
       </div>
 
       {/* Insights and Recommendations */}
       {metrics && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Velocity Insights</h3>
           <div className="space-y-3">
 
@@ -397,7 +415,7 @@ export const VelocityReport = () => {
 
       {/* Sprint Details Table */}
       {velocityData.length > 0 && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Sprint Details</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

@@ -5,8 +5,11 @@
  * Identifies bottlenecks and workflow accumulation patterns.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { ReportsLayout } from '../../../pages/Reports/Reports'
+import { applyChartTheme } from '../../../utils/chartTheme'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,7 +53,14 @@ interface CFDMetrics {
   wipTrend: 'increasing' | 'decreasing' | 'stable'
 }
 
-export const CumulativeFlowDiagram = () => {
+export const CumulativeFlowDiagram = () => (
+  <ReportsLayout>
+    <CumulativeFlowDiagramContent />
+  </ReportsLayout>
+)
+
+const CumulativeFlowDiagramContent = () => {
+  const { resolved } = useTheme()
   const { projectId } = useParams<{ projectId: string }>()
   const [cfdData, setCfdData] = useState<CFDData[]>([])
   const [metrics, setMetrics] = useState<CFDMetrics | null>(null)
@@ -143,68 +153,76 @@ export const CumulativeFlowDiagram = () => {
     ]
   }
 
-  const chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: 'Cumulative Flow Diagram',
-        font: {
-          size: 16,
-          weight: 'bold'
-        }
-      },
-      tooltip: {
-        mode: 'index' as const,
-        intersect: false,
-        callbacks: {
-          label: function(context: any) {
-            return `${context.dataset.label}: ${context.parsed.y} issues`
+  const chartOptions = useMemo<ChartOptions<'line'>>(() => {
+    const isPhone = window.matchMedia('(max-width: 639px)').matches
+
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: isPhone ? 'bottom' : 'top',
           },
-          footer: function(tooltipItems: any[]) {
-            const dataIndex = tooltipItems[0].dataIndex
-            const data = cfdData[dataIndex]
-            return `Total: ${data.total} issues`
+          title: {
+            display: true,
+            text: 'Cumulative Flow Diagram',
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          },
+          tooltip: {
+            mode: 'index' as const,
+            intersect: false,
+            callbacks: {
+              label: function(context: any) {
+                return `${context.dataset.label}: ${context.parsed.y} issues`
+              },
+              footer: function(tooltipItems: any[]) {
+                const dataIndex = tooltipItems[0].dataIndex
+                const data = cfdData[dataIndex]
+                return `Total: ${data.total} issues`
+              }
+            }
           }
-        }
-      }
-    },
-    scales: {
-      y: {
-        stacked: true,
-        beginAtZero: true,
-        ticks: {
-          precision: 0
         },
-        title: {
-          display: true,
-          text: 'Number of Issues'
+        scales: {
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            },
+            title: {
+              display: true,
+              text: 'Number of Issues'
+            }
+          },
+          x: {
+            ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
+            title: {
+              display: true,
+              text: 'Date'
+            }
+          }
+        },
+        interaction: {
+          mode: 'nearest' as const,
+          axis: 'x' as const,
+          intersect: false
         }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Date'
-        }
-      }
-    },
-    interaction: {
-      mode: 'nearest' as const,
-      axis: 'x' as const,
-      intersect: false
     }
-  }
+  }, [cfdData])
+  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading cumulative flow data...</span>
-      </div>
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading report"
+        className="h-64 motion-safe:animate-pulse rounded-lg bg-gray-100"
+      />
     )
   }
 
@@ -220,9 +238,9 @@ export const CumulativeFlowDiagram = () => {
   }
 
   return (
-    <div className="flex-1 px-6 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Cumulative Flow Diagram</h1>
           <p className="text-gray-600 mt-1">
@@ -239,7 +257,7 @@ export const CumulativeFlowDiagram = () => {
             id="time-range"
             value={timeRange}
             onChange={(e) => setTimeRange(Number(e.target.value))}
-            className="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="min-w-0 border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value={14}>Last 2 weeks</option>
             <option value={30}>Last 30 days</option>
@@ -284,7 +302,7 @@ export const CumulativeFlowDiagram = () => {
       )}
 
       {/* Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
         {cfdData.length === 0 || cfdData.every(d => d.total === 0) ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <p className="font-medium text-gray-900">No issue activity in this time range</p>
@@ -293,15 +311,15 @@ export const CumulativeFlowDiagram = () => {
             </p>
           </div>
         ) : (
-          <div style={{ height: '500px' }}>
-            <Line data={chartData} options={chartOptions} />
+          <div className="relative h-72 sm:h-96">
+            <Line data={chartData} options={themedOptions} />
           </div>
         )}
       </div>
 
       {/* Insights */}
       {metrics && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Workflow Insights</h3>
           <div className="space-y-3">
 
