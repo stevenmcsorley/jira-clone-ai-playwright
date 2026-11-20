@@ -11,6 +11,7 @@ import { QuickActions } from '../QuickActions'
 import { Breadcrumb } from '../Breadcrumb'
 import { GlobalSearch } from '../Search/GlobalSearch'
 import { NotificationBell } from '../Notifications'
+import { ThemeToggle } from '../ThemeToggle'
 import { WorkspaceIcon } from '../../lib/workspaceIcons'
 import styles from './Layout.module.css'
 
@@ -323,6 +324,7 @@ export const Layout = ({ children }: LayoutProps) => {
               {/* Quick Actions in Header */}
               <QuickActions />
               <NotificationBell />
+              <ThemeToggle />
               <div className="relative">
                 <button
                   type="button"
