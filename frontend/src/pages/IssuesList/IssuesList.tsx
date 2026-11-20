@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useProjects } from '../../hooks/useProjects'
 import { useIssues } from '../../hooks/useIssues'
+import { Pagination } from '../../components/Pagination/Pagination'
+import { paginate } from '../../utils/pagination'
+import { IssuesSkeleton } from '../../components/IssuesSkeleton/IssuesSkeleton'
 import { Button } from '../../components/ui/Button'
 import { IssueTypeIcon } from '../../components/IssueTypeIcon'
 import type { Issue, IssueStatus, IssuePriority, IssueType } from '../../types/domain.types'
@@ -10,6 +13,20 @@ const PAGE_SIZE = 25
 
 type SortKey = 'title' | 'type' | 'status' | 'priority' | 'assignee' | 'points' | 'updated'
 type SortDir = 'asc' | 'desc'
+
+const SORT_LABELS: Record<SortKey, string> = {
+  type: 'Type',
+  title: 'Title',
+  points: 'Points',
+  status: 'Status',
+  priority: 'Priority',
+  assignee: 'Assignee',
+  updated: 'Updated',
+}
+
+const FILTER_FIELD = 'flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-2'
+const FILTER_LABEL = 'text-xs font-medium text-gray-700 md:text-sm'
+const FILTER_CONTROL = 'min-w-0 px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-md:min-h-11 max-md:w-full'
 
 const PRIORITY_RANK: Record<IssuePriority, number> = { low: 1, medium: 2, high: 3, urgent: 4 }
 // Board column order
@@ -104,18 +121,17 @@ export const IssuesList = () => {
     setPage(1)
   }
 
+  const setSort = (key: SortKey | null, dir: SortDir) => {
+    setSortKey(key)
+    setSortDir(dir)
+    setPage(1)
+  }
+
   // Three-state cycle per column: asc -> desc -> none
   const toggleSort = (key: SortKey) => {
-    if (sortKey !== key) {
-      setSortKey(key)
-      setSortDir('asc')
-    } else if (sortDir === 'asc') {
-      setSortDir('desc')
-    } else {
-      setSortKey(null)
-      setSortDir('asc')
-    }
-    setPage(1)
+    if (sortKey !== key) setSort(key, 'asc')
+    else if (sortDir === 'asc') setSort(key, 'desc')
+    else setSort(null, 'asc')
   }
 
   const filteredAndSortedIssues = useMemo(() => {
@@ -145,27 +161,14 @@ export const IssuesList = () => {
     })
   }, [issues, filters, sortKey, sortDir])
 
-  const totalIssues = filteredAndSortedIssues.length
-  const totalPages = Math.max(1, Math.ceil(totalIssues / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
-  const startIndex = (currentPage - 1) * PAGE_SIZE
-  const pageIssues = filteredAndSortedIssues.slice(startIndex, startIndex + PAGE_SIZE)
-  const showingFrom = totalIssues === 0 ? 0 : startIndex + 1
-  const showingTo = Math.min(startIndex + PAGE_SIZE, totalIssues)
-
-  // Compact page number list: 1 … around current … last
-  const pageNumbers = useMemo(() => {
-    const pages: (number | 'ellipsis')[] = []
-    let last = 0
-    for (let p = 1; p <= totalPages; p++) {
-      if (p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1) {
-        if (last && p - last > 1) pages.push('ellipsis')
-        pages.push(p)
-        last = p
-      }
-    }
-    return pages
-  }, [currentPage, totalPages])
+  const {
+    items: pageIssues,
+    page: currentPage,
+    pageCount,
+    start: showingFrom,
+    end: showingTo,
+    total: totalIssues,
+  } = paginate(filteredAndSortedIssues, page, PAGE_SIZE)
 
   const handleQuickStatusChange = async (issueId: number, status: IssueStatus) => {
     try {
@@ -197,47 +200,60 @@ export const IssuesList = () => {
     })
   }
 
+  const renderStatusSelect = (issue: Issue, className = '') => (
+    <select
+      aria-label="Status"
+      value={issue.status}
+      onChange={(e) => handleQuickStatusChange(issue.id, e.target.value as IssueStatus)}
+      className={`text-xs font-medium px-2 py-1 rounded border-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusConfig[issue.status].color} ${className}`}
+    >
+      <option value="todo">To Do</option>
+      <option value="in_progress">In Progress</option>
+      <option value="code_review">Code Review</option>
+      <option value="done">Done</option>
+    </select>
+  )
+
   if (projectsLoading || !currentProject) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading project...</p>
-        </div>
+      <div className="flex-1 min-w-0 bg-gray-50 px-4 py-4 md:px-6 md:py-6">
+        <IssuesSkeleton />
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
+    <div className="flex-1 min-w-0 flex flex-col bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Issues</h1>
           <Link to={`/projects/${projectId}/issues/create`}>
-            <Button>Create Issue</Button>
+            <Button className="max-md:min-h-11">Create Issue</Button>
           </Link>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Search:</label>
+        <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-center md:gap-4">
+          <div className={`col-span-2 ${FILTER_FIELD}`}>
+            <label htmlFor="issues-filter-search" className={FILTER_LABEL}>Search<span className="hidden md:inline">:</span></label>
             <input
+              id="issues-filter-search"
               type="text"
               value={filters.search}
               onChange={(e) => updateFilters({ search: e.target.value })}
               placeholder="Search issues..."
-              className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={FILTER_CONTROL}
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Status:</label>
+          <div className={FILTER_FIELD}>
+            <label htmlFor="issues-filter-status" className={FILTER_LABEL}>Status<span className="hidden md:inline">:</span></label>
             <select
+              id="issues-filter-status"
               value={filters.status}
               onChange={(e) => updateFilters({ status: e.target.value as IssueStatus | '' })}
-              className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={FILTER_CONTROL}
             >
               <option value="">All</option>
               <option value="todo">To Do</option>
@@ -247,12 +263,13 @@ export const IssuesList = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Priority:</label>
+          <div className={FILTER_FIELD}>
+            <label htmlFor="issues-filter-priority" className={FILTER_LABEL}>Priority<span className="hidden md:inline">:</span></label>
             <select
+              id="issues-filter-priority"
               value={filters.priority}
               onChange={(e) => updateFilters({ priority: e.target.value as IssuePriority | '' })}
-              className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={FILTER_CONTROL}
             >
               <option value="">All</option>
               <option value="urgent">Urgent</option>
@@ -262,12 +279,13 @@ export const IssuesList = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Type:</label>
+          <div className={FILTER_FIELD}>
+            <label htmlFor="issues-filter-type" className={FILTER_LABEL}>Type<span className="hidden md:inline">:</span></label>
             <select
+              id="issues-filter-type"
               value={filters.type}
               onChange={(e) => updateFilters({ type: e.target.value as IssueType | '' })}
-              className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={FILTER_CONTROL}
             >
               <option value="">All</option>
               <option value="story">Story</option>
@@ -280,14 +298,9 @@ export const IssuesList = () => {
       </div>
 
       {/* Issues List */}
-      <main className="flex-1 px-6 py-6">
+      <main className="flex-1 px-4 py-4 md:px-6 md:py-6">
         {issuesLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading issues...</p>
-            </div>
-          </div>
+          <IssuesSkeleton />
         ) : totalIssues === 0 ? (
           <div className="text-center py-8">
             <p className="text-gray-500">
@@ -295,19 +308,83 @@ export const IssuesList = () => {
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow">
-            <div className="overflow-x-auto">
+          <div className="xl:rounded-lg xl:bg-white xl:shadow">
+            <div className="mb-3 flex items-center gap-2 xl:hidden">
+              <label htmlFor="issues-sort" className={`shrink-0 ${FILTER_LABEL}`}>Sort by</label>
+              <select
+                id="issues-sort"
+                value={sortKey ?? ''}
+                onChange={(e) => setSort((e.target.value || null) as SortKey | null, sortDir)}
+                className={`flex-1 md:flex-none ${FILTER_CONTROL}`}
+              >
+                <option value="">None</option>
+                {Object.entries(SORT_LABELS).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                aria-label="Toggle sort direction"
+                onClick={() => setSort(sortKey, sortDir === 'asc' ? 'desc' : 'asc')}
+                className="shrink-0 rounded border border-gray-300 bg-white px-3 py-1 text-sm max-md:min-h-11 max-md:min-w-11"
+              >
+                {sortDir === 'asc' ? '▲' : '▼'}
+              </button>
+            </div>
+
+            <ul className="space-y-3 xl:hidden">
+              {pageIssues.map((issue) => (
+                <li key={issue.id} data-testid={`issue-card-${issue.id}`} className="rounded-lg border border-gray-200 bg-white p-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <span className="shrink-0"><IssueTypeIcon type={issue.type} /></span>
+                    <span className="min-w-0 truncate font-medium">{currentProject.key}-{issue.id}</span>
+                    <span aria-label={`${issue.priority} priority`} className={`shrink-0 font-bold ${priorityConfig[issue.priority].color}`}>
+                      {priorityConfig[issue.priority].icon}
+                    </span>
+                    <time className="ml-auto shrink-0 text-xs">{formatDate(issue.updatedAt)}</time>
+                  </div>
+                  <Link
+                    to={`/projects/${projectId}/issues/${issue.id}`}
+                    className="my-2 flex items-center text-sm font-medium text-gray-900 hover:text-blue-600 max-md:min-h-11"
+                  >
+                    <span className="line-clamp-2 min-w-0 wrap-anywhere">{issue.title}</span>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    {renderStatusSelect(issue, 'min-w-0 max-w-1/2 max-md:min-h-11')}
+                    {issue.storyPoints != null && issue.storyPoints !== '' && issue.storyPoints !== 0 && (
+                      <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                        {issue.storyPoints}
+                      </span>
+                    )}
+                    <div className="ml-auto flex min-w-0 items-center gap-2 text-sm">
+                      {issue.assignee ? (
+                        <>
+                          <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+                            {issue.assignee.name.charAt(0)}
+                          </span>
+                          <span className="truncate text-gray-700">{issue.assignee.name}</span>
+                        </>
+                      ) : (
+                        <span className="truncate text-gray-400">Unassigned</span>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="hidden overflow-x-auto xl:block">
               <div className="min-w-[900px]">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50">
-                <HeaderCell label="Type" sortKey="type" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.type} sortKey="type" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
                 <div className="col-span-1 text-sm font-medium text-gray-700">ID</div>
-                <HeaderCell label="Title" sortKey="title" activeKey={sortKey} dir={sortDir} span="col-span-3" onToggle={toggleSort} />
-                <HeaderCell label="Points" sortKey="points" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
-                <HeaderCell label="Status" sortKey="status" activeKey={sortKey} dir={sortDir} span="col-span-2" onToggle={toggleSort} />
-                <HeaderCell label="Priority" sortKey="priority" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
-                <HeaderCell label="Assignee" sortKey="assignee" activeKey={sortKey} dir={sortDir} span="col-span-2" onToggle={toggleSort} />
-                <HeaderCell label="Updated" sortKey="updated" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.title} sortKey="title" activeKey={sortKey} dir={sortDir} span="col-span-3" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.points} sortKey="points" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.status} sortKey="status" activeKey={sortKey} dir={sortDir} span="col-span-2" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.priority} sortKey="priority" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.assignee} sortKey="assignee" activeKey={sortKey} dir={sortDir} span="col-span-2" onToggle={toggleSort} />
+                <HeaderCell label={SORT_LABELS.updated} sortKey="updated" activeKey={sortKey} dir={sortDir} span="col-span-1" onToggle={toggleSort} />
               </div>
 
               {/* Table Rows */}
@@ -354,16 +431,7 @@ export const IssuesList = () => {
 
                     {/* Status */}
                     <div className="col-span-2 flex items-center">
-                      <select
-                        value={issue.status}
-                        onChange={(e) => handleQuickStatusChange(issue.id, e.target.value as IssueStatus)}
-                        className={`text-xs font-medium px-2 py-1 rounded border-none focus:outline-none focus:ring-2 focus:ring-blue-500 ${statusConfig[issue.status].color}`}
-                      >
-                        <option value="todo">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="code_review">Code Review</option>
-                        <option value="done">Done</option>
-                      </select>
+                      {renderStatusSelect(issue)}
                     </div>
 
                     {/* Priority */}
@@ -406,49 +474,13 @@ export const IssuesList = () => {
             {/* Pagination footer */}
             <div
               data-testid="pagination-bar"
-              className="flex flex-wrap items-center justify-between gap-3 px-6 py-3 border-t border-gray-200 bg-gray-50 rounded-b-lg"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-b-lg border-t border-gray-200 bg-gray-50 px-4 py-3 md:px-6 max-xl:mt-3"
             >
-                <span className="text-sm text-gray-600">
-                  Showing {showingFrom}–{showingTo} of {totalIssues}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Prev
-                  </button>
-                  {pageNumbers.map((p, i) =>
-                    p === 'ellipsis' ? (
-                      <span key={`e-${i}`} className="px-1 text-sm text-gray-400">…</span>
-                    ) : (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setPage(p)}
-                        aria-current={p === currentPage ? 'page' : undefined}
-                        className={`px-3 py-1 text-sm border rounded ${
-                          p === currentPage
-                            ? 'bg-blue-600 border-blue-600 text-white'
-                            : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm border border-gray-300 rounded bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+              <span className="text-sm text-gray-600">
+                Showing {showingFrom}–{showingTo} of {totalIssues} issues
+              </span>
+              <Pagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />
+            </div>
           </div>
         )}
       </main>
