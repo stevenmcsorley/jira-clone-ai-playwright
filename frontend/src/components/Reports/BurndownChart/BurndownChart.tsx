@@ -5,8 +5,11 @@
  * Tracks daily progress against ideal burndown line.
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTheme } from '../../../contexts/ThemeContext'
+import { ReportsLayout } from '../../../pages/Reports/Reports'
+import { applyChartTheme } from '../../../utils/chartTheme'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,7 +53,14 @@ interface Sprint {
   status: string
 }
 
-export const BurndownChart = () => {
+export const BurndownChart = () => (
+  <ReportsLayout>
+    <BurndownChartContent />
+  </ReportsLayout>
+)
+
+const BurndownChartContent = () => {
+  const { resolved } = useTheme()
   const { projectId } = useParams<{ projectId: string }>()
   const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null)
   const [sprints, setSprints] = useState<Sprint[]>([])
@@ -120,53 +130,59 @@ export const BurndownChart = () => {
     ]
   }
 
-  const chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-      },
-      title: {
-        display: true,
-        text: `Sprint Burndown - ${selectedSprint?.name || 'Sprint'}`,
-        font: {
-          size: 16,
-          weight: 'bold'
-        }
-      },
-      tooltip: {
-        callbacks: {
-          label: function(context: any) {
-            const point = burndownData[context.dataIndex]
-            const label = context.dataset.label
-            const value = context.parsed.y
+  const chartOptions = useMemo<ChartOptions<'line'>>(() => {
+    const isPhone = window.matchMedia('(max-width: 639px)').matches
 
-            if (label === 'Actual Remaining Work') {
-              return `${label}: ${value} story points (${point.actualCompleted} completed)`
-            } else {
-              return `${label}: ${value} story points`
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: isPhone ? 'bottom' : 'top',
+          },
+          title: {
+            display: true,
+            text: `Sprint Burndown - ${selectedSprint?.name || 'Sprint'}`,
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context: any) {
+                const point = burndownData[context.dataIndex]
+                const label = context.dataset.label
+                const value = context.parsed.y
+
+                if (label === 'Actual Remaining Work') {
+                  return `${label}: ${value} story points (${point.actualCompleted} completed)`
+                } else {
+                  return `${label}: ${value} story points`
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Story Points Remaining'
+            }
+          },
+          x: {
+            ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
+            title: {
+              display: true,
+              text: 'Sprint Timeline'
             }
           }
         }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Story Points Remaining'
-        }
-      },
-      x: {
-        title: {
-          display: true,
-          text: 'Sprint Timeline'
-        }
-      }
     }
-  }
+  }, [burndownData, selectedSprint?.name])
+  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
 
   // Calculate sprint metrics
   const sprintMetrics = React.useMemo(() => {
@@ -202,10 +218,12 @@ export const BurndownChart = () => {
 
   if (burndownLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading burndown data...</span>
-      </div>
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading report"
+        className="h-64 motion-safe:animate-pulse rounded-lg bg-gray-100"
+      />
     )
   }
 
@@ -227,9 +245,9 @@ export const BurndownChart = () => {
   }
 
   return (
-    <div className="flex-1 px-6 py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Sprint Burndown Chart</h1>
           <p className="text-gray-600 mt-1">
@@ -249,7 +267,7 @@ export const BurndownChart = () => {
               const sprint = sprints.find(s => s.id === Number(e.target.value))
               setSelectedSprint(sprint || null)
             }}
-            className="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="min-w-0 border border-gray-300 rounded px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {sprints.map(sprint => (
               <option key={sprint.id} value={sprint.id}>
@@ -290,15 +308,15 @@ export const BurndownChart = () => {
       )}
 
       {/* Chart */}
-      <div className="bg-white p-6 rounded-lg border border-gray-200">
-        <div style={{ height: '400px' }}>
-          <Line data={chartData} options={chartOptions} />
+      <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+        <div className="relative h-72 sm:h-96">
+          <Line data={chartData} options={themedOptions} />
         </div>
       </div>
 
       {/* Performance Analysis */}
       {sprintMetrics && (
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Sprint Performance</h3>
 
           {/* Status Indicator */}
