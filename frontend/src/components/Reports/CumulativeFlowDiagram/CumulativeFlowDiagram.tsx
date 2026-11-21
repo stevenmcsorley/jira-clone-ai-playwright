@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { chartHasData, EmptyChart, withReportStyle } from '../kit'
 import { ReportsLayout } from '../../../pages/Reports/Reports'
 import { applyChartTheme } from '../../../utils/chartTheme'
 import {
@@ -109,34 +110,34 @@ const CumulativeFlowDiagramContent = () => {
       {
         label: 'Done',
         data: cfdData.map(d => d.done),
-        backgroundColor: 'rgba(134, 201, 143, 0.6)',
+        backgroundColor: 'rgba(134, 201, 143, 0.3)',
         borderColor: 'rgb(134, 201, 143)',
         borderWidth: 2,
         fill: 'origin' as const,
-        tension: 0.3,
-        pointRadius: 2,
+        tension: 0,
+        pointRadius: 0,
         pointHoverRadius: 4
       },
       {
         label: 'Code Review',
         data: cfdData.map(d => d.codeReview),
-        backgroundColor: 'rgba(155, 152, 143, 0.5)',
+        backgroundColor: 'rgba(155, 152, 143, 0.3)',
         borderColor: 'rgb(155, 152, 143)',
         borderWidth: 2,
         fill: '-1' as const,
-        tension: 0.3,
-        pointRadius: 2,
+        tension: 0,
+        pointRadius: 0,
         pointHoverRadius: 4
       },
       {
         label: 'In Progress',
         data: cfdData.map(d => d.inProgress),
-        backgroundColor: 'rgba(207, 192, 138, 0.5)',
+        backgroundColor: 'rgba(207, 192, 138, 0.3)',
         borderColor: 'rgb(207, 192, 138)',
         borderWidth: 2,
         fill: '-1' as const,
-        tension: 0.3,
-        pointRadius: 2,
+        tension: 0,
+        pointRadius: 0,
         pointHoverRadius: 4
       },
       {
@@ -146,8 +147,8 @@ const CumulativeFlowDiagramContent = () => {
         borderColor: 'rgb(156, 163, 175)',
         borderWidth: 2,
         fill: '-1' as const,
-        tension: 0.3,
-        pointRadius: 2,
+        tension: 0,
+        pointRadius: 0,
         pointHoverRadius: 4
       }
     ]
@@ -160,11 +161,9 @@ const CumulativeFlowDiagramContent = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: isPhone ? 'bottom' : 'top',
-          },
+          legend: { position: isPhone ? 'bottom' : 'top', align: 'end' as const, labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16 } },
           title: {
-            display: true,
+            display: false,
             text: 'Cumulative Flow Diagram',
             font: {
               size: 16,
@@ -194,14 +193,14 @@ const CumulativeFlowDiagramContent = () => {
               precision: 0
             },
             title: {
-              display: true,
+            display: false,
               text: 'Number of Issues'
             }
           },
           x: {
             ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
             title: {
-              display: true,
+            display: false,
               text: 'Date'
             }
           }
@@ -213,7 +212,7 @@ const CumulativeFlowDiagramContent = () => {
         }
     }
   }, [cfdData])
-  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
+  const themedOptions = useMemo(() => applyChartTheme(withReportStyle(chartOptions), resolved), [chartOptions, resolved])
 
   if (loading) {
     return (
@@ -269,34 +268,31 @@ const CumulativeFlowDiagramContent = () => {
 
       {/* Metrics Cards */}
       {metrics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 md:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Avg Cycle Time</div>
-            <div className="text-2xl font-bold text-gray-900">{metrics.avgCycleTime}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.avgCycleTime}</div>
             <div className="text-sm text-gray-500">days</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Avg Throughput</div>
-            <div className="text-2xl font-bold text-blue-600">{metrics.avgThroughput}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.avgThroughput}</div>
             <div className="text-sm text-gray-500">issues/week</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Current WIP</div>
-            <div className="text-2xl font-bold text-yellow-600">{metrics.currentWIP}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.currentWIP}</div>
             <div className="text-sm text-gray-500">in progress + review</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">WIP Trend</div>
-            <div className={`text-2xl font-bold ${
-              metrics.wipTrend === 'increasing' ? 'text-red-600' :
-              metrics.wipTrend === 'decreasing' ? 'text-green-600' : 'text-gray-600'
-            }`}>
-              {metrics.wipTrend === 'increasing' ? '↗' : metrics.wipTrend === 'decreasing' ? '↘' : '→'}
+            <div className={`text-2xl font-semibold ${metrics.wipTrend === 'increasing' ? 'text-red-600' : 'text-gray-900'}`}>
+              {metrics.wipTrend === 'increasing' ? 'Rising' : metrics.wipTrend === 'decreasing' ? 'Falling' : 'Steady'}
             </div>
-            <div className="text-sm text-gray-500 capitalize">{metrics.wipTrend}</div>
+            <div className="text-sm text-gray-500">work in progress</div>
           </div>
         </div>
       )}
@@ -312,21 +308,21 @@ const CumulativeFlowDiagramContent = () => {
           </div>
         ) : (
           <div className="relative h-72 sm:h-96">
-            <Line data={chartData} options={themedOptions} />
+            {chartHasData(chartData) ? <Line data={chartData} options={themedOptions} /> : <EmptyChart message="No issue history in this range yet." />}
           </div>
         )}
       </div>
 
       {/* Insights */}
       {metrics && (
-        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Workflow Insights</h3>
+        <div className="hidden has-[.insight]:block bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+          <h2 className="mb-3 text-base font-semibold text-gray-900">Workflow Insights</h2>
           <div className="space-y-3">
 
             {/* Bottleneck Detection */}
             {metrics.bottleneckStatus && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Bottleneck Detected</div>
                   <div className="text-sm text-gray-600">
@@ -339,8 +335,8 @@ const CumulativeFlowDiagramContent = () => {
 
             {/* WIP Trend Analysis */}
             {metrics.wipTrend === 'increasing' && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Rising Work in Progress</div>
                   <div className="text-sm text-gray-600">
@@ -352,8 +348,8 @@ const CumulativeFlowDiagramContent = () => {
             )}
 
             {metrics.wipTrend === 'decreasing' && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Healthy WIP Reduction</div>
                   <div className="text-sm text-gray-600">
@@ -365,8 +361,8 @@ const CumulativeFlowDiagramContent = () => {
 
             {/* Cycle Time Analysis */}
             {metrics.avgCycleTime > 10 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Long Cycle Time</div>
                   <div className="text-sm text-gray-600">
@@ -378,8 +374,8 @@ const CumulativeFlowDiagramContent = () => {
             )}
 
             {metrics.avgCycleTime <= 5 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Efficient Cycle Time</div>
                   <div className="text-sm text-gray-600">
@@ -391,8 +387,8 @@ const CumulativeFlowDiagramContent = () => {
 
             {/* Throughput Analysis */}
             {metrics.avgThroughput < 2 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Low Throughput</div>
                   <div className="text-sm text-gray-600">
@@ -404,8 +400,8 @@ const CumulativeFlowDiagramContent = () => {
             )}
 
             {!metrics.bottleneckStatus && metrics.wipTrend === 'stable' && metrics.avgCycleTime <= 7 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Healthy Flow</div>
                   <div className="text-sm text-gray-600">

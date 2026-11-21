@@ -1,3 +1,4 @@
+import { TriangleAlert } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { SprintsService, type Sprint } from '../../services/api/sprints.service'
@@ -30,7 +31,7 @@ const STATUS_CONFIG: Record<IssueStatus, { color: string; label: string }> = {
   todo: { color: 'bg-gray-100 text-gray-800', label: 'To Do' },
   in_progress: { color: 'bg-blue-100 text-blue-800', label: 'In Progress' },
   code_review: { color: 'bg-purple-100 text-purple-800', label: 'Code Review' },
-  done: { color: 'bg-green-100 text-green-800', label: 'Done' },
+  done: { color: 'bg-gray-100 text-gray-700', label: 'Done' },
 }
 
 /** Normalise story points (number, numeric string, or t-shirt size) to a number. */
@@ -84,7 +85,7 @@ const SprintCard = ({ sprint, projectId }: { sprint: SprintWithMetrics; projectI
   })
 
   return (
-    <div data-testid="sprint-card" className="bg-white rounded-lg ">
+    <div data-testid="sprint-card" className="rounded-lg border border-gray-200 bg-white">
       <div className="p-4 sm:p-6">
         {/* Title row */}
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -94,9 +95,6 @@ const SprintCard = ({ sprint, projectId }: { sprint: SprintWithMetrics; projectI
               <p className="text-sm text-gray-600 mt-0.5 break-words">{sprint.goal}</p>
             )}
           </div>
-          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full shrink-0">
-            Completed
-          </span>
         </div>
 
         {/* Dates */}
@@ -106,22 +104,22 @@ const SprintCard = ({ sprint, projectId }: { sprint: SprintWithMetrics; projectI
         </p>
 
         {/* Stat row — stacks 2-up on narrow screens */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
-          <div className="bg-gray-50 rounded-md px-3 py-2">
+        <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 sm:grid-cols-4">
+          <div className="bg-white px-3 py-2">
             <div className="text-xs text-gray-500">Issues completed</div>
             <div className="text-base font-semibold text-gray-900">
               {sprint.completedIssuesCount} <span className="text-sm font-normal text-gray-500">/ {sprint.totalIssuesCount}</span>
             </div>
           </div>
-          <div className="bg-gray-50 rounded-md px-3 py-2">
+          <div className="bg-white px-3 py-2">
             <div className="text-xs text-gray-500">Points delivered</div>
-            <div className="text-base font-semibold text-blue-600">{sprint.pointsDelivered}</div>
+            <div className="text-base font-semibold text-gray-900">{sprint.pointsDelivered}</div>
           </div>
-          <div className="bg-gray-50 rounded-md px-3 py-2">
+          <div className="bg-white px-3 py-2">
             <div className="text-xs text-gray-500">Points committed</div>
             <div className="text-base font-semibold text-gray-900">{sprint.pointsCommitted}</div>
           </div>
-          <div className="bg-gray-50 rounded-md px-3 py-2">
+          <div className="bg-white px-3 py-2">
             <div className="text-xs text-gray-500">Completion</div>
             <div className="text-base font-semibold text-gray-900">{pct}%</div>
           </div>
@@ -143,10 +141,8 @@ const SprintCard = ({ sprint, projectId }: { sprint: SprintWithMetrics; projectI
 
         {/* Scope change indicator */}
         {sprint.movedOutCount > 0 && (
-          <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-1">
-            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
+          <div className="mt-3 flex items-center gap-1.5 text-sm text-gray-600" data-testid="scope-change">
+            <TriangleAlert className="size-4 text-gray-500" strokeWidth={1.5} aria-hidden="true" />
             Scope changed: {sprint.movedOutCount} issue{sprint.movedOutCount === 1 ? '' : 's'} removed after start
           </div>
         )}
@@ -295,26 +291,14 @@ export const SprintHistory = () => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Sprint History</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Completed sprints{currentProject ? ` for ${currentProject.name}` : ''}
-            </p>
-          </div>
-          <Link
-            to={`/projects/${projectId}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm shrink-0"
-          >
-            Back to Board
-          </Link>
-        </div>
+    <div className="min-w-0 flex-1 bg-gray-50">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Sprint history</h1>
+        <p className="mt-1 text-sm text-gray-500">What each finished sprint delivered against what it committed to.</p>
       </div>
 
-      <div className="flex-1 p-4 sm:p-6">
+      <div>
         {sprints.length === 0 ? (
           <div className="bg-white rounded-lg  text-center py-12 px-4">
             <div className="text-gray-400 mb-4">
@@ -340,6 +324,7 @@ export const SprintHistory = () => {
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

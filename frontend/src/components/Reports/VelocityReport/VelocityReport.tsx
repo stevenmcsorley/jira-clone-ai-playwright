@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { chartHasData, EmptyChart, withReportStyle } from '../kit'
 import { ReportsLayout } from '../../../pages/Reports/Reports'
 import { applyChartTheme } from '../../../utils/chartTheme'
 import {
@@ -76,7 +77,8 @@ const VelocityReportContent = () => {
       try {
         // Fetch completed sprints
         const sprintsResponse = await fetch(`/api/sprints?projectId=${projectId}&status=completed`)
-        const sprints = await sprintsResponse.json()
+        // The API returns every sprint whatever the query says, so keep only the finished ones: a future or running sprint is not a velocity.
+        const sprints = (await sprintsResponse.json()).filter((s: any) => s.status === 'completed' && s.startDate)
 
         // Generate velocity data for each sprint using analytics API
         const velocityPromises = sprints.map(async (sprint: any) => {
@@ -173,16 +175,16 @@ const VelocityReportContent = () => {
       {
         label: 'Planned',
         data: velocityData.map(d => d.planned),
-        backgroundColor: 'rgba(224, 164, 58, 0.5)',
-        borderColor: 'rgba(224, 164, 58, 1)',
-        borderWidth: 1
+        backgroundColor: 'rgba(155, 152, 143, 0.45)',
+        borderWidth: 0,
+        borderRadius: 2
       },
       {
         label: 'Completed',
         data: velocityData.map(d => d.completed),
-        backgroundColor: 'rgba(134, 201, 143, 0.5)',
-        borderColor: 'rgba(134, 201, 143, 1)',
-        borderWidth: 1
+        backgroundColor: 'rgba(224, 164, 58, 0.95)',
+        borderWidth: 0,
+        borderRadius: 2
       }
     ]
   }
@@ -194,11 +196,9 @@ const VelocityReportContent = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: isPhone ? 'bottom' : 'top',
-          },
+          legend: { position: isPhone ? 'bottom' : 'top', align: 'end' as const, labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16 } },
           title: {
-            display: true,
+            display: false,
             text: 'Team Velocity by Sprint',
             font: {
               size: 16,
@@ -226,21 +226,21 @@ const VelocityReportContent = () => {
           y: {
             beginAtZero: true,
             title: {
-              display: true,
+            display: false,
               text: 'Story Points'
             }
           },
           x: {
             ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
             title: {
-              display: true,
+            display: false,
               text: 'Sprint'
             }
           }
         }
     }
   }, [velocityData])
-  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
+  const themedOptions = useMemo(() => applyChartTheme(withReportStyle(chartOptions), resolved), [chartOptions, resolved])
 
   if (loading) {
     return (
@@ -284,39 +284,36 @@ const VelocityReportContent = () => {
 
       {/* Metrics Cards */}
       {metrics && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 md:grid-cols-5 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Average Velocity</div>
-            <div className="text-2xl font-bold text-gray-900">{metrics.averageVelocity}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.averageVelocity}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Recent Average</div>
-            <div className="text-2xl font-bold text-blue-600">{metrics.lastThreeAverage}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.lastThreeAverage}</div>
             <div className="text-sm text-gray-500">last 3 sprints</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Trend</div>
-            <div className={`text-2xl font-bold ${
-              metrics.trend === 'increasing' ? 'text-green-600' :
-              metrics.trend === 'decreasing' ? 'text-red-600' : 'text-gray-600'
-            }`}>
-              {metrics.trend === 'increasing' ? '↗' : metrics.trend === 'decreasing' ? '↘' : '→'}
+            <div className={`text-2xl font-semibold ${metrics.trend === 'decreasing' ? 'text-red-600' : 'text-gray-900'}`}>
+              {metrics.trend === 'increasing' ? 'Rising' : metrics.trend === 'decreasing' ? 'Falling' : 'Steady'}
             </div>
-            <div className="text-sm text-gray-500 capitalize">{metrics.trend}</div>
+            <div className="text-sm text-gray-500">recent sprints</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Consistency</div>
-            <div className="text-2xl font-bold text-purple-600">{metrics.consistency}%</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.consistency}%</div>
             <div className="text-sm text-gray-500">predictability</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Predicted Next</div>
-            <div className="text-2xl font-bold text-orange-600">{metrics.predictedNext}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{metrics.predictedNext}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
         </div>
@@ -325,20 +322,20 @@ const VelocityReportContent = () => {
       {/* Chart */}
       <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
         <div className="relative h-72 sm:h-96">
-          <Bar data={chartData} options={themedOptions} />
+          {chartHasData(chartData) ? <Bar data={chartData} options={themedOptions} /> : <EmptyChart message="No completed sprints with story points yet. Velocity appears once a sprint finishes." />}
         </div>
       </div>
 
       {/* Insights and Recommendations */}
       {metrics && (
-        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Velocity Insights</h3>
+        <div className="hidden has-[.insight]:block bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+          <h2 className="mb-3 text-base font-semibold text-gray-900">Velocity Insights</h2>
           <div className="space-y-3">
 
             {/* Trend Analysis */}
             {metrics.trend === 'increasing' && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Positive Velocity Trend</div>
                   <div className="text-sm text-gray-600">
@@ -349,8 +346,8 @@ const VelocityReportContent = () => {
             )}
 
             {metrics.trend === 'decreasing' && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Declining Velocity</div>
                   <div className="text-sm text-gray-600">
@@ -362,8 +359,8 @@ const VelocityReportContent = () => {
 
             {/* Consistency Analysis */}
             {metrics.consistency > 80 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">High Consistency</div>
                   <div className="text-sm text-gray-600">
@@ -374,8 +371,8 @@ const VelocityReportContent = () => {
             )}
 
             {metrics.consistency < 60 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Variable Velocity</div>
                   <div className="text-sm text-gray-600">
@@ -386,8 +383,8 @@ const VelocityReportContent = () => {
             )}
 
             {/* Planning Recommendation */}
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+            <div className="insight flex items-start gap-3">
+              <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
               <div>
                 <div className="font-medium text-gray-900">Sprint Planning Recommendation</div>
                 <div className="text-sm text-gray-600">
@@ -399,7 +396,7 @@ const VelocityReportContent = () => {
 
             {/* Data Insight */}
             {velocityData.length < 3 && (
-              <div className="flex items-start space-x-3">
+              <div className="insight flex items-start gap-3">
                 <div className="w-2 h-2 bg-gray-400 rounded-full mt-2"></div>
                 <div>
                   <div className="font-medium text-gray-900">Limited Data</div>

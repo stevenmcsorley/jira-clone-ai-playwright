@@ -32,8 +32,18 @@ export const projectTabs = (id: string): NavTab[] => [
 /** A second row of tabs for the two tabs that hold more than one page. */
 export const projectSubTabs = (id: string, pathname: string): NavTab[] | null => {
   if (isReports(id, pathname) || isHistory(id, pathname)) {
+    const report = (slug: string, label: string): NavTab => ({
+      to: `/projects/${id}/reports/${slug}`,
+      label,
+      match: p => p.startsWith(`/projects/${id}/reports/${slug}`),
+    })
     return [
-      { to: `/projects/${id}/reports`, label: 'Reports', match: p => isReports(id, p) },
+      { to: `/projects/${id}/reports`, label: 'Overview', match: p => p === `/projects/${id}/reports` || p === `/projects/${id}/reports/` },
+      report('burndown', 'Burndown'),
+      report('burnup', 'Burnup'),
+      report('velocity', 'Velocity'),
+      report('cumulative-flow', 'Cumulative flow'),
+      report('cycle-time', 'Cycle time'),
       { to: `/projects/${id}/history`, label: 'Sprint history', match: p => isHistory(id, p) },
     ]
   }
