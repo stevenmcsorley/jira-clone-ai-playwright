@@ -370,7 +370,7 @@ export const IssueEdit = () => {
               onChange={setTimeEstimate}
               label="Time Estimate"
               placeholder="e.g., 2h 30m, 1.5h, 90m"
-              helperText="⏰ Time tracking: Estimated time for budget and project management"
+              helperText="Time tracking: Estimated time for budget and project management"
               disabled={saving}
             />
           </div>
@@ -388,7 +388,7 @@ export const IssueEdit = () => {
               disabled={saving}
             />
             <div className="mt-2 text-xs text-gray-500">
-              💡 <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
+              <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
             </div>
           </div>
         </form>

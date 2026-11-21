@@ -152,9 +152,9 @@ export const QuickActions: React.FC = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg  z-50">
           <div className="p-2">
-            <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-100 mb-2">
+            <div className="px-3 py-2 text-xs font-medium text-gray-500   border-b border-gray-100 mb-2">
               Quick Actions
             </div>
 

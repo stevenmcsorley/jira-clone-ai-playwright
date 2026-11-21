@@ -68,7 +68,7 @@ test('the head script resolves the same theme before React starts', () => {
       })
       assert.equal(dark, expected === 'dark')
       assert.equal(style.colorScheme, expected)
-      assert.equal(themeColor, expected === 'dark' ? '#0b1120' : '#2563eb')
+      assert.equal(themeColor, expected === 'dark' ? '#121211' : '#f7f6f2')
     }
   }
 })

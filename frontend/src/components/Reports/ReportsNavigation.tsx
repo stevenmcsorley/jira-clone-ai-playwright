@@ -54,7 +54,7 @@ export const ReportsNavigation = ({ projectId }: ReportsNavigationProps) => {
               to={report.path}
               aria-current={isActive ? 'page' : undefined}
               className={`flex min-h-11 shrink-0 items-center whitespace-nowrap rounded px-3 text-sm ${
-                isActive ? 'bg-blue-600 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                isActive ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               }`}
             >
               {report.name}
@@ -94,7 +94,7 @@ export const ReportsNavigation = ({ projectId }: ReportsNavigationProps) => {
                   aria-current={isActive ? 'page' : undefined}
                   className={`block px-3 py-2 rounded text-sm transition-colors ${
                     isActive
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-slate-700 text-white'
                       : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >

@@ -10,7 +10,7 @@ export const projectListClass = "overflow-hidden rounded-xl border border-gray-2
 export const projectColumns = "lg:grid-cols-[minmax(0,2.4fr)_minmax(0,1.5fr)_7rem_minmax(0,1.2fr)_6.5rem] lg:gap-x-6 lg:items-center";
 
 export const ProjectListHeader = () => (
-  <div className={`hidden border-b border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-medium uppercase tracking-wide text-gray-500 lg:grid lg:px-5 ${projectColumns}`}>
+  <div className={`hidden border-b border-gray-200 bg-gray-50 px-4 py-2 text-[11px] font-medium   text-gray-500 lg:grid lg:px-5 ${projectColumns}`}>
     <span>Project</span>
     <span>Progress</span>
     <span>Activity</span>
@@ -44,7 +44,7 @@ export const ProjectCard = ({ project, className }: ProjectCardProps) => {
           <h2 id={nameId} className="truncate text-sm font-medium text-gray-900" title={project.name}>
             {project.name}
           </h2>
-          <span className="max-w-1/3 shrink-0 truncate rounded border border-gray-200 px-1.5 font-mono text-[11px] font-medium uppercase text-gray-500">
+          <span className="max-w-1/3 shrink-0 truncate rounded border border-gray-200 px-1.5 font-mono text-[11px] font-medium  text-gray-500">
             {project.key}
           </span>
         </div>

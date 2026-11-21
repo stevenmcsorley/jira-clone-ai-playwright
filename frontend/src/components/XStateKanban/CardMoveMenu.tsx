@@ -125,7 +125,7 @@ export const CardMoveMenu = ({ issue, onMove, className }: CardMoveMenuProps) =>
             id={menuId}
             role="menu"
             aria-labelledby={triggerId}
-            className="pointer-events-auto absolute right-0 z-20 w-36 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+            className="pointer-events-auto absolute right-0 z-20 w-36 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-white py-1 "
             onKeyDown={handleMenuKeyDown}
           >
             {targets.map(({ id, label }) => (

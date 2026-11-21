@@ -128,7 +128,7 @@ export const Wiki = () => {
           <div className="max-w-3xl mx-auto px-8 py-8">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{active.title}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{active.title}</h1>
                 <p className="text-xs text-gray-400 mt-1">
                   Updated {new Date(active.updatedAt).toLocaleString()} · /{active.slug}
                 </p>
@@ -152,7 +152,7 @@ export const Wiki = () => {
               value={draftTitle}
               onChange={(e) => setDraftTitle(e.target.value)}
               placeholder="Page title"
-              className="w-full text-2xl font-bold text-gray-900 border-b border-gray-200 pb-2 mb-4 focus:outline-none focus:border-blue-500"
+              className="w-full text-2xl font-semibold tracking-tight text-gray-900 border-b border-gray-200 pb-2 mb-4 focus:outline-none focus:border-blue-500"
               data-testid="wiki-title-input"
             />
             <textarea

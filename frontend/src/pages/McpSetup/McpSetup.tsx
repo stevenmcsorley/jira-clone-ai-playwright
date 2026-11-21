@@ -160,20 +160,56 @@ export const McpSetup = () => {
   return (
     <div className="p-6 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">AI Agent access (MCP)</h1>
-        <p className="text-gray-600 mt-2 max-w-2xl">
-          Ossicone ships an <span className="font-medium">MCP server</span> — a bridge that lets an AI
-          agent like Claude work this tracker the way you do: create projects and issues, plan and run
-          sprints, move cards across the board, comment, log time and read reports. Everything the agent
-          does is done as <span className="font-medium">you</span>, using OAuth or a personal API token.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Agents</h1>
+        <p className="mt-1 max-w-2xl text-sm text-gray-500">Connect AI agents to this tracker through its MCP server. They can plan sprints, move cards, comment and read reports.</p>
       </div>
 
-      <section className="bg-white rounded-lg shadow p-6 space-y-3">
+      <section className="rounded-lg border border-gray-200 bg-white p-6" data-testid="connected-agents">
+        <h2 className="text-lg font-semibold text-gray-900">Connected agents</h2>
+        <p className="mt-1 text-sm text-gray-500">Each token is one agent or client. Everything it does is recorded as you.</p>
+        {tokens.length === 0 ? (
+          <p className="mt-3 text-sm text-gray-600" data-testid="no-agents">No agent is connected yet. Create a token below, then connect Claude or another client.</p>
+        ) : (
+          <div className="mt-3">
+            <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <tbody className="divide-y divide-gray-100">
+                {tokens.map(t => (
+                  <tr key={t.id}>
+                    <td className="py-2 pr-4 font-medium text-gray-900">{t.name}</td>
+                    <td className="py-2 pr-4 text-gray-500">
+                      {t.isActive ? (
+                        t.lastUsedAt
+                          ? `last used ${new Date(t.lastUsedAt).toLocaleDateString()}`
+                          : 'never used'
+                      ) : (
+                        <span className="text-red-500">revoked</span>
+                      )}
+                    </td>
+                    <td className="py-2 text-right">
+                      {t.isActive && (
+                        <button
+                          onClick={() => handleRevoke(t.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="bg-white rounded-lg border border-gray-200 p-6 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">ChatGPT — OAuth</h2>
         <p className="text-sm text-gray-600">Create a custom MCP connector in ChatGPT and use this server URL:</p>
         <div className="flex items-center gap-3"><code className="bg-gray-100 p-2 rounded text-sm">{mcpUrl}</code>
-          <button className="text-blue-600 text-sm" onClick={() => copy(mcpUrl, 'oauth-url')}>{copied === 'oauth-url' ? 'Copied ✓' : 'Copy'}</button></div>
+          <button className="text-blue-600 text-sm" onClick={() => copy(mcpUrl, 'oauth-url')}>{copied === 'oauth-url' ? 'Copied' : 'Copy'}</button></div>
         <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-2">
           <li>Choose OAuth. Leave Client ID and Client Secret blank; ChatGPT discovers the settings automatically.</li>
           <li>Sign in with your Ossicone account, choose a workspace and access level, then select Allow access.</li>
@@ -191,7 +227,7 @@ export const McpSetup = () => {
       </section>
 
       {/* Step 1: token */}
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">1. Create an API token</h2>
         <p className="text-sm text-gray-600 mb-4">
           The token identifies the agent as you. It is shown <span className="font-medium">once</span> —
@@ -237,69 +273,34 @@ export const McpSetup = () => {
                 onClick={() => copy(newToken, 'token')}
                 className="text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
               >
-                {copied === 'token' ? 'Copied ✓' : 'Copy'}
+                {copied === 'token' ? 'Copied' : 'Copy'}
               </button>
             </div>
           </div>
         )}
 
-        {tokens.length > 0 && (
-          <div className="mt-5">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Your tokens</h3>
-            <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <tbody className="divide-y divide-gray-100">
-                {tokens.map(t => (
-                  <tr key={t.id}>
-                    <td className="py-2 pr-4 font-medium text-gray-900">{t.name}</td>
-                    <td className="py-2 pr-4 text-gray-500">
-                      {t.isActive ? (
-                        t.lastUsedAt
-                          ? `last used ${new Date(t.lastUsedAt).toLocaleDateString()}`
-                          : 'never used'
-                      ) : (
-                        <span className="text-red-500">revoked</span>
-                      )}
-                    </td>
-                    <td className="py-2 text-right">
-                      {t.isActive && (
-                        <button
-                          onClick={() => handleRevoke(t.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Revoke
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Step 2: register */}
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">2. Connect it</h2>
         <p className="text-sm text-gray-600 mb-4">
           Ossicone hosts the MCP server — <span className="font-medium">no clone, no install</span>. Just add
           the URL <code className="bg-gray-100 px-1 rounded">{mcpUrl}</code> and your token.
         </p>
 
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Claude Code (CLI) — one command</p>
+        <p className="text-xs font-semibold   text-gray-500 mb-1">Claude Code (CLI) — one command</p>
         <div className="relative">
           <pre className="bg-slate-900 text-slate-100 rounded-md p-4 text-xs overflow-x-auto">{registerCommand}</pre>
           <button
             onClick={() => copy(registerCommand.replace(/\\\n\s*/g, ' '), 'cmd')}
             className="absolute top-2 right-2 text-xs text-slate-300 hover:text-white bg-slate-700 rounded px-2 py-1"
           >
-            {copied === 'cmd' ? 'Copied ✓' : 'Copy'}
+            {copied === 'cmd' ? 'Copied' : 'Copy'}
           </button>
         </div>
 
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-5 mb-1">
+        <p className="text-xs font-semibold   text-gray-500 mt-5 mb-1">
           Claude Desktop / Clawx — config (uses the <code className="normal-case">mcp-remote</code> bridge, auto-downloaded by npx)
         </p>
         <div className="relative">
@@ -308,7 +309,7 @@ export const McpSetup = () => {
             onClick={() => copy(bridgeConfig, 'cfg')}
             className="absolute top-2 right-2 text-xs text-slate-300 hover:text-white bg-slate-700 rounded px-2 py-1"
           >
-            {copied === 'cfg' ? 'Copied ✓' : 'Copy'}
+            {copied === 'cfg' ? 'Copied' : 'Copy'}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-3">
@@ -320,7 +321,7 @@ export const McpSetup = () => {
       </section>
 
       {/* What it can do */}
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">What the agent can do</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {TOOL_GROUPS.map(group => (
@@ -340,7 +341,7 @@ export const McpSetup = () => {
       </section>
 
       {/* Example prompts */}
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Things to try</h2>
         <ul className="space-y-2">
           {EXAMPLE_PROMPTS.map(prompt => (

@@ -27,6 +27,7 @@ import { WorkspaceSettings } from './pages/WorkspaceSettings'
 import { Users } from './pages/Users'
 import { Account } from './pages/Account'
 import { McpSetup } from './pages/McpSetup'
+import { Today } from './pages/Today'
 import { OAuthConsent } from './pages/OAuthConsent'
 import { AuthProvider } from './contexts/AuthContext'
 import { RequireAuth } from './components/Auth/RequireAuth'
@@ -65,8 +66,17 @@ const AppRoutes = () => {
         <Route element={<RequireAuth />}>
         <Route
           path="/"
-          element={<Navigate to="/projects" replace />}
+          element={<Navigate to="/today" replace />}
         />
+        <Route
+          path="/today"
+          element={
+            <Layout>
+              <Today />
+            </Layout>
+          }
+        />
+        <Route path="/agents" element={<Layout><McpSetup /></Layout>} />
         <Route
           path="/users"
           element={
@@ -252,7 +262,7 @@ const AppRoutes = () => {
           element={<ProjectSettings />}
         />
         {/* Redirect to projects list for any unmatched routes */}
-        <Route path="*" element={<Navigate to="/projects" replace />} />
+        <Route path="*" element={<Navigate to="/today" replace />} />
         </Route>
       </Routes>
   )

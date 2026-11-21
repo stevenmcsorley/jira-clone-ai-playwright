@@ -123,7 +123,7 @@ export const searchMachine = setup({
           parsedQuery: result,
         };
       } catch (error) {
-        console.error('❌ Parse error:', error);
+        console.error('Parse error:', error);
         return {
           parsedQuery: null,
         };
@@ -261,7 +261,7 @@ export const searchMachine = setup({
         };
       })
       .catch(error => {
-        console.error('❌ Search API error:', error);
+        console.error('Search API error:', error);
         throw error;
       });
     }),
@@ -282,7 +282,7 @@ export const searchMachine = setup({
               reject(new Error('Empty query'));
             }
           } catch (error) {
-            console.error('❌ Validation error:', error);
+            console.error('Validation error:', error);
             reject(error);
           }
         }, 100);
@@ -447,7 +447,7 @@ export const searchMachine = setup({
         onError: {
           target: 'error',
           actions: [
-            ({ event }) => console.error('❌ Search API failed:', event),
+            ({ event }) => console.error('Search API failed:', event),
             assign({
               error: 'Search failed. Please try again.',
               isLoading: false,
@@ -496,7 +496,7 @@ export const searchMachine = setup({
         onError: {
           target: 'results',
           actions: [
-            ({ event }) => console.error('❌ Load more failed:', event),
+            ({ event }) => console.error('Load more failed:', event),
             assign({
               error: 'Failed to load more results',
               isLoading: false,

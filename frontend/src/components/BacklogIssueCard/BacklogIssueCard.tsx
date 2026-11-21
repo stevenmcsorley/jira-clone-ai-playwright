@@ -23,8 +23,8 @@ export const BacklogIssueCard = ({
   >
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
-        issue.type === 'story' ? 'bg-green-100 text-green-800' :
-        issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
+        issue.type === 'story' ? 'bg-gray-100 text-gray-700' :
+        issue.type === 'task' ? 'bg-gray-100 text-gray-700' :
         issue.type === 'bug' ? 'bg-red-100 text-red-800' :
         'bg-purple-100 text-purple-800'
       }`}>

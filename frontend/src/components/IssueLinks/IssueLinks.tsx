@@ -1,3 +1,4 @@
+import { Link2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
@@ -246,7 +247,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
 
               {/* Search Results Dropdown */}
               {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md  max-h-60 overflow-y-auto">
                   {searchResults.map((searchIssue) => (
                     <button
                       key={searchIssue.id}
@@ -265,7 +266,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
                       <div className="ml-2 flex-shrink-0">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           searchIssue.type === 'bug' ? 'bg-red-100 text-red-800' :
-                          searchIssue.type === 'story' ? 'bg-green-100 text-green-800' :
+                          searchIssue.type === 'story' ? 'bg-gray-100 text-gray-700' :
                           searchIssue.type === 'epic' ? 'bg-purple-100 text-purple-800' :
                           'bg-blue-100 text-blue-800'
                         }`}>
@@ -325,7 +326,7 @@ export const IssueLinks = ({ issue, projectId }: IssueLinksProps) => {
       {issueLinks.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <div className="mb-4">
-            <span className="text-4xl">🔗</span>
+            <Link2 className="size-8 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <p className="text-sm">No linked issues yet.</p>
           <p className="text-xs text-gray-400 mt-1">

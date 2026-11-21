@@ -1,3 +1,4 @@
+import { IssueTypeIcon } from '../IssueTypeIcon'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Card } from '../ui/Card'
@@ -8,13 +9,6 @@ const priorityColors = {
   medium: 'text-yellow-600 bg-yellow-50 border-yellow-200',
   high: 'text-orange-600 bg-orange-50 border-orange-200',
   urgent: 'text-red-600 bg-red-50 border-red-200',
-}
-
-const typeIcons = {
-  story: '📖',
-  task: '✅',
-  bug: '🐛',
-  epic: '🎯',
 }
 
 export const DraggableIssueCard = ({
@@ -45,7 +39,7 @@ export const DraggableIssueCard = ({
 
   const cardClasses = [
     'cursor-grab active:cursor-grabbing',
-    'hover:shadow-md transition-shadow duration-200',
+    ' transition-shadow duration-200',
     isDragging ? 'opacity-50' : '',
     className,
   ].filter(Boolean).join(' ')
@@ -63,8 +57,8 @@ export const DraggableIssueCard = ({
 
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{typeIcons[issue.type]}</span>
-              <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+              <IssueTypeIcon type={issue.type} />
+              <span className="text-sm font-semibold text-gray-500  ">
                 {issue.project?.key}-{issue.id}
               </span>
             </div>
@@ -107,8 +101,8 @@ export const DraggableIssueCard = ({
             <div className="flex items-center gap-2">
               {issue.assignee && (
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-md">
-                    <span className="text-xs font-bold text-white">
+                  <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center ">
+                    <span className="text-xs font-bold text-gray-800">
                       {issue.assignee.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
@@ -122,11 +116,11 @@ export const DraggableIssueCard = ({
             <div className="flex items-center gap-2">
               {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
                 <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                  📊 {issue.storyPoints}
+                  {issue.storyPoints} pts
                 </span>
               ) : (
                 <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
-                  📊 ?
+                  ? pts
                 </span>
               )}
               <button
@@ -136,7 +130,7 @@ export const DraggableIssueCard = ({
                   if (onDelete) onDelete(issue.id)
                 }}
               >
-                ✕
+                ×
               </button>
             </div>
           </div>

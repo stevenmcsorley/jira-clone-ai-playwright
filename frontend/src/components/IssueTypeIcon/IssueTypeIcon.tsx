@@ -1,14 +1,14 @@
 import type { IssueType } from '../../types/domain.types'
 
 /**
- * Jira-style issue type glyphs: small coloured rounded squares with a white
- * symbol — replaces the emoji markers on cards and in tables.
+ * Issue type glyphs: small rounded squares with a symbol, in neutral tones.
  */
+// Monochrome: the glyph says the type. Only a bug carries colour, because a bug is the one type that is a problem.
 const TYPE_STYLES: Record<IssueType, { bg: string; label: string }> = {
-  story: { bg: 'bg-green-500', label: 'Story' },
-  task: { bg: 'bg-blue-500', label: 'Task' },
-  bug: { bg: 'bg-red-500', label: 'Bug' },
-  epic: { bg: 'bg-purple-500', label: 'Epic' },
+  story: { bg: 'bg-gray-200 text-gray-700', label: 'Story' },
+  task: { bg: 'bg-gray-200 text-gray-700', label: 'Task' },
+  bug: { bg: 'bg-red-500 text-white', label: 'Bug' },
+  epic: { bg: 'bg-gray-200 text-gray-700', label: 'Epic' },
 }
 
 const GLYPHS: Record<IssueType, React.ReactNode> = {
@@ -48,7 +48,7 @@ export const IssueTypeIcon = ({ type, className = '' }: IssueTypeIconProps) => {
   return (
     <span
       title={style.label}
-      className={`inline-flex items-center justify-center w-4 h-4 rounded-[3px] text-white shrink-0 ${style.bg} ${className}`}
+      className={`inline-flex items-center justify-center w-4 h-4 rounded-[3px] shrink-0 ${style.bg} ${className}`}
     >
       {GLYPHS[type] ?? GLYPHS.task}
     </span>

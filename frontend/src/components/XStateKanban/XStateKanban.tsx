@@ -63,9 +63,9 @@ const XStateIssueCard = ({
   const metrics = useIssueMetrics(issue.id);
 
   const priorityIcons = {
-    low: { icon: '↓', color: 'text-green-600', bg: 'bg-green-50' },
-    medium: { icon: '→', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    high: { icon: '↑', color: 'text-orange-600', bg: 'bg-orange-50' },
+    low: { icon: '↓', color: 'text-gray-500', bg: 'bg-gray-100' },
+    medium: { icon: '→', color: 'text-gray-600', bg: 'bg-gray-100' },
+    high: { icon: '↑', color: 'text-gray-900', bg: 'bg-gray-200' },
     urgent: { icon: '⇈', color: 'text-red-600', bg: 'bg-red-50' },
   };
 
@@ -93,8 +93,8 @@ const XStateIssueCard = ({
       }}
       onDragEnd={onDragEnd}
       className={`
-        relative bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-3 cursor-grab active:cursor-grabbing
-        hover:shadow-md transition-all select-none
+        relative bg-white rounded-lg  border border-gray-200 p-3 mb-3 cursor-grab active:cursor-grabbing
+         transition-all select-none
         ${isDragged ? 'opacity-50 scale-95' : ''}
         ${isOptimistic ? 'ring-2 ring-blue-300 bg-blue-50' : ''}
       `}
@@ -124,7 +124,7 @@ const XStateIssueCard = ({
           {issue.labels.map((label, index) => (
             <span
               key={index}
-              className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800 font-medium"
+              className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-medium"
             >
               {label}
             </span>
@@ -211,8 +211,8 @@ const XStateIssueCard = ({
 
           {/* Assignee avatar */}
           {issue.assignee && (
-            <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-xs font-bold text-white">
+            <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-gray-800">
                 {issue.assignee.name.charAt(0)}
               </span>
             </div>
@@ -256,10 +256,10 @@ const XStateColumn = ({
   const [dropIndex, setDropIndex] = React.useState<number | null>(null);
 
   const config = {
-    todo: { color: 'bg-gray-50', dot: 'bg-gray-400', borderColor: 'border-gray-300' },
-    in_progress: { color: 'bg-blue-50', dot: 'bg-blue-500', borderColor: 'border-blue-300' },
-    code_review: { color: 'bg-purple-50', dot: 'bg-purple-500', borderColor: 'border-purple-300' },
-    done: { color: 'bg-green-50', dot: 'bg-green-500', borderColor: 'border-green-300' },
+    todo: { color: 'bg-gray-100', dot: 'bg-gray-400', borderColor: 'border-gray-200' },
+    in_progress: { color: 'bg-gray-100', dot: 'bg-blue-500', borderColor: 'border-gray-200' },
+    code_review: { color: 'bg-gray-100', dot: 'bg-gray-600', borderColor: 'border-gray-200' },
+    done: { color: 'bg-gray-100', dot: 'bg-green-500', borderColor: 'border-gray-200' },
   }[status];
 
   const handleDrop = useCallback((e: React.DragEvent, index?: number) => {
@@ -280,7 +280,7 @@ const XStateColumn = ({
       {/* Column Header */}
       <div className="flex items-center justify-between mb-4 px-3">
         <div className="flex items-center gap-2 whitespace-nowrap">
-          <h2 className="flex items-center gap-2 font-semibold text-sm text-gray-600 uppercase tracking-wide">
+          <h2 className="flex items-center gap-2 font-semibold text-sm text-gray-600  ">
             <span className={`w-2 h-2 rounded-full ${config.dot}`} />
             {title}
           </h2>
@@ -298,9 +298,9 @@ const XStateColumn = ({
       {/* Drop Zone */}
       <div
         className={`
-          min-h-[16rem] p-3 xl:min-h-[500px] xl:p-6 rounded-lg border-2 border-dashed transition-all
+          min-h-[16rem] p-3 xl:min-h-[500px] xl:p-6 rounded-lg border transition-colors
           ${config.color} ${config.borderColor}
-          ${isDragOver ? 'border-blue-400 bg-blue-100 scale-102' : ''}
+          ${isDragOver ? 'border-dashed border-blue-500 bg-blue-50' : ''}
         `}
         onDrop={(e) => handleDrop(e)}
         onDragOver={handleDragOver}
@@ -493,9 +493,9 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
         {announcement}
       </div>
       {/* Project Header with State Information */}
-      <div className="mb-4" data-testid="xstate-project-header">
+      <div className="mb-2" data-testid="xstate-project-header">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <h1 className="min-w-0 max-w-full truncate text-xl font-semibold" title={project.name} data-testid="project-name">{project.name}</h1>
+          <h2 className="sr-only" data-testid="project-name">{project.name}</h2>
           <div className="ml-auto flex items-center gap-3 text-sm">
             {/* Sync Status */}
             {isSyncing && (
@@ -514,21 +514,10 @@ export const XStateKanban: React.FC<XStateKanbanProps> = ({
               className="text-gray-600 hover:text-blue-600 p-1 rounded"
               title="Sync now"
             >
-              🔄
+              Refresh
             </button>
           </div>
         </div>
-        {project.description?.trim() && (
-          <div data-testid="project-description" className="min-w-0">
-            <ProjectDescription
-              projectId={project.id}
-              idPrefix="board-project"
-              lines={2}
-              description={project.description}
-              className="max-w-prose"
-            />
-          </div>
-        )}
       </div>
 
       {/* Error Banner */}

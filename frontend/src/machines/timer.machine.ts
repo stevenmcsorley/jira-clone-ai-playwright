@@ -388,7 +388,7 @@ export const timerManagerMachine = createMachine(
                   date: new Date().toISOString(),
                 }).then(() => {
                 }).catch((error) => {
-                  console.error(`❌ Failed to log time for issue ${issueId}:`, error);
+                  console.error(`Failed to log time for issue ${issueId}:`, error);
                 });
               } else {
               }

@@ -5,8 +5,8 @@ import type { KanbanColumnProps } from './KanbanColumn.types'
 const statusColors = {
   todo: 'border-gray-300 bg-gray-50',
   in_progress: 'border-blue-300 bg-blue-50',
-  code_review: 'border-purple-300 bg-purple-50',
-  done: 'border-green-300 bg-green-50',
+  code_review: 'border-gray-200 bg-gray-100',
+  done: 'border-gray-200 bg-gray-100',
 }
 
 export const KanbanColumn = ({
@@ -30,7 +30,7 @@ export const KanbanColumn = ({
 
   return (
     <div className={classes} data-testid={`kanban-column-${status}`}>
-      <div className={`rounded-lg border-2 border-dashed p-4 h-full ${statusColors[status]}`}>
+      <div className={`rounded-lg border p-4 h-full ${statusColors[status]}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="font-semibold text-gray-900">{title}</h2>

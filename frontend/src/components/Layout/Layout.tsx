@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
+import { Check, Search } from 'lucide-react'
 import { useProjects } from '../../hooks/useProjects'
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
@@ -12,11 +13,32 @@ import { GlobalSearch } from '../Search/GlobalSearch'
 import { NotificationBell } from '../Notifications'
 import { ThemeToggle } from '../ThemeToggle'
 import { WorkspaceIcon } from '../../lib/workspaceIcons'
+import { Mark } from './Mark'
+import { projectSubTabs, projectTabs, workspaceTabs } from './navigation'
+import type { NavTab } from './navigation'
 import styles from './Layout.module.css'
 
 interface LayoutProps {
   children: React.ReactNode
 }
+
+const tabClass = (active: boolean) =>
+  `relative inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3 text-sm font-medium focus-visible:outline-offset-[-2px] md:min-h-10 ${
+    active ? 'border-blue-600 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900'
+  }`
+
+const Tabs = ({ tabs, pathname, label }: { tabs: NavTab[]; pathname: string; label: string }) => (
+  <nav aria-label={label} className="-mb-px flex gap-1 overflow-x-auto overflow-y-hidden max-sm:[mask-image:linear-gradient(to_right,black_88%,transparent)]">
+    {tabs.map(tab => {
+      const active = tab.match(pathname)
+      return (
+        <Link key={tab.to} to={tab.to} aria-current={active ? 'page' : undefined} className={tabClass(active)} data-testid={`nav-${tab.label.toLowerCase().replace(/\s+/g, '-')}`}>
+          {tab.label}
+        </Link>
+      )
+    })}
+  </nav>
+)
 
 export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
@@ -24,291 +46,67 @@ export const Layout = ({ children }: LayoutProps) => {
   const { projects } = useProjects()
   const { user, logout, workspaces, currentWorkspace, switchWorkspace } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [overlay, setOverlay] = useState<'navigation' | 'search' | null>(null)
-  const sidebarOpen = overlay === 'navigation'
-  const searchOpen = overlay === 'search'
-  const menuTrigger = useRef<HTMLButtonElement>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
   const searchTrigger = useRef<HTMLButtonElement>(null)
-  const sidebar = useRef<HTMLDivElement>(null)
   const searchDialog = useRef<HTMLDivElement>(null)
 
   const currentProject = projects.find(p => p.id === Number(projectId))
-  const isProjectBoard = location.pathname.includes('/projects/') && projectId
-
+  const inProject = location.pathname.includes('/projects/') && !!projectId
   const workspaceName = currentWorkspace?.name || 'Ossicone'
+  // Breadcrumbs only where the tabs cannot say where you are: inside one issue, a create or edit page, or one report.
+  const showCrumbs = /\/issues\/[^/]+|\/reports\/[^/]+|\/projects\/create|\/issues\/create/.test(location.pathname)
+  const subTabs = inProject ? projectSubTabs(projectId!, location.pathname) : null
 
-  const closeOverlay = useCallback(() => setOverlay(null), [])
-
-  useEscapeKey(overlay !== null, closeOverlay)
-  useBodyScrollLock(overlay !== null)
-  useFocusTrap(sidebar, sidebarOpen, menuTrigger)
+  const closeSearch = useCallback(() => setSearchOpen(false), [])
+  useEscapeKey(searchOpen, closeSearch)
+  useBodyScrollLock(searchOpen)
   useFocusTrap(searchDialog, searchOpen, searchTrigger, 'input')
 
   useEffect(() => {
-    if (!overlay) return
+    if (!searchOpen) return
+    const wide = window.matchMedia('(min-width: 40rem)')
+    const close = () => { if (wide.matches) closeSearch() }
+    close()
+    wide.addEventListener('change', close)
+    return () => wide.removeEventListener('change', close)
+  }, [searchOpen, closeSearch])
 
-    const desktop = window.matchMedia(overlay === 'navigation' ? '(min-width: 48rem)' : '(min-width: 40rem)')
-    const closeAtBreakpoint = () => {
-      if (desktop.matches) closeOverlay()
-    }
-
-    closeAtBreakpoint()
-    desktop.addEventListener('change', closeAtBreakpoint)
-    return () => desktop.removeEventListener('change', closeAtBreakpoint)
-  }, [overlay, closeOverlay])
-
-  // Project-only nav items: a real link inside a project, disabled otherwise.
-  const ProjectNavItem = ({ to, active, children }: { to: string; active: boolean; children: React.ReactNode }) => {
-    if (!isProjectBoard) {
-      return (
-        <div
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 opacity-60 cursor-not-allowed"
-          aria-disabled="true"
-          title="Open a project to use this"
-        >
-          {children}
-        </div>
-      )
-    }
-    return (
-      <Link
-        to={to}
-        onClick={closeOverlay}
-        className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-          active
-            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-        }`}
-      >
-        {children}
-      </Link>
-    )
-  }
+  const initials = (user?.name || '?').split(' ').map(part => part[0]).slice(0, 2).join('').toUpperCase()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-60 bg-black/40 md:hidden"
-          onClick={closeOverlay}
-          aria-hidden="true"
-          data-testid="sidebar-backdrop"
-        />
-      )}
-
-      {/* Left Sidebar */}
-      <div
-        ref={sidebar}
-        role={sidebarOpen ? 'dialog' : undefined}
-        aria-modal={sidebarOpen ? true : undefined}
-        aria-label={sidebarOpen ? 'Navigation' : undefined}
-        tabIndex={sidebarOpen ? -1 : undefined}
-        className={`fixed inset-y-0 left-0 z-70 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out max-md:overflow-y-auto max-md:overscroll-contain md:static md:z-auto md:translate-x-0 md:transition-none ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full max-md:invisible'
-        }`}
-        data-testid="app-sidebar"
-      >
-        {sidebarOpen && (
-          <button
-            type="button"
-            onClick={closeOverlay}
-            className="min-h-11 self-end px-4 text-sm text-gray-700 hover:bg-gray-100 md:hidden"
-            aria-label="Close navigation"
-          >
-            Close
-          </button>
-        )}
-        {/* Workspace Header */}
-        <Link
-          to="/workspace"
-          onClick={closeOverlay}
-          className="block p-4 border-b border-gray-200 hover:bg-gray-50"
-          title="Workspace settings"
-        >
-          <div className="flex items-center gap-3">
-            <WorkspaceIcon
-              name={workspaceName}
-              icon={currentWorkspace?.icon}
-              iconImage={currentWorkspace?.iconImage}
-            />
-            <div className="min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">{workspaceName}</h3>
-              <p className="text-xs text-gray-500 truncate">
-                {currentProject?.name || 'Workspace'}
-              </p>
-            </div>
-          </div>
-        </Link>
-
-        {/* Navigation */}
-        <nav className="flex-1 px-2 py-4">
-          <div className="space-y-1">
-                        <Link
-              to="/projects"
-              onClick={closeOverlay}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === '/projects'
-                  ? 'bg-gray-100 text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-              </svg>
-              Projects
-            </Link>
-
-            <Link
-              to="/search"
-              onClick={closeOverlay}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === '/search'
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Advanced Search
-            </Link>
-
-            <ProjectNavItem to={`/projects/${projectId}/backlog`} active={location.pathname.includes('/backlog')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              Backlog
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}`} active={!!isProjectBoard && !location.pathname.includes('/backlog') && !location.pathname.includes('/issues') && !location.pathname.includes('/reports') && !location.pathname.includes('/history') && !location.pathname.includes('/repository') && !location.pathname.includes('/wiki') && !location.pathname.includes('/settings')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-              </svg>
-              Board
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}/repository`} active={location.pathname.includes('/repository')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2h6v10l-3-2-3 2V4z" clipRule="evenodd" />
-              </svg>
-              Repository
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}/wiki`} active={location.pathname.includes('/wiki')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm1 4a1 1 0 011-1h3a1 1 0 110 2H6a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-              Wiki
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}/reports`} active={location.pathname.includes('/reports')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm2.707 4.293a1 1 0 00-1.414 1.414L7.586 13a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L9 10.172 6.707 9.707z" clipRule="evenodd" />
-              </svg>
-              Reports
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}/history`} active={location.pathname.includes('/history')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
-              Sprint History
-            </ProjectNavItem>
-
-            <ProjectNavItem to={`/projects/${projectId}/issues`} active={location.pathname.includes('/issues') && !location.pathname.includes('/board')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              Issues
-            </ProjectNavItem>
-
-            <Link
-              to="/ai-agents"
-              onClick={closeOverlay}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium ${
-                location.pathname === '/ai-agents'
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-              </svg>
-              AI Agent
-            </Link>
-
-            <ProjectNavItem to={`/projects/${projectId}/settings`} active={location.pathname.includes('/settings')}>
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-              </svg>
-              Settings
-            </ProjectNavItem>
-          </div>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0" inert={overlay !== null}>
-        {/* Active Timer Display */}
+    <div className="min-h-screen bg-gray-50">
+      <div inert={searchOpen}>
         <ActiveTimerDisplay />
 
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-3 sm:px-6 py-4">
-          <div className="flex items-center justify-between max-md:relative">
-            <div className="flex items-center gap-1 sm:gap-4">
-              {/* Mobile menu toggle */}
-              <button
-                ref={menuTrigger}
-                type="button"
-                onClick={() => {
-                  setUserMenuOpen(false)
-                  setOverlay('navigation')
-                }}
-                className="md:hidden min-w-11 min-h-11 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
-                aria-label="Toggle navigation menu"
-                aria-haspopup="dialog"
-                aria-expanded={sidebarOpen}
-                data-testid="sidebar-toggle"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <Link to="/projects" className="flex items-center gap-2 text-xl font-bold text-blue-600 max-md:min-h-11 max-md:min-w-11 max-md:justify-center">
-                <img src="/logo.png" alt="" className="w-7 h-7 rounded-md" />
-                <span className="sr-only sm:not-sr-only">Ossicone</span>
-              </Link>
+        {/* Workspace bar */}
+        <header className="border-b border-gray-200 bg-white" data-testid="app-header">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-3 sm:px-6">
+            <Link to="/today" className="flex min-h-11 items-center gap-2 text-base font-semibold tracking-tight text-gray-900" aria-label="Ossicone, go to Today">
+              <Mark className="size-6" />
+              <span className="hidden sm:inline">Ossicone</span>
+            </Link>
+
+            <div className="order-last w-full sm:order-none sm:w-auto">
+              <Tabs tabs={workspaceTabs} pathname={location.pathname} label="Workspace" />
             </div>
 
-            {/* Global Search */}
-            <div className="hidden sm:block flex-1 max-w-md mx-4 md:mx-8">
-              <GlobalSearch
-                onNavigate={(path) => window.location.href = path}
-                className="w-full"
-              />
+            <div className="ml-auto hidden max-w-md flex-1 sm:block">
+              <GlobalSearch onNavigate={(path) => { window.location.href = path }} className="w-full" />
             </div>
 
-            <div className={`flex items-center gap-1 md:gap-3 ${styles.actions}`}>
+            <div className={`ml-auto flex items-center gap-1 sm:ml-0 md:gap-2 ${styles.actions}`}>
               <button
                 ref={searchTrigger}
                 type="button"
-                onClick={() => {
-                  setUserMenuOpen(false)
-                  setOverlay('search')
-                }}
-                className="sm:hidden min-w-11 min-h-11 flex items-center justify-center rounded-md text-gray-600 hover:bg-gray-100"
+                onClick={() => { setUserMenuOpen(false); setSearchOpen(true) }}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-gray-600 hover:bg-gray-100 sm:hidden"
                 aria-label="Search"
                 aria-haspopup="dialog"
                 aria-expanded={searchOpen}
                 data-testid="mobile-search-toggle"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="size-5" strokeWidth={1.5} aria-hidden="true" />
               </button>
-              {/* Quick Actions in Header */}
               <QuickActions />
               <NotificationBell />
               <ThemeToggle />
@@ -316,91 +114,46 @@ export const Layout = ({ children }: LayoutProps) => {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(open => !open)}
-                  className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center hover:ring-2 hover:ring-blue-300"
+                  className="flex size-8 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-xs font-semibold text-gray-700 hover:border-gray-400"
                   title={user?.name}
                   aria-label="User menu"
                   aria-expanded={userMenuOpen}
                 >
-                  <span className="text-sm font-medium text-blue-700">
-                    {(user?.name || '?')
-                      .split(' ')
-                      .map(part => part[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
-                  </span>
+                  {initials}
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-lg border border-gray-300 bg-white py-1">
+                    <div className="border-b border-gray-200 px-4 py-2">
                       <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                       <p className="text-xs text-gray-500">{user?.email}</p>
                     </div>
                     {workspaces.length > 0 && (
-                      <div className="border-b border-gray-100 pb-1 mb-1">
-                        <p className="px-4 pt-2 pb-1 text-xs font-medium text-gray-400 uppercase">
-                          Workspaces
-                        </p>
+                      <div className="mb-1 border-b border-gray-200 pb-1">
+                        <p className="px-4 pb-1 pt-2 text-xs font-medium text-gray-500">Workspaces</p>
                         {workspaces.map(workspace => {
                           const isCurrent = workspace.id === currentWorkspace?.id
                           return (
                             <button
                               key={workspace.id}
-                              onClick={() => {
-                                if (!isCurrent) {
-                                  switchWorkspace(workspace.id)
-                                }
-                                setUserMenuOpen(false)
-                              }}
-                              className="flex w-full items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left"
+                              onClick={() => { if (!isCurrent) switchWorkspace(workspace.id); setUserMenuOpen(false) }}
+                              className="flex w-full items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                             >
-                              <span className="flex items-center gap-2 min-w-0">
-                                <WorkspaceIcon
-                                  name={workspace.name}
-                                  icon={workspace.icon}
-                                  iconImage={workspace.iconImage}
-                                  className="w-5 h-5"
-                                  textClassName="text-[10px]"
-                                />
+                              <span className="flex min-w-0 items-center gap-2">
+                                <WorkspaceIcon name={workspace.name} icon={workspace.icon} iconImage={workspace.iconImage} className="size-5" textClassName="text-[10px]" />
                                 <span className="truncate">{workspace.name}</span>
                               </span>
-                              {isCurrent && (
-                                <svg className="w-4 h-4 text-blue-600 flex-shrink-0 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
+                              {isCurrent && <Check className="ml-2 size-4 shrink-0 text-blue-600" strokeWidth={1.5} aria-hidden="true" />}
                             </button>
                           )
                         })}
-                        <Link
-                          to="/workspace"
-                          onClick={() => setUserMenuOpen(false)}
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
+                        <Link to="/workspace" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                           Workspace settings
                         </Link>
                       </div>
                     )}
-                    <Link
-                      to="/account"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Account settings
-                    </Link>
-                    <Link
-                      to="/users"
-                      onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      People
-                    </Link>
-                    <button
-                      onClick={logout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                    >
-                      Sign out
-                    </button>
+                    <Link to="/account" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Account settings</Link>
+                    <Link to="/users" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">People</Link>
+                    <button onClick={logout} className="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-50">Sign out</button>
                   </div>
                 )}
               </div>
@@ -408,39 +161,37 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb />
+        {/* Project strip: only inside a project */}
+        {inProject && (
+          <div className="border-b border-gray-200 bg-white" data-testid="project-strip">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 px-3 sm:px-6">
+              <Link to={`/projects/${projectId}`} className="flex min-h-11 items-center gap-2 text-sm text-gray-900 md:min-h-10">
+                <span className="rounded border border-gray-300 px-1.5 py-0.5 font-mono text-xs text-gray-600">{currentProject?.key ?? '…'}</span>
+                <span className="max-w-[16rem] truncate font-medium">{currentProject?.name ?? 'Project'}</span>
+              </Link>
+              <Tabs tabs={projectTabs(projectId!)} pathname={location.pathname} label={`${currentProject?.name ?? 'Project'} sections`} />
+            </div>
+            {subTabs && (
+              <div className="border-t border-gray-200 px-3 sm:px-6" data-testid="project-subtabs">
+                <Tabs tabs={subTabs} pathname={location.pathname} label="Sub-sections" />
+              </div>
+            )}
+          </div>
+        )}
 
-        {/* Page Content */}
+        {showCrumbs && <Breadcrumb />}
+
+        <div className="sr-only" aria-live="polite">{workspaceName}</div>
+
         {children}
       </div>
 
       {searchOpen && (
         <div className="fixed inset-0 z-70 sm:hidden">
-          <div className="absolute inset-0 bg-black/40" aria-hidden="true" onClick={closeOverlay} />
-          <div
-            ref={searchDialog}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search"
-            tabIndex={-1}
-            className="relative w-full bg-white p-3"
-            data-testid="mobile-search-dialog"
-          >
-            <button
-              type="button"
-              onClick={closeOverlay}
-              className="ml-auto mb-2 block min-h-11 rounded-md px-3 text-sm text-gray-700 hover:bg-gray-100"
-            >
-              Close
-            </button>
-            <GlobalSearch
-              onNavigate={(path) => {
-                closeOverlay()
-                window.location.href = path
-              }}
-              className="w-full"
-            />
+          <div className="absolute inset-0 bg-black/50" aria-hidden="true" onClick={closeSearch} />
+          <div ref={searchDialog} role="dialog" aria-modal="true" aria-label="Search" tabIndex={-1} className="relative w-full bg-white p-3" data-testid="mobile-search-dialog">
+            <button type="button" onClick={closeSearch} className="mb-2 ml-auto block min-h-11 rounded-md px-3 text-sm text-gray-700 hover:bg-gray-100">Close</button>
+            <GlobalSearch onNavigate={(path) => { closeSearch(); window.location.href = path }} className="w-full" />
           </div>
         </div>
       )}

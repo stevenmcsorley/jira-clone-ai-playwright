@@ -1,3 +1,4 @@
+import { ClipboardList } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ProjectDescription } from '../../components/ProjectDescription/ProjectDescription'
@@ -342,7 +343,7 @@ export const Backlog = () => {
       <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 wrap-anywhere">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900 wrap-anywhere">
               {currentProject?.name} Backlog
             </h1>
             <p className="text-sm text-gray-600 mt-1 max-md:hidden">
@@ -478,7 +479,7 @@ export const Backlog = () => {
                 </div>
                 {tidyDescription(sprint.goal) && (
                   <div className="mt-2 min-w-0 max-w-prose wrap-anywhere">
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Sprint goal</p>
+                    <p className="text-xs font-medium   text-gray-500">Sprint goal</p>
                     <ProjectDescription
                       idPrefix="backlog-sprint-goal"
                       projectId={sprint.id}
@@ -554,7 +555,7 @@ export const Backlog = () => {
               {backlogIssues.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                   <div className="mb-4">
-                    <span className="text-4xl">📋</span>
+                    <ClipboardList className="size-8 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
                   </div>
                   <p className="text-sm">No issues in backlog</p>
                   <p className="text-xs text-gray-400 mt-1">
@@ -830,7 +831,7 @@ const BacklogIssueList = ({
 
   return (
     <>
-      <div className="hidden xl:block bg-white rounded-lg shadow">
+      <div className="hidden xl:block bg-white rounded-lg ">
         {/* Table Header */}
         <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
           <div className="col-span-1">Type</div>
@@ -855,8 +856,8 @@ const BacklogIssueList = ({
               {/* Type */}
               <div className="col-span-1 flex items-center">
                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize ${
-                  issue.type === 'story' ? 'bg-green-100 text-green-800' :
-                  issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
+                  issue.type === 'story' ? 'bg-gray-100 text-gray-700' :
+                  issue.type === 'task' ? 'bg-gray-100 text-gray-700' :
                   issue.type === 'bug' ? 'bg-red-100 text-red-800' :
                   'bg-purple-100 text-purple-800'
                 }`}>
@@ -920,8 +921,8 @@ const BacklogIssueList = ({
               <div className="col-span-2 flex items-center">
                 {issue.assignee ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-bold text-white">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-xs font-bold text-gray-800">
                         {issue.assignee.name.charAt(0)}
                       </span>
                     </div>

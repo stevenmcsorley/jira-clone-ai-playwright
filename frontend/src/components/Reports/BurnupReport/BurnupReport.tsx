@@ -157,16 +157,16 @@ const BurnupReportContent = () => {
       {
         label: 'Work Completed',
         data: burnupData.map(d => d.completed),
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+        borderColor: 'rgb(134, 201, 143)',
+        backgroundColor: 'rgba(134, 201, 143, 0.1)',
         fill: true,
         tension: 0.1
       },
       {
         label: 'Total Scope',
         data: burnupData.map(d => d.totalScope),
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderColor: 'rgb(224, 164, 58)',
+        backgroundColor: 'rgba(224, 164, 58, 0.1)',
         fill: false,
         tension: 0.1,
         borderDash: [5, 5]

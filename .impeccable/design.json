@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T13:30:00Z",
+  "title": "Design System: Ossicone",
+  "extensions": {
+    "colorMeta": {
+      "signal-dark": { "role": "primary", "displayName": "Amber Signal", "canonical": "#e0a43a", "tonalRamp": ["#a8741e", "#c98f2c", "#e0a43a", "#e8b04e", "#ecc070", "#f3d49a", "#f8e4bd", "#fbf3e1"] },
+      "signal-light": { "role": "primary", "displayName": "Brass Signal", "canonical": "#8a5a00", "tonalRamp": ["#3a2500", "#543600", "#704800", "#8a5a00", "#b57a12", "#cf9632", "#e1b565", "#fbf3e1"] },
+      "page-dark": { "role": "neutral", "displayName": "Graphite Page", "canonical": "#121211", "tonalRamp": ["#121211", "#1a1a18", "#1d1d1b", "#2a2a27", "#3b3b37", "#7d7b73", "#9b988f", "#efede5"] },
+      "page-light": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#f7f6f2", "tonalRamp": ["#181816", "#2a2a26", "#3f3e38", "#6f6c63", "#99958a", "#cdc9bd", "#e2dfd6", "#f7f6f2"] },
+      "alert-dark": { "role": "status", "displayName": "Dark Alert Red", "canonical": "#ee806f", "tonalRamp": ["#ee806f", "#f4a799", "#f8c8bf", "#fbe2dd"] },
+      "success-dark": { "role": "status", "displayName": "Dark Success Green", "canonical": "#86c98f", "tonalRamp": ["#86c98f", "#a8d9ae", "#c9e8cd"] }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Title", "purpose": "One page title per page." },
+      "headline": { "displayName": "Headline", "purpose": "Panel and section headings." },
+      "body": { "displayName": "Body", "purpose": "Rows, controls, nav tabs; tabular figures." },
+      "label": { "displayName": "Label", "purpose": "Metadata, hints, counts; sentence case." },
+      "mono": { "displayName": "Mono", "purpose": "Issue keys and the timer only." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "colour-transition", "value": "transition-colors (150ms, Tailwind default easing)", "purpose": "Button and row hover." },
+      { "name": "pulse", "value": "animate-pulse", "purpose": "Running timer dot, loading skeleton, optimistic card dot." },
+      { "name": "drag-state", "value": "opacity 0.5, scale 0.95", "purpose": "A card being dragged." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one filled action per view; brass on paper, amber on graphite.",
+      "html": "<button class=\"ds-btn-primary\">Create issue</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #8a5a00; color: #f7f6f2; padding: 8px 16px; border: 0; border-radius: 8px; font: 500 14px/20px Geist, system-ui, sans-serif; cursor: pointer; transition: background-color .15s; } .ds-btn-primary:hover { background: #704800; } .ds-btn-primary:focus-visible { outline: 0; box-shadow: 0 0 0 2px #f7f6f2, 0 0 0 4px #b57a12; }"
+    },
+    {
+      "name": "Primary Button (dark)",
+      "kind": "button",
+      "refersTo": "button-primary-dark",
+      "description": "Amber fill with near-black text on graphite.",
+      "html": "<button class=\"ds-btn-primary-dark\">Create issue</button>",
+      "css": ".ds-btn-primary-dark { display: inline-flex; align-items: center; justify-content: center; background: #e0a43a; color: #17150f; padding: 8px 16px; border: 0; border-radius: 8px; font: 500 14px/20px Geist, system-ui, sans-serif; cursor: pointer; transition: background-color .15s; } .ds-btn-primary-dark:hover { background: #c98f2c; } .ds-btn-primary-dark:focus-visible { outline: 0; box-shadow: 0 0 0 2px #1a1a18, 0 0 0 4px #e0a43a; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Panel fill with a strong 1px rule.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; background: #fff; color: #3f3e38; padding: 8px 16px; border: 1px solid #cdc9bd; border-radius: 8px; font: 500 14px/20px Geist, system-ui, sans-serif; cursor: pointer; transition: background-color .15s; } .ds-btn-secondary:hover { background: #f7f6f2; } .ds-btn-secondary:focus-visible { outline: 0; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #b57a12; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "panel",
+      "description": "8px radius, strong rule, signal border and ring on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Issue title\">",
+      "css": ".ds-input { display: block; width: 240px; box-sizing: border-box; background: #fff; color: #181816; border: 1px solid #cdc9bd; border-radius: 8px; padding: 8px 12px; font: 400 14px/20px Geist, system-ui, sans-serif; } .ds-input::placeholder { color: #99958a; } .ds-input:focus { outline: 0; border-color: #b57a12; box-shadow: 0 0 0 1px #b57a12; }"
+    },
+    {
+      "name": "Workspace Tabs",
+      "kind": "nav",
+      "refersTo": "nav-tab",
+      "description": "Text tabs on a ruled bar; the active tab takes a 2px signal underline.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\" href=\"#\">Today</a><a class=\"ds-tab\" href=\"#\">Projects</a><a class=\"ds-tab\" href=\"#\">Agents</a></nav>",
+      "css": ".ds-tabs { display: flex; gap: 4px; border-bottom: 1px solid #e2dfd6; background: #fff; padding: 0 12px; } .ds-tab { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; margin-bottom: -1px; border-bottom: 2px solid transparent; color: #6f6c63; font: 500 14px/20px Geist, system-ui, sans-serif; text-decoration: none; } .ds-tab:hover { color: #181816; } .ds-tab-active { color: #181816; border-bottom-color: #8a5a00; } .ds-tab:focus-visible { outline: 2px solid #b57a12; outline-offset: -2px; }"
+    },
+    {
+      "name": "Ruled Section With Rows",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The Today section: heading block over a hairline-divided list.",
+      "html": "<section class=\"ds-section\"><div class=\"ds-section-head\"><h2>In progress</h2><p>Assigned to you and started.</p></div><ul><li class=\"ds-row\"><span class=\"ds-glyph\"><svg viewBox=\"0 0 16 16\" width=\"10\" height=\"10\" fill=\"currentColor\"><path d=\"M6.5 11.2L3.3 8l-1.1 1.1 4.3 4.3 7.3-7.3-1.1-1.1z\"/></svg></span><span class=\"ds-key\">OSS-42</span><span class=\"ds-title\">Reorder board columns</span><span class=\"ds-meta\">High</span></li></ul></section>",
+      "css": ".ds-section { background: #fff; border: 1px solid #e2dfd6; border-radius: 8px; width: 480px; font-family: Geist, system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-section-head { padding: 12px 16px; border-bottom: 1px solid #e2dfd6; } .ds-section-head h2 { margin: 0; font: 600 16px/24px Geist, system-ui, sans-serif; color: #181816; } .ds-section-head p { margin: 0; font-size: 14px; line-height: 20px; color: #6f6c63; } .ds-section ul { list-style: none; margin: 0; padding: 0; } .ds-row { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px; } .ds-row:hover { background: #f7f6f2; } .ds-glyph { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 3px; background: #e2dfd6; color: #3f3e38; } .ds-key { width: 80px; font: 400 12px/16px ui-monospace, Menlo, monospace; color: #6f6c63; } .ds-title { flex: 1; font-size: 14px; color: #181816; } .ds-meta { font-size: 12px; color: #6f6c63; }"
+    },
+    {
+      "name": "Active Timer Bar",
+      "kind": "custom",
+      "refersTo": "timer-bar",
+      "description": "Status strip above the header: pulsing signal dot, mono elapsed time, Stop.",
+      "html": "<div class=\"ds-timer\"><span class=\"ds-dot\"></span><span class=\"ds-elapsed\">00:42:17</span><span class=\"ds-tkey\">OSS-42</span><button class=\"ds-stop\">Stop</button></div>",
+      "css": ".ds-timer { display: flex; align-items: center; gap: 12px; background: #efede7; border-bottom: 1px solid #e2dfd6; padding: 6px 16px; font: 400 14px/20px Geist, system-ui, sans-serif; color: #3f3e38; } .ds-dot { width: 8px; height: 8px; border-radius: 9999px; background: #8a5a00; animation: ds-pulse 2s cubic-bezier(.4,0,.6,1) infinite; } @keyframes ds-pulse { 50% { opacity: .5; } } .ds-elapsed { font: 600 16px/24px ui-monospace, Menlo, monospace; color: #181816; font-variant-numeric: tabular-nums; } .ds-tkey { color: #57554d; } .ds-stop { margin-left: auto; min-height: 32px; padding: 0 12px; border: 1px solid #cdc9bd; border-radius: 6px; background: transparent; color: #2a2a26; font: 500 12px/16px Geist, system-ui, sans-serif; cursor: pointer; } .ds-stop:hover { background: #e2dfd6; }"
+    },
+    {
+      "name": "Issue Type Glyphs",
+      "kind": "chip",
+      "refersTo": "issue-type-glyph",
+      "description": "Neutral 16px squares; the bug alone is red.",
+      "html": "<span class=\"ds-g\"><svg viewBox=\"0 0 16 16\" width=\"10\" height=\"10\" fill=\"currentColor\"><path d=\"M4 2h8a1 1 0 011 1v11l-5-3-5 3V3a1 1 0 011-1z\"/></svg></span> <span class=\"ds-g ds-g-bug\"><svg viewBox=\"0 0 16 16\" width=\"10\" height=\"10\" fill=\"currentColor\"><circle cx=\"8\" cy=\"8\" r=\"4\"/></svg></span>",
+      "css": ".ds-g { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 3px; background: #e2dfd6; color: #3f3e38; } .ds-g-bug { background: #ef4444; color: #fff; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Workbench",
+    "overview": "Ossicone is a tool used for hours by one developer and the agents around them, so it behaves like a bench: surfaces are flat, ruled with 1px hairlines, and quiet, and a single warm signal colour marks what is yours, in progress, or primary. Nothing floats. There are no gradients and no resting shadows; depth is a step in tone (page, then panel) plus a rule.\n\nTwo themes share one structure. Dark (the default, set by a .dark class on the root) is warm graphite with amber as the signal. Light is warm paper and ink with brass as the signal. Neither is blue, and neither has a decorative second hue; green, red, yellow and orange exist only as status meaning.\n\nThe app's historical Tailwind class names were deliberately reinterpreted instead of renamed: blue is the signal scale, gray is warm paper/graphite and inverts in dark, slate is the always-dark warm graphite family, and purple and indigo read as warm neutrals.",
+    "keyCharacteristics": [
+      "One signal colour per theme, used for the active tab, the primary button, the running timer dot, the mark's knobs, focus rings and links.",
+      "Hairline-ruled flat panels at 8px radius; lists divided by 1px rules, not cards inside cards.",
+      "Geist throughout with tabular figures on the body; monospace only for issue keys and the timer.",
+      "Monochrome line icons (lucide, 1.5 stroke) and monochrome issue-type glyphs; only a bug carries red.",
+      "Dense and calm: 14px body, 44px touch rows."
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "One amber (dark) or brass (light) accent marks what is yours, in progress, or primary. Status hues report state; they never decorate.", "section": "colors" },
+      { "name": "The Reinterpreted Scale Rule", "body": "Class names keep their historical meaning in code and take their palette meaning from index.css. A new surface uses blue for the signal, gray for neutrals, and never hard-codes a hex that a scale step already holds.", "section": "colors" },
+      { "name": "The Opaque Foreground Rule", "body": "In dark, text and icon colours come from the opaque foreground override layer, not from the translucent tint steps. Tints are for backgrounds only.", "section": "colors" },
+      { "name": "The Dark Text On Amber Rule", "body": "Fills in the signal colour carry near-black text in dark.", "section": "colors" },
+      { "name": "The Mono Is For Keys Rule", "body": "Monospace appears only on issue keys, project key chips and the timer.", "section": "typography" },
+      { "name": "The Ramp Is Short Rule", "body": "Five sizes carry the app: 12, 14, 16, 24 (plus 18 and 20 for dialogs). Do not invent display sizes.", "section": "typography" },
+      { "name": "The Flat Panel Rule", "body": "No gradients and no resting shadows. A surface is separated by tone and a 1px rule.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do express new surfaces with gray neutrals, blue for the one signal, and the existing remaps; both themes must be checked.",
+      "Do separate with a 1px rule and a tone step; keep panels at 8px radius.",
+      "Do keep monospace to issue keys and the timer, and keep figures tabular.",
+      "Do keep icons monochrome line (lucide at 1.5 stroke) and issue-type glyphs neutral, with red for bug only.",
+      "Do give any signal-filled control dark text in dark theme and a 44px touch target.",
+      "Do theme any new chart through applyChartTheme."
+    ],
+    "donts": [
+      "Don't add gradients or resting shadows.",
+      "Don't add a second accent hue or use green, red, yellow or orange as decoration.",
+      "Don't colour issue types or give each one a coloured square.",
+      "Don't use emoji or glyph characters as icons.",
+      "Don't use a pale-blue sidebar-app layout; navigation is the two ruled tab bars."
+    ]
+  }
+}

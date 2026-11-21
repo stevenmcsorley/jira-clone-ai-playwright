@@ -211,7 +211,7 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg  max-h-64 overflow-hidden">
           {/* Search Input */}
           <div className="p-3 border-b border-gray-100">
             <input
@@ -235,7 +235,7 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({
                 {/* Unreleased Versions */}
                 {groupedVersions.unreleased.length > 0 && (
                   <div>
-                    <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-700 uppercase tracking-wide">
+                    <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-700  ">
                       Unreleased
                     </div>
                     {groupedVersions.unreleased.map(version => (
@@ -275,7 +275,7 @@ export const VersionSelector: React.FC<VersionSelectorProps> = ({
                 {/* Released Versions */}
                 {groupedVersions.released.length > 0 && !showOnlyUnreleased && (
                   <div>
-                    <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-700 uppercase tracking-wide">
+                    <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-700  ">
                       Released
                     </div>
                     {groupedVersions.released.map(version => (

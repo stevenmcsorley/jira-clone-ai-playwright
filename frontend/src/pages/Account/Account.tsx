@@ -67,15 +67,15 @@ export const Account = () => {
     <div className="p-6 space-y-8">
       <div className="max-w-2xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Account</h1>
         <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
       </div>
 
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Your details</h2>
         <form onSubmit={handleNameSave} className="space-y-4">
           {nameError && <p className="text-sm text-red-600">{nameError}</p>}
-          {nameSaved && <p className="text-sm text-green-600">Name updated ✓</p>}
+          {nameSaved && <p className="text-sm text-green-600">Name updated</p>}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <input value={name} onChange={e => setName(e.target.value)} required minLength={2} className={inputClass} />
@@ -86,7 +86,7 @@ export const Account = () => {
         </form>
       </section>
 
-      <section className="bg-white rounded-lg shadow p-6">
+      <section className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Change password</h2>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           {pwError && (
@@ -94,7 +94,7 @@ export const Account = () => {
           )}
           {pwSaved && (
             <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-md px-3 py-2">
-              Password changed ✓
+              Password changed
             </div>
           )}
           <div>

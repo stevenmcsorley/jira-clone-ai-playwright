@@ -1,3 +1,4 @@
+import { IssueTypeIcon } from '../IssueTypeIcon'
 import { Card } from '../ui/Card'
 import type { Issue } from '../../types/domain.types'
 
@@ -14,13 +15,6 @@ const priorityColors = {
   medium: 'border-l-yellow-400',
   high: 'border-l-orange-400',
   urgent: 'border-l-red-400',
-}
-
-const typeIcons = {
-  story: '📖',
-  task: '✅',
-  bug: '🐛',
-  epic: '🎯',
 }
 
 export const CleanIssueCard = ({
@@ -45,8 +39,8 @@ export const CleanIssueCard = ({
   return (
     <Card
       className={`
-        cursor-pointer hover:shadow-md transition-shadow duration-200
-        border-l-4 ${priorityColors[issue.priority]}
+        cursor-pointer  transition-shadow duration-200
+        ${priorityColors[issue.priority]}
         ${isDragging ? 'opacity-50' : ''}
         ${className}
       `}
@@ -59,8 +53,8 @@ export const CleanIssueCard = ({
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{typeIcons[issue.type]}</span>
-            <span className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+            <IssueTypeIcon type={issue.type} />
+            <span className="text-sm font-semibold text-gray-500  ">
               {issue.project?.key}-{issue.id}
             </span>
           </div>
@@ -100,8 +94,8 @@ export const CleanIssueCard = ({
         <div className="flex items-center justify-between">
           {issue.assignee && (
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold text-white">
+              <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-gray-800">
                   {issue.assignee.name.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -114,11 +108,11 @@ export const CleanIssueCard = ({
           <div className="flex items-center gap-2">
             {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
               <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-                📊 {issue.storyPoints}
+                {issue.storyPoints} pts
               </span>
             ) : (
               <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
-                📊 ?
+                ? pts
               </span>
             )}
           </div>

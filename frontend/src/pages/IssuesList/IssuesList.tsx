@@ -186,9 +186,9 @@ export const IssuesList = () => {
   }
 
   const priorityConfig = {
-    low: { color: 'text-green-600', icon: '↓' },
-    medium: { color: 'text-yellow-600', icon: '→' },
-    high: { color: 'text-orange-600', icon: '↑' },
+    low: { color: 'text-gray-500', icon: '↓' },
+    medium: { color: 'text-gray-600', icon: '→' },
+    high: { color: 'text-gray-900', icon: '↑' },
     urgent: { color: 'text-red-600', icon: '⇈' },
   }
 
@@ -227,7 +227,10 @@ export const IssuesList = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Issues</h1>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Issues</h1>
+            <p className="mt-1 text-sm text-gray-500">Every issue in this project. Filter, sort and open any of them.</p>
+          </div>
           <Link to={`/projects/${projectId}/issues/create`}>
             <Button className="max-md:min-h-11">Create Issue</Button>
           </Link>
@@ -445,8 +448,8 @@ export const IssuesList = () => {
                     <div className="col-span-2 flex items-center">
                       {issue.assignee ? (
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-bold text-white">
+                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-bold text-gray-800">
                               {issue.assignee.name.charAt(0)}
                             </span>
                           </div>

@@ -119,8 +119,8 @@ const CycleTimeReportContent = () => {
       {
         label: 'Cycle time (days)',
         data: chartPoints.map(d => d.cycleTimeDays),
-        backgroundColor: 'rgba(59, 130, 246, 0.6)',
-        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(224, 164, 58, 0.6)',
+        borderColor: 'rgba(224, 164, 58, 1)',
         borderWidth: 1
       }
     ]
@@ -285,13 +285,13 @@ const CycleTimeReportContent = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                         Month
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                         Avg Cycle Time (days)
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                         Issues Completed
                       </th>
                     </tr>

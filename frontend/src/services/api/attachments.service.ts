@@ -64,16 +64,17 @@ export class AttachmentsService extends BaseApiService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  static getFileIcon(mimeType: string): string {
-    if (mimeType.startsWith('image/')) return '🖼️'
-    if (mimeType.includes('pdf')) return '📄'
-    if (mimeType.includes('word') || mimeType.includes('document')) return '📝'
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return '📊'
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📽️'
-    if (mimeType.includes('zip') || mimeType.includes('archive')) return '📦'
-    if (mimeType.includes('video')) return '🎬'
-    if (mimeType.includes('audio')) return '🎵'
-    return '📎'
+  /** The kind of file, for choosing an icon. */
+  static getFileKind(mimeType: string): 'image' | 'pdf' | 'document' | 'sheet' | 'slides' | 'archive' | 'video' | 'audio' | 'file' {
+    if (mimeType.startsWith('image/')) return 'image'
+    if (mimeType.includes('pdf')) return 'pdf'
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'document'
+    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'sheet'
+    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'slides'
+    if (mimeType.includes('zip') || mimeType.includes('archive')) return 'archive'
+    if (mimeType.includes('video')) return 'video'
+    if (mimeType.includes('audio')) return 'audio'
+    return 'file'
   }
 
   static isImageFile(mimeType: string): boolean {

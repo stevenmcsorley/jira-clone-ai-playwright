@@ -1,3 +1,4 @@
+import { Mark } from '../../components/Layout/Mark'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
@@ -39,15 +40,15 @@ export const Login = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[url('/app-bg.jpg')] bg-cover bg-center flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Ossicone" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-md" />
-          <h1 className="text-3xl font-bold text-blue-600">Ossicone</h1>
+          <Mark className="mx-auto mb-3 size-12" />
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Ossicone</h1>
           <p className="text-gray-600 mt-2">Sign in to your workspace</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/95 backdrop-blur rounded-lg shadow-xl p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-lg  p-6 space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-md px-3 py-2">
               {error}

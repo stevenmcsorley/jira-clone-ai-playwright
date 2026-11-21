@@ -84,7 +84,7 @@ const SprintCard = ({ sprint, projectId }: { sprint: SprintWithMetrics; projectI
   })
 
   return (
-    <div data-testid="sprint-card" className="bg-white rounded-lg shadow">
+    <div data-testid="sprint-card" className="bg-white rounded-lg ">
       <div className="p-4 sm:p-6">
         {/* Title row */}
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -300,7 +300,7 @@ export const SprintHistory = () => {
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900">Sprint History</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Sprint History</h1>
             <p className="text-sm text-gray-600 mt-1">
               Completed sprints{currentProject ? ` for ${currentProject.name}` : ''}
             </p>
@@ -316,7 +316,7 @@ export const SprintHistory = () => {
 
       <div className="flex-1 p-4 sm:p-6">
         {sprints.length === 0 ? (
-          <div className="bg-white rounded-lg shadow text-center py-12 px-4">
+          <div className="bg-white rounded-lg  text-center py-12 px-4">
             <div className="text-gray-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 0v12h8V4H6z" clipRule="evenodd" />

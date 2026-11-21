@@ -1,3 +1,4 @@
+import { ClipboardList } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
@@ -30,17 +31,17 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
   }
 
   const priorityConfig = {
-    low: { color: 'text-green-600', icon: '↓' },
-    medium: { color: 'text-yellow-600', icon: '→' },
-    high: { color: 'text-orange-600', icon: '↑' },
-    urgent: { color: 'text-red-600', icon: '⇈' },
+    low: { color: 'text-gray-500', icon: '' },
+    medium: { color: 'text-gray-600', icon: '' },
+    high: { color: 'text-gray-900', icon: '' },
+    urgent: { color: 'text-red-600', icon: '' },
   }
 
   const typeConfig = {
-    story: { color: 'bg-green-100 text-green-800', icon: '📖' },
-    task: { color: 'bg-blue-100 text-blue-800', icon: '✓' },
-    bug: { color: 'bg-red-100 text-red-800', icon: '🐛' },
-    epic: { color: 'bg-purple-100 text-purple-800', icon: '⚡' },
+    story: { color: 'bg-gray-100 text-gray-700', icon: '' },
+    task: { color: 'bg-gray-100 text-gray-700', icon: '' },
+    bug: { color: 'bg-red-100 text-red-800', icon: '' },
+    epic: { color: 'bg-purple-100 text-purple-800', icon: '' },
   }
 
   const getProgress = () => {
@@ -143,7 +144,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
       <div className="flex items-center justify-between mb-6 px-6 pt-6">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-            <span className="text-purple-600">⚡</span>
+            
             Epic Issues
           </h3>
           {epicIssues.length > 0 && (
@@ -196,7 +197,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
 
               {/* Search Results Dropdown */}
               {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md  max-h-60 overflow-y-auto">
                   {searchResults.map((searchIssue) => (
                     <button
                       key={searchIssue.id}
@@ -215,7 +216,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
                       <div className="ml-2 flex-shrink-0">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           searchIssue.type === 'bug' ? 'bg-red-100 text-red-800' :
-                          searchIssue.type === 'story' ? 'bg-green-100 text-green-800' :
+                          searchIssue.type === 'story' ? 'bg-gray-100 text-gray-700' :
                           searchIssue.type === 'epic' ? 'bg-purple-100 text-purple-800' :
                           'bg-blue-100 text-blue-800'
                         }`}>
@@ -273,7 +274,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
       {epicIssues.length === 0 ? (
         <div className="text-center py-12 text-gray-500 mx-6">
           <div className="mb-4">
-            <span className="text-4xl">📋</span>
+            <ClipboardList className="size-8 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           </div>
           <p className="text-sm">No issues linked to this epic yet.</p>
           <p className="text-xs text-gray-400 mt-1">
@@ -283,7 +284,7 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
       ) : (
         <>
           {/* Issues Table - Full Width, Same as Issues Page */}
-          <div className="bg-white shadow overflow-hidden">
+          <div className="bg-white  overflow-hidden">
             {/* Table Header */}
             <div className="grid grid-cols-12 gap-4 px-6 py-3 border-b border-gray-200 bg-gray-50 text-sm font-medium text-gray-700">
               <div className="col-span-1">Type</div>
@@ -351,8 +352,8 @@ export const EpicIssues = ({ epic, projectId, onIssueUpdate }: EpicIssuesProps) 
                   <div className="col-span-2 flex items-center">
                     {issue.assignee ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-white">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-gray-800">
                             {issue.assignee.name.charAt(0)}
                           </span>
                         </div>

@@ -91,9 +91,9 @@ export const IssueDetail = () => {
   }
 
   const priorityIcons = {
-    low: { icon: '↓', color: 'text-green-600', bg: 'bg-green-50' },
-    medium: { icon: '→', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    high: { icon: '↑', color: 'text-orange-600', bg: 'bg-orange-50' },
+    low: { icon: '↓', color: 'text-gray-500', bg: 'bg-gray-100' },
+    medium: { icon: '→', color: 'text-gray-600', bg: 'bg-gray-100' },
+    high: { icon: '↑', color: 'text-gray-900', bg: 'bg-gray-200' },
     urgent: { icon: '⇈', color: 'text-red-600', bg: 'bg-red-50' },
   }
 
@@ -265,15 +265,15 @@ export const IssueDetail = () => {
               <h4 className="text-sm font-medium text-gray-900 mb-3">Issue Type</h4>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${
-                  issue.type === 'story' ? 'bg-green-100 text-green-800' :
-                  issue.type === 'task' ? 'bg-blue-100 text-blue-800' :
+                  issue.type === 'story' ? 'bg-gray-100 text-gray-700' :
+                  issue.type === 'task' ? 'bg-gray-100 text-gray-700' :
                   issue.type === 'bug' ? 'bg-red-100 text-red-800' :
                   'bg-purple-100 text-purple-800'
                 }`}>
-                  {issue.type === 'story' ? '📖 Story' :
-                   issue.type === 'task' ? '✓ Task' :
-                   issue.type === 'bug' ? '🐛 Bug' :
-                   '⚡ Epic'}
+                  {issue.type === 'story' ? 'Story' :
+                   issue.type === 'task' ? 'Task' :
+                   issue.type === 'bug' ? 'Bug' :
+                   'Epic'}
                 </span>
               </div>
             </div>
@@ -302,7 +302,7 @@ export const IssueDetail = () => {
                 onChange={handleTimeEstimateChange}
                 label="Time Estimate"
                 placeholder="e.g., 2h 30m, 1.5h, 90m"
-                helperText="⏰ Time tracking: Estimated time for budget planning"
+                helperText="Time tracking: Estimated time for budget planning"
                 disabled={saving}
               />
             </div>
@@ -313,7 +313,7 @@ export const IssueDetail = () => {
               <div className="flex items-center gap-2 mb-4">
                 {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
                   <span className="inline-flex items-center px-3 py-1 text-sm font-medium bg-blue-50 text-blue-700 rounded-full">
-                    📊 {issue.storyPoints}
+                    {issue.storyPoints} pts
                   </span>
                 ) : (
                   <span className="text-sm text-gray-400">No story points assigned</span>
@@ -331,7 +331,7 @@ export const IssueDetail = () => {
                   showScaleSelector={true}
                 />
                 <div className="mt-2 text-xs text-gray-500">
-                  💡 Use Planning Poker for team estimation sessions
+                  Use Planning Poker for team estimation sessions
                 </div>
               </div>
             </div>
@@ -354,8 +354,8 @@ export const IssueDetail = () => {
               </select>
               {issue.assignee && (
                 <div className="flex items-center gap-2 mt-3">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-white">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-gray-800">
                       {issue.assignee.name.charAt(0)}
                     </span>
                   </div>

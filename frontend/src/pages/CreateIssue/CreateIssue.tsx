@@ -135,7 +135,7 @@ export const CreateIssue = () => {
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
         <div className="flex items-center justify-between">
-          <h1 className="min-w-0 wrap-anywhere text-xl md:text-2xl font-bold text-gray-900">
+          <h1 className="min-w-0 wrap-anywhere text-xl md:text-2xl font-semibold tracking-tight text-gray-900">
             Create Issue
           </h1>
           <div className="flex items-center gap-3 max-md:hidden">
@@ -325,7 +325,7 @@ export const CreateIssue = () => {
               onChange={setTimeEstimate}
               label="Time Estimate"
               placeholder="e.g., 2h 30m, 1.5h, 90m"
-              helperText="⏰ Time tracking: Estimated time for budget and project management"
+              helperText="Time tracking: Estimated time for budget and project management"
             />
           </div>
 
@@ -341,7 +341,7 @@ export const CreateIssue = () => {
               showScaleSelector={true}
             />
             <div className="mt-2 text-xs text-gray-500">
-              💡 <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
+              <strong>Story Points:</strong> Relative complexity for sprint planning - can be estimated during Planning Poker sessions
             </div>
           </div>
         </form>

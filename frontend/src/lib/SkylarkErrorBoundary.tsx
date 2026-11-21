@@ -31,7 +31,7 @@ export class SkylarkErrorBoundary extends Component<Props, State> {
             <p style={{ marginBottom: 16, color: '#64748b' }}>The error was reported. Try reloading.</p>
             <button
               onClick={() => window.location.reload()}
-              style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}
+              style={{ padding: '8px 16px', borderRadius: 6, border: 'none', background: '#e0a43a', color: '#17150f', cursor: 'pointer' }}
             >
               Reload
             </button>

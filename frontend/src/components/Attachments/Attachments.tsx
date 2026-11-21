@@ -1,3 +1,4 @@
+import { Archive, FileSpreadsheet, FileText, Film, Image as ImageIcon, Music, Paperclip, Presentation } from 'lucide-react'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { AttachmentsService, type Attachment } from '../../services/api/attachments.service'
 import { Button } from '../ui/Button'
@@ -5,6 +6,12 @@ import { CollapsibleCard } from '../CollapsibleCard'
 
 interface AttachmentsProps {
   issueId: number
+}
+
+const KIND_ICONS = { image: ImageIcon, pdf: FileText, document: FileText, sheet: FileSpreadsheet, slides: Presentation, archive: Archive, video: Film, audio: Music, file: Paperclip }
+const FileKindIcon = ({ kind }: { kind: keyof typeof KIND_ICONS }) => {
+  const Icon = KIND_ICONS[kind]
+  return <Icon className="size-5 text-gray-500" strokeWidth={1.5} aria-hidden="true" />
 }
 
 export const Attachments = ({ issueId }: AttachmentsProps) => {
@@ -142,7 +149,7 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
           />
 
           <div className="text-gray-500">
-            <div className="text-2xl mb-2">📎</div>
+            <Paperclip className="mx-auto mb-2 size-6 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
             <p className="mb-2">
               Drag and drop files here, or{' '}
               <button
@@ -182,9 +189,7 @@ export const Attachments = ({ issueId }: AttachmentsProps) => {
               className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">
-                  {AttachmentsService.getFileIcon(attachment.mimeType)}
-                </span>
+                <FileKindIcon kind={AttachmentsService.getFileKind(attachment.mimeType)} />
                 <div>
                   <p className="font-medium text-gray-900">
                     {attachment.originalName}
