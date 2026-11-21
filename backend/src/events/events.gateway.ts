@@ -135,6 +135,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     void this.emitToWorkspace('issue:deleted', { id: issueId }, projectId)
   }
 
+  // Timer events: a person's timers changed (from the UI, the API or an agent). Everyone in the workspace
+  // receives it; clients ignore other people's.
+  emitTimersChanged(userId: number, issue: any) {
+    void this.emitToWorkspace('timers:changed', { userId, issueId: issue?.id }, issue?.projectId, issue?.id)
+  }
+
   // Notification events — the workspace is already known, so target the room
   // directly. Every member of the workspace receives it; clients filter by
   // their own userId (acceptable within a workspace).

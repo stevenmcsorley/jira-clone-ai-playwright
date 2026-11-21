@@ -56,6 +56,25 @@ const run = (fn) => async (args) => {
   }
 }
 
+
+const pad = (n) => String(n).padStart(2, '0')
+/** 4_320_000 -> "1h 12m 00s": a timer's elapsed time, readable at a glance. */
+export const formatElapsed = (ms) => {
+  const total = Math.max(0, Math.round((ms || 0) / 1000))
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60
+  return h > 0 ? `${h}h ${pad(m)}m ${pad(s)}s` : `${m}m ${pad(s)}s`
+}
+/** A timer from the API, trimmed to what an agent needs to read. */
+export const slimTimer = (t) => ({
+  issueId: t.issueId,
+  key: t.issue?.projectKey ? `${t.issue.projectKey}-${t.issueId}` : undefined,
+  title: t.issue?.title,
+  status: t.status,
+  elapsed: formatElapsed(t.elapsedMs),
+  elapsedMs: t.elapsedMs,
+  ...(t.loggedHours !== undefined ? { loggedHours: t.loggedHours } : {}),
+})
+
 // Trim issue objects so tool output stays readable
 const slimIssue = (issue) => ({
   id: issue.id,
@@ -340,7 +359,7 @@ export function registerTools(server, api) {
   server.registerTool(
     'update_issue',
     {
-      description: 'Update an issue: move it across the board (status), reassign, edit title/description/priority/points/labels.',
+      description: 'Update an issue: move it across the board (status), reassign, edit title/description/priority/points/labels. Timers follow status, exactly as a drag on the board: in_progress starts your timer, todo pauses it, done stops it and logs the time.',
       inputSchema: {
         issueId: z.number(),
         title: z.string().optional(),
@@ -399,6 +418,63 @@ export function registerTools(server, api) {
         body: { issueId, hours, description, date: date || new Date().toISOString().slice(0, 10) },
       })
     )
+  )
+
+  // ---------- Timers ----------
+  // Timers live on the server and belong to the token owner, so the board, the API and agents all drive the same clock.
+
+  server.registerTool(
+    'list_timers',
+    { description: 'List the timers you have running or paused right now, with elapsed time. Call this before starting one.', inputSchema: {} },
+    run(async () => (await api('/timers')).map(slimTimer))
+  )
+
+  server.registerTool(
+    'get_timer',
+    { description: 'The state of your timer on one issue: running, paused or stopped, and the elapsed time.', inputSchema: { issueId: z.number() } },
+    run(async ({ issueId }) => slimTimer(await api(`/timers/issue/${issueId}`)))
+  )
+
+  server.registerTool(
+    'start_timer',
+    { description: 'Start a timer on an issue, or resume it if it is paused. Starting one that is already running changes nothing. (Moving the issue to in_progress also starts it.)', inputSchema: { issueId: z.number() } },
+    run(async ({ issueId }) => slimTimer(await api(`/timers/issue/${issueId}/start`, { method: 'POST' })))
+  )
+
+  server.registerTool(
+    'pause_timer',
+    { description: 'Pause a running timer, keeping the time so far. Resume it with resume_timer or start_timer.', inputSchema: { issueId: z.number() } },
+    run(async ({ issueId }) => slimTimer(await api(`/timers/issue/${issueId}/pause`, { method: 'POST' })))
+  )
+
+  server.registerTool(
+    'resume_timer',
+    { description: 'Resume a paused timer from where it stopped.', inputSchema: { issueId: z.number() } },
+    run(async ({ issueId }) => slimTimer(await api(`/timers/issue/${issueId}/resume`, { method: 'POST' })))
+  )
+
+  server.registerTool(
+    'stop_timer',
+    {
+      description: 'Stop a timer and write the elapsed time to the issue\'s time log (shown as loggedHours). Pass log=false to throw the session away instead; discard_timer does the same.',
+      inputSchema: { issueId: z.number(), description: z.string().optional().describe('Note stored with the time log'), log: z.boolean().optional().describe('Default true') },
+    },
+    run(async ({ issueId, description, log }) => slimTimer(await api(`/timers/issue/${issueId}/stop`, { method: 'POST', body: { description, log } })))
+  )
+
+  server.registerTool(
+    'discard_timer',
+    { description: 'Stop a timer WITHOUT logging its time. Use it when the session should not count.', inputSchema: { issueId: z.number() } },
+    run(async ({ issueId }) => slimTimer(await api(`/timers/issue/${issueId}/stop`, { method: 'POST', body: { log: false } })))
+  )
+
+  server.registerTool(
+    'stop_all_timers',
+    {
+      description: 'Stop every timer you have running or paused, logging each one. Handy at the end of a work session.',
+      inputSchema: { description: z.string().optional(), log: z.boolean().optional().describe('Default true') },
+    },
+    run(async ({ description, log }) => (await api('/timers/stop-all', { method: 'POST', body: { description, log } })).map(slimTimer))
   )
 
   server.registerTool(

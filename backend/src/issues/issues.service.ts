@@ -4,7 +4,7 @@ import { Repository } from 'typeorm'
 import { Issue } from './entities/issue.entity'
 import { CreateIssueDto } from './dto/create-issue.dto'
 import { Sprint } from '../sprints/entities/sprint.entity'
-import { TimeTrackingService } from './time-tracking.service'
+import { TimersService } from './timers.service'
 import { NotificationsService, IssueFieldChange } from '../notifications/notifications.service'
 import { WebhookDispatcher } from '../webhooks/webhook-dispatcher.service'
 
@@ -25,7 +25,7 @@ export class IssuesService {
   constructor(
     @InjectRepository(Issue)
     private issuesRepository: Repository<Issue>,
-    private timeTrackingService: TimeTrackingService,
+    private timersService: TimersService,
     private notificationsService: NotificationsService,
     private webhooks: WebhookDispatcher,
   ) {}
@@ -102,9 +102,6 @@ export class IssuesService {
       throw new Error('Issue not found')
     }
 
-    // Check if status is changing from in_progress to done
-    const isStatusChangeToDone = currentIssue.status === 'in_progress' && updateData.status === 'done'
-
     // Diff tracked fields before applying the update
     const changes = recordHistory ? this.diffTrackedFields(currentIssue, updateData) : []
 
@@ -120,29 +117,16 @@ export class IssuesService {
       }
     }
 
-    // Auto time tracking: log time when moving from in_progress to done
-    if (isStatusChangeToDone && currentIssue.assigneeId) {
-      try {
-        // Calculate time spent since last status change to in_progress
-        // For now, we'll use a simplified calculation based on updatedAt
-        const timeSpentHours = this.calculateTimeSpent(currentIssue.updatedAt)
-        console.log(`Auto time tracking: Issue ${id}, time spent: ${timeSpentHours} hours, assignee: ${currentIssue.assigneeId}`)
-
-        if (timeSpentHours > 0) {
-          console.log(`Logging time for issue ${id}: ${timeSpentHours} hours`)
-          await this.timeTrackingService.logTime({
-            issueId: id,
-            hours: timeSpentHours,
-            date: new Date().toISOString(),
-            description: 'Auto-logged time (in_progress → done)'
-          }, currentIssue.assigneeId)
-          console.log(`Time logged successfully for issue ${id}`)
-        } else {
-          console.log(`No time to log for issue ${id} (time spent: ${timeSpentHours})`)
+    // Timers follow status, on the server, whoever moves the card (the board, the API or an agent):
+    // in progress starts the mover's timer, todo pauses it, done stops it and logs the time.
+    if ('status' in updateData && updateData.status !== currentIssue.status) {
+      const timerUser = actorId ?? currentIssue.assigneeId ?? null
+      if (timerUser) {
+        try {
+          await this.timersService.applyStatusChange(timerUser, id, currentIssue.status, String(updateData.status))
+        } catch (error) {
+          console.warn('Failed to apply timer rules for issue', id, error)
         }
-      } catch (error) {
-        console.warn('Failed to auto-log time for issue', id, error)
-        // Don't fail the update if time tracking fails
       }
     }
 
@@ -200,31 +184,14 @@ export class IssuesService {
     return changes
   }
 
-  private calculateTimeSpent(lastUpdated: Date): number {
-    const now = new Date()
-    const diffMs = now.getTime() - lastUpdated.getTime()
-    const diffHours = diffMs / (1000 * 60 * 60)
-
-    // Round to 15-minute increments and cap at reasonable limits
-    const roundedHours = Math.round(diffHours * 4) / 4  // Round to 0.25h increments
-
-    // Only log if between 1 minute and 8 hours (reasonable work session)
-    // Minimum 1 minute to avoid noise from quick status changes
-    if (roundedHours >= 0.017 && roundedHours <= 8) { // 0.017 hours = 1 minute
-      return Math.max(roundedHours, 0.25) // Always log at least 15 minutes for completed work
-    }
-
-    return 0
-  }
-
-  async updatePositions(updates: { id: number; position: number; status: string }[]): Promise<void> {
+  async updatePositions(updates: { id: number; position: number; status: string }[], actorId: number | null = null): Promise<void> {
     for (const update of updates) {
       // Use the main update method to ensure auto time tracking works.
       // recordHistory: false — board reorders don't need activity events.
       await this.update(update.id, {
         position: update.position,
         status: update.status as any
-      }, null, { recordHistory: false })
+      }, actorId, { recordHistory: false })
     }
   }
 

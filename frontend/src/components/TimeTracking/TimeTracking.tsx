@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { TimeTrackingService, type TimeLog, type CreateTimeLogRequest, type TimeTrackingSummary } from '../../services/api/time-tracking.service'
 import { Button } from '../ui/Button'
 import { CollapsibleCard } from '../CollapsibleCard'
+import { IssueTimerControls } from '../IssueTimerControls'
+import { useTimerManager } from '../../hooks/useTimerManager'
 
 interface TimeTrackingProps {
   issueId: number
@@ -20,6 +22,9 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
   })
   const [submitting, setSubmitting] = useState(false)
   const [timeParseError, setTimeParseError] = useState('')
+  // A timer stopping writes a time log, so look again when this issue's timer starts or ends.
+  const { timers } = useTimerManager()
+  const timerLive = timers.some(timer => timer.issueId === issueId)
 
   const fetchTimeTrackingSummary = useCallback(async () => {
     try {
@@ -45,7 +50,7 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
   useEffect(() => {
     fetchTimeTrackingSummary()
     fetchTimeLogs()
-  }, [fetchTimeTrackingSummary, fetchTimeLogs])
+  }, [fetchTimeTrackingSummary, fetchTimeLogs, timerLive])
 
   const handleLogTime = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -140,7 +145,8 @@ export const TimeTracking = ({ issueId, originalEstimate }: TimeTrackingProps) =
       defaultOpen={timeLogs.length > 0 || Boolean(originalEstimate)}
       testId="time-tracking-section"
     >
-      <div className="flex items-center justify-end mb-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <IssueTimerControls issueId={issueId} />
         <Button
           onClick={() => setShowLogForm(true)}
           size="sm"
