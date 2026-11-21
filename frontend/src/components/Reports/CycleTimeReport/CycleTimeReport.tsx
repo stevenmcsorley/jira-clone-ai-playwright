@@ -9,6 +9,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { chartHasData, EmptyChart, withReportStyle } from '../kit'
 import { ReportsLayout } from '../../../pages/Reports/Reports'
 import { applyChartTheme } from '../../../utils/chartTheme'
 import {
@@ -138,7 +139,7 @@ const CycleTimeReportContent = () => {
             position: isPhone ? 'bottom' : undefined
           },
           title: {
-            display: true,
+            display: false,
             text: `Cycle Time of Recently Completed Issues${datapoints.length > MAX_CHART_ISSUES ? ` (last ${MAX_CHART_ISSUES})` : ''}`,
             font: {
               size: 16,
@@ -168,13 +169,13 @@ const CycleTimeReportContent = () => {
           y: {
             beginAtZero: true,
             title: {
-              display: true,
+            display: false,
               text: 'Days'
             }
           },
           x: {
             title: {
-              display: true,
+            display: false,
               text: 'Issue'
             },
             ticks: {
@@ -186,7 +187,7 @@ const CycleTimeReportContent = () => {
         }
     }
   }, [chartPoints, datapoints.length])
-  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
+  const themedOptions = useMemo(() => applyChartTheme(withReportStyle(chartOptions), resolved), [chartOptions, resolved])
 
   if (loading) {
     return (
@@ -244,28 +245,28 @@ const CycleTimeReportContent = () => {
       {stats && stats.count > 0 ? (
         <>
           {/* Metrics Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 md:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
+            <div className="bg-white px-4 py-3">
               <div className="text-sm font-medium text-gray-500">Average</div>
-              <div className="text-2xl font-bold text-gray-900">{stats.averageDays}</div>
+              <div className="text-2xl font-semibold tabular-nums text-gray-900">{stats.averageDays}</div>
               <div className="text-sm text-gray-500">days</div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white px-4 py-3">
               <div className="text-sm font-medium text-gray-500">Median</div>
-              <div className="text-2xl font-bold text-blue-600">{stats.medianDays}</div>
+              <div className="text-2xl font-semibold tabular-nums text-gray-900">{stats.medianDays}</div>
               <div className="text-sm text-gray-500">days</div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white px-4 py-3">
               <div className="text-sm font-medium text-gray-500">85th Percentile</div>
-              <div className="text-2xl font-bold text-purple-600">{stats.p85Days}</div>
+              <div className="text-2xl font-semibold tabular-nums text-gray-900">{stats.p85Days}</div>
               <div className="text-sm text-gray-500">days (85% ship faster)</div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white px-4 py-3">
               <div className="text-sm font-medium text-gray-500">Completed Issues</div>
-              <div className="text-2xl font-bold text-green-600">{stats.count}</div>
+              <div className="text-2xl font-semibold tabular-nums text-gray-900">{stats.count}</div>
               <div className="text-sm text-gray-500">in selected range</div>
             </div>
           </div>
@@ -273,7 +274,7 @@ const CycleTimeReportContent = () => {
           {/* Chart */}
           <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
             <div className="relative h-72 sm:h-96">
-              <Bar data={chartData} options={themedOptions} />
+              {chartHasData(chartData) ? <Bar data={chartData} options={themedOptions} /> : <EmptyChart message="No completed issues in this range yet." />}
             </div>
           </div>
 

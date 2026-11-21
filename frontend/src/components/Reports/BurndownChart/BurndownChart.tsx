@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { chartHasData, EmptyChart, withReportStyle } from '../kit'
 import { ReportsLayout } from '../../../pages/Reports/Reports'
 import { applyChartTheme } from '../../../utils/chartTheme'
 import {
@@ -124,8 +125,8 @@ const BurndownChartContent = () => {
         data: burndownData.map(d => d.remainingWork),
         borderColor: 'rgb(238, 128, 111)',
         backgroundColor: 'rgba(238, 128, 111, 0.1)',
-        fill: true,
-        tension: 0.1
+        fill: false,
+        tension: 0
       }
     ]
   }
@@ -137,11 +138,9 @@ const BurndownChartContent = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: isPhone ? 'bottom' : 'top',
-          },
+          legend: { position: isPhone ? 'bottom' : 'top', align: 'end' as const, labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16 } },
           title: {
-            display: true,
+            display: false,
             text: `Sprint Burndown - ${selectedSprint?.name || 'Sprint'}`,
             font: {
               size: 16,
@@ -168,21 +167,21 @@ const BurndownChartContent = () => {
           y: {
             beginAtZero: true,
             title: {
-              display: true,
+            display: false,
               text: 'Story Points Remaining'
             }
           },
           x: {
             ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
             title: {
-              display: true,
+            display: false,
               text: 'Sprint Timeline'
             }
           }
         }
     }
   }, [burndownData, selectedSprint?.name])
-  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
+  const themedOptions = useMemo(() => applyChartTheme(withReportStyle(chartOptions), resolved), [chartOptions, resolved])
 
   // Calculate sprint metrics
   const sprintMetrics = React.useMemo(() => {
@@ -280,28 +279,28 @@ const BurndownChartContent = () => {
 
       {/* Metrics Cards */}
       {sprintMetrics && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 md:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Total Scope</div>
-            <div className="text-2xl font-bold text-gray-900">{sprintMetrics.totalScope}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.totalScope}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Completed</div>
-            <div className="text-2xl font-bold text-green-600">{sprintMetrics.completed}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.completed}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Remaining</div>
-            <div className="text-2xl font-bold text-orange-600">{sprintMetrics.remaining}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.remaining}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Progress</div>
-            <div className="text-2xl font-bold text-blue-600">{sprintMetrics.completionRate.toFixed(1)}%</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.completionRate.toFixed(1)}%</div>
             <div className="text-sm text-gray-500">complete</div>
           </div>
         </div>
@@ -310,7 +309,7 @@ const BurndownChartContent = () => {
       {/* Chart */}
       <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
         <div className="relative h-72 sm:h-96">
-          <Line data={chartData} options={themedOptions} />
+          {chartHasData(chartData) ? <Line data={chartData} options={themedOptions} /> : <EmptyChart message="No story points in this sprint yet. Estimate its issues and the chart fills in." />}
         </div>
       </div>
 
@@ -359,8 +358,8 @@ const BurndownChartContent = () => {
           {/* Insights */}
           <div className="space-y-3">
             {sprintMetrics.completionRate > 80 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Strong Sprint Performance</div>
                   <div className="text-sm text-gray-600">
@@ -372,8 +371,8 @@ const BurndownChartContent = () => {
             )}
 
             {sprintMetrics.isBehind && sprintMetrics.variancePercentage > 20 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Action Required</div>
                   <div className="text-sm text-gray-600">
@@ -384,8 +383,8 @@ const BurndownChartContent = () => {
             )}
 
             {sprintMetrics.isAhead && sprintMetrics.variancePercentage < -15 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Opportunity for More Work</div>
                   <div className="text-sm text-gray-600">

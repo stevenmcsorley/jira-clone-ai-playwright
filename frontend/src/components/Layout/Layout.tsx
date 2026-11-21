@@ -53,8 +53,8 @@ export const Layout = ({ children }: LayoutProps) => {
   const currentProject = projects.find(p => p.id === Number(projectId))
   const inProject = location.pathname.includes('/projects/') && !!projectId
   const workspaceName = currentWorkspace?.name || 'Ossicone'
-  // Breadcrumbs only where the tabs cannot say where you are: inside one issue, a create or edit page, or one report.
-  const showCrumbs = /\/issues\/[^/]+|\/reports\/[^/]+|\/projects\/create|\/issues\/create/.test(location.pathname)
+  // Breadcrumbs only where the tabs cannot say where you are: inside one issue or a create or edit page.
+  const showCrumbs = /\/issues\/[^/]+|\/projects\/create|\/issues\/create/.test(location.pathname)
   const subTabs = inProject ? projectSubTabs(projectId!, location.pathname) : null
 
   const closeSearch = useCallback(() => setSearchOpen(false), [])

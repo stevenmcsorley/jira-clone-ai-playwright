@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTheme } from '../../../contexts/ThemeContext'
+import { chartHasData, EmptyChart, withReportStyle } from '../kit'
 import { ReportsLayout } from '../../../pages/Reports/Reports'
 import { applyChartTheme } from '../../../utils/chartTheme'
 import {
@@ -160,7 +161,7 @@ const BurnupReportContent = () => {
         borderColor: 'rgb(134, 201, 143)',
         backgroundColor: 'rgba(134, 201, 143, 0.1)',
         fill: true,
-        tension: 0.1
+        tension: 0
       },
       {
         label: 'Total Scope',
@@ -168,7 +169,7 @@ const BurnupReportContent = () => {
         borderColor: 'rgb(224, 164, 58)',
         backgroundColor: 'rgba(224, 164, 58, 0.1)',
         fill: false,
-        tension: 0.1,
+        tension: 0,
         borderDash: [5, 5]
       }
     ]
@@ -181,11 +182,9 @@ const BurnupReportContent = () => {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: isPhone ? 'bottom' : 'top',
-          },
+          legend: { position: isPhone ? 'bottom' : 'top', align: 'end' as const, labels: { usePointStyle: true, boxWidth: 8, boxHeight: 8, padding: 16 } },
           title: {
-            display: true,
+            display: false,
             text: `Burnup Chart - ${selectedSprint?.name || 'Sprint'}`,
             font: {
               size: 16,
@@ -213,21 +212,21 @@ const BurnupReportContent = () => {
           y: {
             beginAtZero: true,
             title: {
-              display: true,
+            display: false,
               text: 'Story Points'
             }
           },
           x: {
             ticks: isPhone ? { maxRotation: 45, autoSkip: true } : undefined,
             title: {
-              display: true,
+            display: false,
               text: 'Sprint Days'
             }
           }
         }
     }
   }, [burnupData, selectedSprint?.name])
-  const themedOptions = useMemo(() => applyChartTheme(chartOptions, resolved), [chartOptions, resolved])
+  const themedOptions = useMemo(() => applyChartTheme(withReportStyle(chartOptions), resolved), [chartOptions, resolved])
 
   // Calculate sprint metrics
   const sprintMetrics = React.useMemo(() => {
@@ -310,34 +309,34 @@ const BurnupReportContent = () => {
 
       {/* Metrics Cards */}
       {sprintMetrics && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-gray-200 bg-gray-200 md:grid-cols-5 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Initial Scope</div>
-            <div className="text-2xl font-bold text-gray-900">{sprintMetrics.initialScope}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.initialScope}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Current Scope</div>
-            <div className="text-2xl font-bold text-gray-900">{sprintMetrics.currentScope}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.currentScope}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Completed</div>
-            <div className="text-2xl font-bold text-green-600">{sprintMetrics.completed}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.completed}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Remaining</div>
-            <div className="text-2xl font-bold text-orange-600">{sprintMetrics.remaining}</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.remaining}</div>
             <div className="text-sm text-gray-500">story points</div>
           </div>
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="bg-white px-4 py-3">
             <div className="text-sm font-medium text-gray-500">Progress</div>
-            <div className="text-2xl font-bold text-blue-600">{sprintMetrics.completionRate.toFixed(1)}%</div>
+            <div className="text-2xl font-semibold tabular-nums text-gray-900">{sprintMetrics.completionRate.toFixed(1)}%</div>
             <div className="text-sm text-gray-500">complete</div>
           </div>
         </div>
@@ -346,18 +345,18 @@ const BurnupReportContent = () => {
       {/* Chart */}
       <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
         <div className="relative h-72 sm:h-96">
-          <Line data={chartData} options={themedOptions} />
+          {chartHasData(chartData) ? <Line data={chartData} options={themedOptions} /> : <EmptyChart message="No story points in this sprint yet. Estimate its issues and the chart fills in." />}
         </div>
       </div>
 
       {/* Insights */}
       {sprintMetrics && (
-        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Sprint Insights</h3>
+        <div className="hidden has-[.insight]:block bg-white p-4 md:p-6 rounded-lg border border-gray-200">
+          <h2 className="mb-3 text-base font-semibold text-gray-900">Sprint Insights</h2>
           <div className="space-y-3">
             {sprintMetrics.scopeChange > 5 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Scope Increase Detected</div>
                   <div className="text-sm text-gray-600">
@@ -369,8 +368,8 @@ const BurnupReportContent = () => {
             )}
 
             {sprintMetrics.completionRate > 90 && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Excellent Progress</div>
                   <div className="text-sm text-gray-600">
@@ -382,8 +381,8 @@ const BurnupReportContent = () => {
             )}
 
             {sprintMetrics.completionRate < 50 && selectedSprint?.status === 'active' && (
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+              <div className="insight flex items-start gap-3">
+                <div className="mt-2 size-1.5 shrink-0 rounded-full bg-gray-400"></div>
                 <div>
                   <div className="font-medium text-gray-900">Progress Behind Schedule</div>
                   <div className="text-sm text-gray-600">
