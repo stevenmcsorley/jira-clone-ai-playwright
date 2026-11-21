@@ -36,7 +36,7 @@ export const CreateProjectModal = ({
     if (!formData.key.trim()) {
       newErrors.key = 'Project key is required'
     } else if (!/^[A-Z0-9]+$/.test(formData.key)) {
-      newErrors.key = 'Project key must contain only uppercase letters and numbers'
+      newErrors.key = 'Project key must contain only  letters and numbers'
     } else if (formData.key.length < 2 || formData.key.length > 10) {
       newErrors.key = 'Project key must be 2-10 characters long'
     }

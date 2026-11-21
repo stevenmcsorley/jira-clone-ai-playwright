@@ -28,7 +28,7 @@ export const Modal = ({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         />
 
         {/* Modal panel */}
-        <div className={`inline-block w-full ${sizeClasses[size]} transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left align-bottom shadow-xl transition-all sm:my-8 sm:p-6 sm:align-middle`}>
+        <div className={`inline-block w-full ${sizeClasses[size]} transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left align-bottom  transition-all sm:my-8 sm:p-6 sm:align-middle`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
             <h3 className="text-lg font-medium text-gray-900">{title}</h3>

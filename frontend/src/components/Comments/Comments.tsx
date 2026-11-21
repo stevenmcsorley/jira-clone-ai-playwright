@@ -118,8 +118,8 @@ export const Comments = ({ issueId }: CommentsProps) => {
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold text-white">
+            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold text-gray-800">
                 {comment.author.name.charAt(0)}
               </span>
             </div>

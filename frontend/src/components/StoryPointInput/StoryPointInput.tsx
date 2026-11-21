@@ -190,7 +190,7 @@ export const StoryPointInput: React.FC<StoryPointInputProps> = ({
 
         {/* Dropdown */}
         {isOpen && !disabled && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md  max-h-60 overflow-auto">
             <div className="py-1">
               {/* Clear option */}
               <button
@@ -226,12 +226,12 @@ export const StoryPointInput: React.FC<StoryPointInputProps> = ({
 
       {/* Info note */}
       <div className="text-xs text-gray-500">
-        {scale === 'fibonacci' && "📊 Story points for sprint planning & velocity (not actual time)"}
-        {scale === 'tshirt' && "📊 T-shirt sizes for relative complexity (not actual time)"}
-        {scale === 'linear' && "📊 Simple complexity scale (not actual time)"}
-        {scale === 'power_of_2' && "📊 Exponential complexity scale (not actual time)"}
-        {scale === 'hours' && "⚠️ Time estimates - consider abstract story points instead"}
-        {scale === 'days' && "⚠️ Time estimates - consider abstract story points instead"}
+        {scale === 'fibonacci' && "Story points for sprint planning & velocity (not actual time)"}
+        {scale === 'tshirt' && "T-shirt sizes for relative complexity (not actual time)"}
+        {scale === 'linear' && "Simple complexity scale (not actual time)"}
+        {scale === 'power_of_2' && "Exponential complexity scale (not actual time)"}
+        {scale === 'hours' && " Time estimates - consider abstract story points instead"}
+        {scale === 'days' && " Time estimates - consider abstract story points instead"}
       </div>
     </div>
   )

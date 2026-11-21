@@ -122,8 +122,8 @@ const BurndownChartContent = () => {
       {
         label: 'Actual Remaining Work',
         data: burndownData.map(d => d.remainingWork),
-        borderColor: 'rgb(239, 68, 68)',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: 'rgb(238, 128, 111)',
+        backgroundColor: 'rgba(238, 128, 111, 0.1)',
         fill: true,
         tension: 0.1
       }

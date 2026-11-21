@@ -136,7 +136,7 @@ export const BacklogMoveMenu = ({ issue, targets, onMove, className }: BacklogMo
             id={menuId}
             role="menu"
             aria-labelledby={triggerId}
-            className="pointer-events-auto absolute right-0 z-20 w-52 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+            className="pointer-events-auto absolute right-0 z-20 w-52 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-md border border-gray-200 bg-white py-1 "
             onKeyDown={handleMenuKeyDown}
           >
             {targets.map(target => (

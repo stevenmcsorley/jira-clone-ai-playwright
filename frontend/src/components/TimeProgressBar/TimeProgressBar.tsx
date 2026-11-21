@@ -69,12 +69,7 @@ const TimeProgressBarInner: React.FC<TimeProgressBarProps> = ({
             className="absolute top-0 left-0 h-full rounded-full transition-all duration-300"
             style={{
               width: `${Math.min(100 + overflowWidth, 200)}%`,
-              background: `linear-gradient(90deg,
-                rgba(34, 197, 94, 1) 0%,
-                rgba(34, 197, 94, 1) ${100 / (1 + overflowWidth / 100)}%,
-                rgba(239, 68, 68, 0.8) ${100 / (1 + overflowWidth / 100)}%,
-                rgba(239, 68, 68, 0.8) 100%)`,
-              backgroundImage: overflowWidth > 10 ? 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.3) 3px, rgba(255,255,255,0.3) 6px)' : 'none'
+              background: 'var(--color-red-500)'
             }}
           />
         )}
@@ -136,10 +131,10 @@ const TimeProgressBarInner: React.FC<TimeProgressBarProps> = ({
         <div>Spent: {formatHours(elapsedHours)} / Estimated: {formatHours(issue.estimate || 0)}</div>
         {percentage > 100 && (
           <div className="text-red-300">
-            ⚠️ Over by {formatHours(elapsedHours - (issue.estimate || 0))}
+             Over by {formatHours(elapsedHours - (issue.estimate || 0))}
           </div>
         )}
-        {hasActiveTimer && <div className="text-blue-300">⏱️ Timer running</div>}
+        {hasActiveTimer && <div className="text-blue-300">Timer running</div>}
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
       </div>
     </div>
@@ -187,7 +182,7 @@ const TimeProgressIndicatorInner: React.FC<{ issue: Issue }> = ({ issue }) => {
           className="absolute top-0 left-0 h-full bg-red-500 transition-all duration-300"
           style={{
             width: `${Math.min(overtimeProgress, 100)}%`,
-            background: 'repeating-linear-gradient(45deg, #ef4444, #ef4444 4px, #dc2626 4px, #dc2626 8px)'
+            background: 'var(--color-red-500)'
           }}
         />
       )}

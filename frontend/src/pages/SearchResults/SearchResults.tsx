@@ -67,9 +67,9 @@ export const SearchResults = () => {
   }
 
   const priorityIcons = {
-    low: { icon: '↓', color: 'text-green-600', bg: 'bg-green-50' },
-    medium: { icon: '→', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    high: { icon: '↑', color: 'text-orange-600', bg: 'bg-orange-50' },
+    low: { icon: '↓', color: 'text-gray-500', bg: 'bg-gray-100' },
+    medium: { icon: '→', color: 'text-gray-600', bg: 'bg-gray-100' },
+    high: { icon: '↑', color: 'text-gray-900', bg: 'bg-gray-200' },
     urgent: { icon: '⇈', color: 'text-red-600', bg: 'bg-red-50' },
   }
 
@@ -151,7 +151,7 @@ export const SearchResults = () => {
               <Link
                 key={issue.id}
                 to={`/projects/${projectId}/issues/${issue.id}`}
-                className="block bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                className="block bg-white rounded-lg border border-gray-200 p-6  transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1 wrap-anywhere">
@@ -173,7 +173,7 @@ export const SearchResults = () => {
                       </span>
                       {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) && (
                         <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">
-                          📊 {issue.storyPoints}
+                          {issue.storyPoints} pts
                         </span>
                       )}
                     </div>
@@ -209,8 +209,8 @@ export const SearchResults = () => {
                       <div className="flex min-w-0 items-center gap-2">
                         {issue.assignee ? (
                           <>
-                            <div className="w-6 h-6 shrink-0 bg-blue-500 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-bold text-white">
+                            <div className="w-6 h-6 shrink-0 bg-gray-200 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-bold text-gray-800">
                                 {issue.assignee.name.charAt(0)}
                               </span>
                             </div>

@@ -71,21 +71,21 @@ export const InviteAccept = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[url('/app-bg.jpg')] bg-cover bg-center flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">Ossicone</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Ossicone</h1>
           <p className="text-gray-500 mt-2">Workspace invitation</p>
         </div>
 
         {loading && (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-sm text-gray-500">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center text-sm text-gray-500">
             Loading invite…
           </div>
         )}
 
         {!loading && loadError && (
-          <div className="bg-white rounded-lg shadow p-6 text-center space-y-3">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center space-y-3">
             <p className="text-sm font-medium text-red-600">{loadError}</p>
             <p className="text-sm text-gray-500">
               Ask a workspace admin to send you a new invite.
@@ -97,7 +97,7 @@ export const InviteAccept = () => {
         )}
 
         {!loading && invite && (
-          <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
             <p className="text-sm text-gray-700">
               You&apos;ve been invited to{' '}
               <span className="font-semibold text-gray-900">{invite.workspaceName}</span> as{' '}

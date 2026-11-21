@@ -214,7 +214,7 @@ export const BoardFilterBar = ({ issues, filters, onChange }: BoardFilterBarProp
                 className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${
                   active
                     ? 'bg-orange-500 text-white ring-2 ring-orange-200 ring-offset-1'
-                    : 'bg-orange-100 text-orange-800 hover:bg-orange-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-orange-200'
                 }`}
                 data-testid={`label-filter-${label}`}
                 aria-pressed={active}

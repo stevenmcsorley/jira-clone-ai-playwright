@@ -52,15 +52,15 @@ export const Users = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">People</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-gray-900 mb-6">People</h1>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden overflow-x-auto mb-8">
+      <div className="bg-white rounded-lg  overflow-hidden overflow-x-auto mb-8">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Name</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Email</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Role</th>
               {isAdmin && <th className="px-4 py-3" />}
             </tr>
           </thead>
@@ -98,7 +98,7 @@ export const Users = () => {
       </div>
 
       {isAdmin && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Add user</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {error && (

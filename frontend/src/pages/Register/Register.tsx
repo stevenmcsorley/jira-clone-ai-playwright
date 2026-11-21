@@ -39,21 +39,21 @@ export const Register = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[url('/app-bg.jpg')] bg-cover bg-center flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">Ossicone</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Ossicone</h1>
           <p className="text-gray-500 mt-2">Create your account</p>
         </div>
 
         {openSignup === null && (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-sm text-gray-500">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center text-sm text-gray-500">
             Loading…
           </div>
         )}
 
         {openSignup === false && (
-          <div className="bg-white rounded-lg shadow p-6 text-center space-y-3">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 text-center space-y-3">
             <p className="text-sm font-medium text-gray-900">Sign-up is invite-only</p>
             <p className="text-sm text-gray-500">
               Ask a workspace admin to send you an invite link.
@@ -65,7 +65,7 @@ export const Register = () => {
         )}
 
         {openSignup === true && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-md px-3 py-2">
                 {error}

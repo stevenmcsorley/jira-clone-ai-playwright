@@ -173,15 +173,15 @@ const VelocityReportContent = () => {
       {
         label: 'Planned',
         data: velocityData.map(d => d.planned),
-        backgroundColor: 'rgba(59, 130, 246, 0.5)',
-        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(224, 164, 58, 0.5)',
+        borderColor: 'rgba(224, 164, 58, 1)',
         borderWidth: 1
       },
       {
         label: 'Completed',
         data: velocityData.map(d => d.completed),
-        backgroundColor: 'rgba(34, 197, 94, 0.5)',
-        borderColor: 'rgba(34, 197, 94, 1)',
+        backgroundColor: 'rgba(134, 201, 143, 0.5)',
+        borderColor: 'rgba(134, 201, 143, 1)',
         borderWidth: 1
       }
     ]
@@ -421,16 +421,16 @@ const VelocityReportContent = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                     Sprint
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                     Planned
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                     Completed
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  ">
                     Completion Rate
                   </th>
                 </tr>

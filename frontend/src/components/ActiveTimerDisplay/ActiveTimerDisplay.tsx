@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Square, X } from 'lucide-react';
 import { useActiveTimerDisplay, useTimerManager } from '../../hooks/useTimerManager';
 import { TimerErrorBoundary } from '../ErrorBoundary';
 
@@ -21,47 +22,27 @@ const ActiveTimerDisplayInner: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border-l-4 border-blue-500 text-blue-800 text-sm">
-      {/* Timer icon */}
-      <div className="flex items-center gap-2">
-        <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
-        <span className="font-medium">⏱️</span>
-      </div>
+    <div className="flex items-center gap-3 border-b border-gray-200 bg-gray-100 px-4 py-1.5 text-sm text-gray-700" role="status" data-testid="active-timer">
+      <span className={`size-2 rounded-full ${isRunning ? 'animate-pulse bg-blue-600' : 'bg-gray-400'}`} aria-hidden="true" />
+      <span className="font-mono text-base font-semibold tabular-nums text-gray-900">{elapsedTime}</span>
+      <span className="text-gray-600">{projectKey}-{issueId}</span>
+      {totalActiveTimers > 1 && <span className="text-xs text-gray-500">+{totalActiveTimers - 1} more</span>}
 
-      {/* Timer info */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono font-bold text-lg">{elapsedTime}</span>
-        <span className="text-blue-600">
-          {projectKey}-{issueId}
-        </span>
-        {totalActiveTimers > 1 && (
-          <span className="text-xs bg-blue-200 px-2 py-1 rounded-full">
-            +{totalActiveTimers - 1} more
-          </span>
-        )}
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="ml-auto flex items-center gap-1">
         {isRunning ? (
           <button
             onClick={handleStopTimer}
-            className="flex items-center gap-1 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-xs font-medium transition-colors"
+            className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-gray-300 px-3 text-xs font-medium text-gray-800 hover:bg-gray-200"
             title="Stop timer and log time"
           >
-            <span>⏹️</span>
+            <Square className="size-3 fill-current" strokeWidth={1.5} aria-hidden="true" />
             Stop
           </button>
         ) : (
-          <span className="text-xs text-blue-600">Paused</span>
+          <span className="text-xs text-gray-500">Paused</span>
         )}
-
-        <button
-          onClick={handleStopTimer}
-          className="text-blue-500 hover:text-blue-700 p-1"
-          title="Close timer"
-        >
-          ✕
+        <button onClick={handleStopTimer} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-900" title="Close timer" aria-label="Close timer">
+          <X className="size-4" strokeWidth={1.5} aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -1,20 +1,20 @@
 export type ChartThemeName = 'light' | 'dark'
 
 export const chartTheme = (name: ChartThemeName) => name === 'dark' ? {
-  text: '#dbe2ec',
-  mutedText: '#94a3b8',
-  grid: 'rgba(148,163,184,0.16)',
-  border: 'rgba(148,163,184,0.28)',
-  tooltipBackground: '#1e293b',
-  tooltipText: '#f1f5f9',
-  tooltipBorder: 'rgba(148,163,184,0.3)',
+  text: '#dfdcd2',
+  mutedText: '#9b988f',
+  grid: 'rgba(155,152,143,0.16)',
+  border: 'rgba(155,152,143,0.28)',
+  tooltipBackground: '#1d1d1b',
+  tooltipText: '#efede5',
+  tooltipBorder: 'rgba(155,152,143,0.3)',
 } : {
-  text: '#374151',
-  mutedText: '#6b7280',
-  grid: 'rgba(17,24,39,0.08)',
-  border: 'rgba(17,24,39,0.15)',
-  tooltipBackground: '#111827',
-  tooltipText: '#f9fafb',
+  text: '#3f3e38',
+  mutedText: '#6f6c63',
+  grid: 'rgba(24,24,22,0.08)',
+  border: 'rgba(24,24,22,0.15)',
+  tooltipBackground: '#181816',
+  tooltipText: '#f7f6f2',
   tooltipBorder: 'rgba(255,255,255,0.1)',
 }
 

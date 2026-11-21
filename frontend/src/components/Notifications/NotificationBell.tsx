@@ -58,7 +58,7 @@ export const NotificationBell = () => {
 
       {open && (
         <div
-          className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50"
+          className="absolute right-0 mt-2 w-80 bg-white rounded-md  border border-gray-200 py-1 z-50"
           data-testid="notification-dropdown"
         >
           <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">

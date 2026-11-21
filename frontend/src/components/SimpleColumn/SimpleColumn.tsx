@@ -17,22 +17,22 @@ const statusConfig = {
   todo: {
     color: 'bg-gray-50 border-gray-200',
     headerColor: 'text-gray-700',
-    icon: '📋',
+    icon: '',
   },
   in_progress: {
     color: 'bg-blue-50 border-blue-200',
     headerColor: 'text-blue-700',
-    icon: '🚧',
+    icon: '',
   },
   code_review: {
     color: 'bg-purple-50 border-purple-200',
     headerColor: 'text-purple-700',
-    icon: '👀',
+    icon: '',
   },
   done: {
     color: 'bg-green-50 border-green-200',
     headerColor: 'text-green-700',
-    icon: '✅',
+    icon: '',
   },
 }
 

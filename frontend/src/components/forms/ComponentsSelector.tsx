@@ -176,7 +176,7 @@ export const ComponentsSelector: React.FC<ComponentsSelectorProps> = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg  max-h-60 overflow-hidden">
           {/* Search Input */}
           <div className="p-3 border-b border-gray-100">
             <input

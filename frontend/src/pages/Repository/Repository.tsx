@@ -1,3 +1,4 @@
+import { Link2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { GitService, isRepoConnected } from '../../services/api/git.service'
@@ -81,7 +82,7 @@ export const Repository = () => {
     return (
       <div className="flex-1 bg-gray-50 px-6 py-6">
         <div className="max-w-lg mx-auto mt-12 bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <div className="text-4xl mb-3">🔗</div>
+          <Link2 className="mx-auto mb-3 size-8 text-gray-400" strokeWidth={1.5} aria-hidden="true" />
           <h2 className="text-lg font-semibold text-gray-900 mb-1">
             No repository connected
           </h2>
@@ -107,7 +108,7 @@ export const Repository = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Repository</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Repository</h1>
           <a
             href={repoUrl}
             target="_blank"

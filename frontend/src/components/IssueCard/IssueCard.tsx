@@ -1,3 +1,4 @@
+import { IssueTypeIcon } from '../IssueTypeIcon'
 import { Card } from '../ui/Card'
 import type { IssueCardProps } from './IssueCard.types'
 
@@ -6,13 +7,6 @@ const priorityColors = {
   medium: 'text-yellow-600 bg-yellow-50',
   high: 'text-orange-600 bg-orange-50',
   urgent: 'text-red-600 bg-red-50',
-}
-
-const typeIcons = {
-  story: '📖',
-  task: '✅',
-  bug: '🐛',
-  epic: '🎯',
 }
 
 export const IssueCard = ({
@@ -29,7 +23,7 @@ export const IssueCard = ({
   }
 
   const classes = [
-    'cursor-pointer hover:shadow-medium transition-shadow',
+    'cursor-pointer  transition-shadow',
     draggable ? 'hover:scale-[1.02]' : '',
     className,
   ].filter(Boolean).join(' ')
@@ -43,7 +37,7 @@ export const IssueCard = ({
       >
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{typeIcons[issue.type]}</span>
+            <IssueTypeIcon type={issue.type} />
             <span className="text-sm font-medium text-gray-600">
               {issue.project?.key}-{issue.id}
             </span>
@@ -96,11 +90,11 @@ export const IssueCard = ({
 
           {(issue.storyPoints !== null && issue.storyPoints !== undefined && issue.storyPoints !== '' && issue.storyPoints !== 0) ? (
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
-              📊 {issue.storyPoints}
+              {issue.storyPoints} pts
             </span>
           ) : (
             <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-500 rounded-full border border-dashed border-gray-300">
-              📊 ?
+              ? pts
             </span>
           )}
         </div>

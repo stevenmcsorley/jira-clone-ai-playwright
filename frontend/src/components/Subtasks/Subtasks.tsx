@@ -255,8 +255,8 @@ export const Subtasks = ({ issueId }: SubtasksProps) => {
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     {subtask.assignee && (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-white">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-bold text-gray-800">
                             {subtask.assignee.name.charAt(0)}
                           </span>
                         </div>

@@ -184,14 +184,13 @@ export const ProjectBoard = () => {
       <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4" data-testid="board-header">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between md:gap-0">
           <div className="min-w-0">
-            <h1 className="min-w-0 text-2xl font-bold text-gray-900 max-md:truncate" title={currentProject.name} data-testid="project-title">
-              {activeSprint ? `${activeSprint.name} Board` : 'Project Board'}
+            <h1 className="min-w-0 text-2xl font-semibold tracking-tight text-gray-900 max-md:truncate" title={currentProject.name} data-testid="project-title">
+              {activeSprint ? activeSprint.name : 'Board'}
             </h1>
             {activeSprint ? (
               <div data-testid="active-sprint-info">
                 {tidyDescription(activeSprint.goal) && (
                   <div className="mt-2 min-w-0 max-w-prose wrap-anywhere">
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Sprint goal</p>
                     <ProjectDescription
                       idPrefix="sprint-goal"
                       projectId={activeSprint.id}
@@ -200,14 +199,15 @@ export const ProjectBoard = () => {
                     />
                   </div>
                 )}
-                <p className="text-sm text-gray-600 mt-1" data-testid="sprint-details">
+                <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                <p className="text-sm text-gray-600" data-testid="sprint-details">
                   {activeSprint.issues.length === 0
                     ? 'No issues in this sprint'
                     : `${activeSprint.issues.length} issues`
                   }
                 </p>
                 {(activeSprint.startDate || activeSprint.endDate) && (
-                  <p className="text-sm text-gray-500 mt-1" data-testid="sprint-dates">
+                  <p className="text-sm text-gray-500" data-testid="sprint-dates">
                     {activeSprint.startDate && (
                       <span className="max-md:block" data-testid="sprint-start-date">Started: {new Date(activeSprint.startDate).toLocaleDateString()}</span>
                     )}
@@ -217,6 +217,8 @@ export const ProjectBoard = () => {
                     )}
                   </p>
                 )}
+                <p className="text-sm text-gray-500">Drag a card to change its status.</p>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-gray-600 mt-1">
@@ -261,7 +263,7 @@ export const ProjectBoard = () => {
               {boardMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setBoardMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 w-52 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md shadow-lg py-1">
+                  <div className="absolute right-0 top-full mt-1 z-20 w-52 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md  py-1">
                     {activeSprint && (
                       <button
                         onClick={() => { setBoardMenuOpen(false); handleCompleteSprint() }}
@@ -343,7 +345,7 @@ export const ProjectBoard = () => {
                   data-testid="quick-filters-backdrop"
                 />
                 <div
-                  className="absolute left-0 top-full mt-1 z-20 w-56 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md shadow-lg py-1"
+                  className="absolute left-0 top-full mt-1 z-20 w-56 max-md:max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-md  py-1"
                   role="menu"
                   data-testid="quick-filters-menu"
                 >

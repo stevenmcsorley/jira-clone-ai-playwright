@@ -79,14 +79,14 @@ export const SavedFilters: React.FC<SavedFiltersProps> = ({
     return (
       <div
         key={filter.id}
-        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+        className="bg-white border border-gray-200 rounded-lg p-4  transition-shadow cursor-pointer"
         onClick={() => onFilterSelect(filter)}
       >
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center space-x-2">
             <div
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: filter.color || '#3B82F6' }}
+              style={{ backgroundColor: filter.color || '#e0a43a' }}
             ></div>
             <h3 className="font-medium text-gray-900">{filter.name}</h3>
             {filter.isPublic && (
@@ -169,7 +169,7 @@ export const SavedFilters: React.FC<SavedFiltersProps> = ({
         <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden  transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -250,11 +250,11 @@ export const SavedFilters: React.FC<SavedFiltersProps> = ({
                         name="color"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="#3B82F6">Blue</option>
-                        <option value="#10B981">Green</option>
-                        <option value="#F59E0B">Yellow</option>
-                        <option value="#EF4444">Red</option>
-                        <option value="#8B5CF6">Purple</option>
+                        <option value="#e0a43a">Blue</option>
+                        <option value="#86c98f">Green</option>
+                        <option value="#cfc08a">Yellow</option>
+                        <option value="#ee806f">Red</option>
+                        <option value="#9b988f">Purple</option>
                       </select>
                     </div>
                   </div>
@@ -275,14 +275,14 @@ export const SavedFilters: React.FC<SavedFiltersProps> = ({
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button
                   type="submit"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent  px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Save Filter
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300  px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 >
                   Cancel
                 </button>
@@ -309,7 +309,7 @@ export const SavedFilters: React.FC<SavedFiltersProps> = ({
       {/* Favorites Section */}
       {favoriteFilters.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">⭐ Favorites</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Favorites</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {favoriteFilters.map(renderFilterCard)}
           </div>

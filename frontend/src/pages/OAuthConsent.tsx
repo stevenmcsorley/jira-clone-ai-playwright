@@ -39,7 +39,7 @@ export const OAuthConsent = () => {
   if (!user) return <Navigate replace to={`/login?returnTo=${encodeURIComponent(`/oauth/consent?request=${request}`)}`} />
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <section className="bg-white rounded-lg shadow p-6 max-w-lg w-full space-y-5">
+      <section className="bg-white rounded-lg border border-gray-200 p-6 max-w-lg w-full space-y-5">
         <h1 className="text-2xl font-bold">Connect to Ossicone</h1>
         {details && <p>Allow <strong>{details.clientName}</strong> ({details.redirectHost}) to access Ossicone as {user.email}?</p>}
         <p className="text-sm text-gray-600">Choose the workspace this connection can use. Your account’s permissions apply. This grants no account administrator access.</p>

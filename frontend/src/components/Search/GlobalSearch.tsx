@@ -344,13 +344,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       {isOpen && (
         <div
           ref={resultsRef}
-          className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-md shadow-lg border border-gray-200 max-h-[70vh] overflow-y-auto"
+          className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-md  border border-gray-200 max-h-[70vh] overflow-y-auto"
         >
           {query ? (
             // Search Results
             searchResults.length > 0 ? (
               <div className="p-2">
-                <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+                <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400  ">
                   Results
                 </div>
                 {searchResults.map((item, index) => (
@@ -369,7 +369,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
           ) : recentItems.length > 0 ? (
             // Recent Items
             <div className="p-2">
-              <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wide">
+              <div className="px-2 py-1.5 text-[11px] font-semibold text-gray-400  ">
                 Recent
               </div>
               {recentItems.map((item, index) => (

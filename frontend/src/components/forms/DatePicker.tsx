@@ -166,7 +166,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
       {/* Calendar Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-[300px]">
+        <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg  p-4 min-w-[300px]">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <button

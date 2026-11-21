@@ -248,7 +248,7 @@ export const WorkspaceSettings = () => {
     <div className="p-6 space-y-8">
       {/* Header / rename */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
           {currentWorkspace?.name ?? 'Workspace'}
         </h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -258,7 +258,7 @@ export const WorkspaceSettings = () => {
         {canManage && (
           <form onSubmit={handleRename} className="mt-4 space-y-4 max-w-lg">
             <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Name</label>
+              <label className="block text-xs font-medium text-gray-500  mb-1">Name</label>
               <input
                 value={renameValue}
                 onChange={e => setRenameValue(e.target.value)}
@@ -269,7 +269,7 @@ export const WorkspaceSettings = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase mb-2">Icon</label>
+              <label className="block text-xs font-medium text-gray-500  mb-2">Icon</label>
               <div className="flex items-start gap-4">
                 <WorkspaceIcon
                   name={renameValue}
@@ -347,7 +347,7 @@ export const WorkspaceSettings = () => {
       </div>
 
       {/* Members */}
-      <section className="bg-white rounded-lg shadow overflow-hidden">
+      <section className="bg-white rounded-lg  overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Members</h2>
           {memberError && <p className="text-sm text-red-600 mt-1">{memberError}</p>}
@@ -356,9 +356,9 @@ export const WorkspaceSettings = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Name</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Email</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 ">Role</th>
               {canManage && <th className="px-4 py-3" />}
             </tr>
           </thead>
@@ -417,7 +417,7 @@ export const WorkspaceSettings = () => {
 
       {/* Invites */}
       {canManage && (
-        <section className="bg-white rounded-lg shadow p-6">
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Invite people</h2>
           <form onSubmit={handleInvite} className="flex flex-wrap items-center gap-3">
             <input
@@ -460,7 +460,7 @@ export const WorkspaceSettings = () => {
                   onClick={copyInviteLink}
                   className="text-sm text-blue-600 hover:text-blue-800 whitespace-nowrap"
                 >
-                  {copied ? 'Copied ✓' : 'Copy'}
+                  {copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
             </div>
@@ -499,7 +499,7 @@ export const WorkspaceSettings = () => {
 
       {/* New workspace — one per account, so only shown to people who don't own one yet */}
       {ownsAWorkspace ? (
-        <section className="bg-white rounded-lg shadow p-6">
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">New workspace</h2>
           <p className="text-sm text-gray-600">
             Each account can own one workspace. To run a separate workspace, sign up with a
@@ -507,7 +507,7 @@ export const WorkspaceSettings = () => {
           </p>
         </section>
       ) : (
-        <section className="bg-white rounded-lg shadow p-6">
+        <section className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">New workspace</h2>
           <p className="text-sm text-gray-600 mb-4">
             Create a workspace with its own projects and members. You&apos;ll be switched to it.
@@ -534,7 +534,7 @@ export const WorkspaceSettings = () => {
 
       {/* Danger zone */}
       {isOwner && (
-        <section className="bg-white rounded-lg shadow p-6 border border-red-200">
+        <section className="bg-white rounded-lg border border-gray-200 p-6 border border-red-200">
           <h2 className="text-lg font-semibold text-red-700 mb-1">Danger zone</h2>
           <p className="text-sm text-gray-600 mb-4">
             Deleting this workspace permanently removes all of its projects, issues, sprints and history.

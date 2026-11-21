@@ -339,7 +339,7 @@ export const JQLSearch: React.FC<JQLSearchProps> = ({
       {showDropdownState && (
         <div
           ref={resultsRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden"
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg  max-h-80 overflow-hidden"
         >
           {stateMatches('results') && state.context.results.length > 0 ? (
             renderResults()

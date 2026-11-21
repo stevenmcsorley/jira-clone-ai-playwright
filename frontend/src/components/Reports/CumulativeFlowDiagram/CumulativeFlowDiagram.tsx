@@ -109,8 +109,8 @@ const CumulativeFlowDiagramContent = () => {
       {
         label: 'Done',
         data: cfdData.map(d => d.done),
-        backgroundColor: 'rgba(34, 197, 94, 0.6)',
-        borderColor: 'rgb(34, 197, 94)',
+        backgroundColor: 'rgba(134, 201, 143, 0.6)',
+        borderColor: 'rgb(134, 201, 143)',
         borderWidth: 2,
         fill: 'origin' as const,
         tension: 0.3,
@@ -120,8 +120,8 @@ const CumulativeFlowDiagramContent = () => {
       {
         label: 'Code Review',
         data: cfdData.map(d => d.codeReview),
-        backgroundColor: 'rgba(168, 85, 247, 0.5)',
-        borderColor: 'rgb(168, 85, 247)',
+        backgroundColor: 'rgba(155, 152, 143, 0.5)',
+        borderColor: 'rgb(155, 152, 143)',
         borderWidth: 2,
         fill: '-1' as const,
         tension: 0.3,
@@ -131,8 +131,8 @@ const CumulativeFlowDiagramContent = () => {
       {
         label: 'In Progress',
         data: cfdData.map(d => d.inProgress),
-        backgroundColor: 'rgba(251, 191, 36, 0.5)',
-        borderColor: 'rgb(251, 191, 36)',
+        backgroundColor: 'rgba(207, 192, 138, 0.5)',
+        borderColor: 'rgb(207, 192, 138)',
         borderWidth: 2,
         fill: '-1' as const,
         tension: 0.3,

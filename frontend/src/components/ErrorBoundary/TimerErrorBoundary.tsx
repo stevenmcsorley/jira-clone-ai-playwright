@@ -46,7 +46,7 @@ export class TimerErrorBoundary extends Component<TimerErrorBoundaryProps, Timer
     if (this.state.hasError) {
       return this.props.fallback || (
         <div className="flex items-center gap-2 px-2 py-1 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
-          <span>⚠️</span>
+          <span></span>
           <span>Timer error</span>
           <button
             onClick={this.handleRetry}

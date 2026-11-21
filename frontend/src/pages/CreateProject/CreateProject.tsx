@@ -30,7 +30,7 @@ export const CreateProject = () => {
     if (!formData.key.trim()) {
       newErrors.key = 'Project key is required'
     } else if (!/^[A-Z0-9]+$/.test(formData.key)) {
-      newErrors.key = 'Project key must contain only uppercase letters and numbers'
+      newErrors.key = 'Project key must contain only  letters and numbers'
     } else if (formData.key.length < 2 || formData.key.length > 10) {
       newErrors.key = 'Project key must be 2-10 characters long'
     }
@@ -114,9 +114,9 @@ export const CreateProject = () => {
       </header>
 
       <main className="max-w-2xl mx-auto py-8 px-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Create New Project</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Create New Project</h1>
             <p className="mt-2 text-gray-600">
               Set up a new project to organize your team's work and track progress.
             </p>

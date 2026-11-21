@@ -28,10 +28,10 @@ export const Search: React.FC = () => {
   };
 
   const tabs = [
-    { id: 'search', label: 'JQL Search', icon: '🔍' },
-    { id: 'builder', label: 'Query Builder', icon: '🔧' },
-    { id: 'filters', label: 'Saved Filters', icon: '💾' },
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'search', label: 'JQL Search', icon: '' },
+    { id: 'builder', label: 'Query Builder', icon: '' },
+    { id: 'filters', label: 'Saved Filters', icon: '' },
+    { id: 'dashboard', label: 'Dashboard', icon: '' },
   ];
 
   return (
@@ -68,7 +68,7 @@ export const Search: React.FC = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-white rounded-lg ">
           {activeTab === 'search' && (
             <div className="p-6">
               <div className="mb-6">
@@ -214,7 +214,7 @@ export const Search: React.FC = () => {
 
         {/* Help Section */}
         <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">🚀 How to Use Advanced Search</h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">How to Use Advanced Search</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>
               <h4 className="font-medium text-blue-800 mb-2">JQL Search:</h4>

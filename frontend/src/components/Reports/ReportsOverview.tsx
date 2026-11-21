@@ -28,17 +28,17 @@ const BurnupMockChart = () => (
   <div className="relative h-24 bg-gray-50 rounded">
     <div className="absolute inset-0 flex items-end p-2">
       <div className="w-full flex items-end space-x-1">
-        <div className="h-8 w-4 bg-orange-400 rounded-sm"></div>
-        <div className="h-12 w-4 bg-orange-400 rounded-sm"></div>
-        <div className="h-16 w-4 bg-orange-400 rounded-sm"></div>
-        <div className="h-10 w-4 bg-green-400 rounded-sm"></div>
-        <div className="h-14 w-4 bg-green-400 rounded-sm"></div>
-        <div className="h-18 w-4 bg-green-400 rounded-sm"></div>
+        <div className="h-8 w-4 bg-blue-400 rounded-sm"></div>
+        <div className="h-12 w-4 bg-blue-400 rounded-sm"></div>
+        <div className="h-16 w-4 bg-blue-400 rounded-sm"></div>
+        <div className="h-10 w-4 bg-gray-400 rounded-sm"></div>
+        <div className="h-14 w-4 bg-gray-400 rounded-sm"></div>
+        <div className="h-18 w-4 bg-gray-400 rounded-sm"></div>
       </div>
     </div>
     <svg className="absolute inset-0 w-full h-full">
-      <path d="M 10 20 Q 20 15 30 18 T 50 12" stroke="#f59e0b" strokeWidth="2" fill="none" />
-      <path d="M 10 22 Q 20 18 30 20 T 50 16" stroke="#10b981" strokeWidth="2" fill="none" />
+      <path d="M 10 20 Q 20 15 30 18 T 50 12" stroke="#cfc08a" strokeWidth="2" fill="none" />
+      <path d="M 10 22 Q 20 18 30 20 T 50 16" stroke="#86c98f" strokeWidth="2" fill="none" />
     </svg>
   </div>
 )
@@ -47,29 +47,29 @@ const BurndownMockChart = () => (
   <div className="relative h-24 bg-gray-50 rounded">
     <div className="absolute inset-0 flex items-end p-2">
       <div className="w-full flex items-end space-x-1">
-        <div className="h-16 w-4 bg-red-400 rounded-sm"></div>
-        <div className="h-14 w-4 bg-red-400 rounded-sm"></div>
-        <div className="h-10 w-4 bg-orange-400 rounded-sm"></div>
-        <div className="h-8 w-4 bg-orange-400 rounded-sm"></div>
-        <div className="h-4 w-4 bg-green-400 rounded-sm"></div>
-        <div className="h-2 w-4 bg-green-400 rounded-sm"></div>
+        <div className="h-16 w-4 bg-gray-500 rounded-sm"></div>
+        <div className="h-14 w-4 bg-gray-500 rounded-sm"></div>
+        <div className="h-10 w-4 bg-blue-400 rounded-sm"></div>
+        <div className="h-8 w-4 bg-blue-400 rounded-sm"></div>
+        <div className="h-4 w-4 bg-gray-400 rounded-sm"></div>
+        <div className="h-2 w-4 bg-gray-400 rounded-sm"></div>
       </div>
     </div>
     <svg className="absolute inset-0 w-full h-full">
-      <path d="M 5 10 L 15 15 L 25 18 L 35 20 L 45 22 L 55 23" stroke="#f59e0b" strokeWidth="2" fill="none" />
+      <path d="M 5 10 L 15 15 L 25 18 L 35 20 L 45 22 L 55 23" stroke="#cfc08a" strokeWidth="2" fill="none" />
     </svg>
   </div>
 )
 
 const VelocityMockChart = () => (
   <div className="h-24 bg-gray-50 rounded flex items-end p-2 space-x-1">
-    <div className="h-8 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-12 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-16 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-6 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-14 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-18 w-4 bg-purple-400 rounded-sm"></div>
-    <div className="h-10 w-4 bg-purple-400 rounded-sm"></div>
+    <div className="h-8 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-12 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-16 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-6 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-14 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-18 w-4 bg-blue-400 rounded-sm"></div>
+    <div className="h-10 w-4 bg-blue-400 rounded-sm"></div>
   </div>
 )
 
@@ -78,9 +78,9 @@ const CumulativeFlowMockChart = () => (
     {/* Stacked bands are painted back-to-front (widest first) so they read as a
         cumulative flow diagram. viewBox + preserveAspectRatio fills the card. */}
     <svg className="w-full h-full" viewBox="0 0 120 96" preserveAspectRatio="none">
-      <path d="M0 96 L0 60 C 30 52 60 40 90 26 S 115 16 120 14 L120 96 Z" fill="#a78bfa" />
-      <path d="M0 96 L0 72 C 30 66 60 56 90 44 S 115 36 120 34 L120 96 Z" fill="#fbbf24" />
-      <path d="M0 96 L0 84 C 30 80 60 72 90 62 S 115 56 120 54 L120 96 Z" fill="#34d399" />
+      <path d="M0 96 L0 60 C 30 52 60 40 90 26 S 115 16 120 14 L120 96 Z" fill="#9b988f" />
+      <path d="M0 96 L0 72 C 30 66 60 56 90 44 S 115 36 120 34 L120 96 Z" fill="#cfc08a" />
+      <path d="M0 96 L0 84 C 30 80 60 72 90 62 S 115 56 120 54 L120 96 Z" fill="#86c98f" />
     </svg>
   </div>
 )
@@ -90,17 +90,17 @@ const CycleTimeMockChart = () => (
     <div className="flex items-center space-x-2">
       <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
       <div className="h-1 w-16 bg-gray-300 rounded"></div>
-      <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
     </div>
     <div className="flex items-center space-x-2">
       <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
       <div className="h-1 w-12 bg-gray-300 rounded"></div>
-      <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
     </div>
     <div className="flex items-center space-x-2">
       <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
       <div className="h-1 w-20 bg-gray-300 rounded"></div>
-      <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
     </div>
     <div className="flex items-end space-x-1 mt-2">
       <div className="h-4 w-2 bg-gray-400 rounded-sm"></div>
@@ -164,7 +164,7 @@ export const ReportsOverview: React.FC<ReportsOverviewProps> = ({ projectId }) =
           <Link
             key={report.id}
             to={report.path}
-            className="group bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md"
+            className="group bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all "
           >
             <div className="p-6">
               {/* Chart/Visual */}

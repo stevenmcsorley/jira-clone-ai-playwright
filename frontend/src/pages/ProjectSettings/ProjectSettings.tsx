@@ -266,7 +266,7 @@ export const ProjectSettings = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Used in issue IDs (e.g., {key || 'KEY'}-123). Only uppercase letters allowed.
+                  Used in issue IDs (e.g., {key || 'KEY'}-123). Only  letters allowed.
                 </p>
               </div>
 
