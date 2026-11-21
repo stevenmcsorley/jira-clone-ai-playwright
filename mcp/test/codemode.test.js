@@ -85,7 +85,7 @@ test('end to end over MCP: exactly two tools, search + execute work, errors flag
   const c = new Client({ name: 't', version: '1' }); const [a, b] = InMemoryTransport.createLinkedPair()
   await buildCodeModeServer(fakeApi()).connect(a); await c.connect(b)
   assert.deepEqual((await c.listTools()).tools.map((t) => t.name).sort(), ['execute', 'search'])
-  const s = JSON.parse((await c.callTool({ name: 'search', arguments: {} })).content[0].text); assert.equal(s.totalTools, 34)
+  const s = JSON.parse((await c.callTool({ name: 'search', arguments: {} })).content[0].text); assert.equal(s.totalTools, 42)
   const ok = await c.callTool({ name: 'execute', arguments: { code: 'async () => (await ossicone.list_projects({})).length' } })
   assert.equal(JSON.parse(ok.content[0].text).result, 2)
   const bad = await c.callTool({ name: 'execute', arguments: { code: 'async () => { throw new Error("boom") }' } })

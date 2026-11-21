@@ -66,7 +66,7 @@ export class IssuesController {
     for (const update of updates) {
       await this.workspaceScope.assertIssue(update.id, req.workspaceId)
     }
-    const result = await this.issuesService.updatePositions(updates)
+    const result = await this.issuesService.updatePositions(updates, req.user?.id ?? null)
     // Emit update event for each changed issue
     for (const update of updates) {
       const issue = await this.issuesService.findOne(update.id)

@@ -50,6 +50,7 @@ Free to run: no Cloudflare account or paid plan is involved, the sandbox is in-p
 | Projects | `list_projects`, `create_project`, `list_users` |
 | Board | `get_board`, `get_backlog`, `list_issues`, `search_issues` |
 | Issues | `get_issue`, `create_issue`, `update_issue`, `add_comment`, `log_time` |
+| Timers | `list_timers`, `get_timer`, `start_timer`, `pause_timer`, `resume_timer`, `stop_timer`, `discard_timer`, `stop_all_timers` |
 | Subtasks & links | `add_subtask`, `list_subtasks`, `complete_subtask`, `link_issues`, `list_links`, `get_epic` |
 | Sprints | `list_sprints`, `create_sprint`, `plan_sprint`, `remove_from_sprint`, `start_sprint`, `complete_sprint` |
 | Reports | `sprint_report`, `project_dashboard` |
@@ -58,4 +59,6 @@ Actions are attributed to the user who owns the API token (reporter on issues, a
 
 **Workspaces:** every token is bound to the workspace it was created in, and all tools are scoped to it server-side — an agent can never see another workspace's data. To let Claude work in a second workspace, create a token there and register another MCP server entry (e.g. `ossicone-teamx`).
 
-Typical agent flow: `create_project` → `create_issue` (epics + stories) → `create_sprint` → `plan_sprint` → `start_sprint` → work: `update_issue` (status moves) + `add_comment` + `log_time` → `complete_sprint` → `sprint_report`.
+**Timers** live on the server and belong to the token owner, so the board, the API and agents all drive the same clock. `start_timer` starts (or resumes) one, `pause_timer` / `resume_timer` hold and continue it, `stop_timer` closes the session and writes the elapsed time to the issue's time log (the result's `loggedHours` says how much), and `discard_timer` stops without logging. `list_timers` shows what is running now, `stop_all_timers` ends a work session. Timers also follow status exactly as a drag on the board does: `update_issue` to `in_progress` starts your timer, to `todo` pauses it, and to `done` stops it and logs the time. A session shorter than the time log can store (about 20 seconds) is not logged.
+
+Typical agent flow: `create_project` → `create_issue` (epics + stories) → `create_sprint` → `plan_sprint` → `start_sprint` → work: `update_issue` (status moves, which also run the timer) + `add_comment` + `log_time` or `start_timer` / `stop_timer` → `complete_sprint` → `sprint_report`.

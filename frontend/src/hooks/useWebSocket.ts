@@ -79,6 +79,9 @@ const getSocket = (): Socket => {
   })
   socket.on('sprint:deleted', () => emitRefreshEvent('sprints'))
 
+  // A person's timers changed (from the board, the API or an agent): the timer store looks again
+  socket.on('timers:changed', () => emitRefreshEvent('timers'))
+
   // Notifications → window event; useNotifications filters by recipient
   socket.on('notification:new', (notification: unknown) => {
     window.dispatchEvent(new CustomEvent('ossicone-notification', { detail: notification }))
