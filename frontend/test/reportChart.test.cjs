@@ -43,3 +43,15 @@ test('every report page uses the shared empty state and house style', () => {
     assert.match(text, /chartHasData\(chartData\)/, `${f} is missing the empty state`)
   }
 })
+
+test('each card on the reports landing page has its own drawing, in the palette, with no leftover mock bars', () => {
+  const root = path.join(__dirname, '../src/components/Reports')
+  const overview = fs.readFileSync(path.join(root, 'ReportsOverview.tsx'), 'utf8')
+  const drawings = fs.readFileSync(path.join(root, 'ReportIllustrations.tsx'), 'utf8')
+  for (const kind of ['burnup', 'burndown', 'velocity', 'cumulative-flow', 'cycle-time']) {
+    assert.match(overview, new RegExp(`<ReportIllustration kind="${kind}" />`), `${kind} card has no drawing`)
+    assert.match(drawings, new RegExp(`'?${kind}'?:`), `${kind} has no illustration`)
+  }
+  assert.doesNotMatch(overview, /MockChart|h-\d+ w-\d+ bg-(?:orange|green|purple|red)-/, 'old mock bars are back')
+  assert.doesNotMatch(drawings, /#[0-9a-fA-F]{6}\b|rgb\(/, 'illustrations must use theme classes, not fixed colours')
+})
