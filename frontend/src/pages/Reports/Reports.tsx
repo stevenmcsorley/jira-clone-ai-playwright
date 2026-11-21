@@ -1,19 +1,13 @@
 import type { ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
-import { ReportsNavigation } from '../../components/Reports/ReportsNavigation'
 import { ReportsOverview } from '../../components/Reports/ReportsOverview'
 
 export const ReportsLayout = ({ children, header }: { children: ReactNode; header?: ReactNode }) => {
-  const { projectId } = useParams<{ projectId: string }>()
-
   return (
-    <div className="min-w-0 flex-1 flex flex-col bg-gray-50">
-      {header}
-      <div className="flex flex-col lg:flex-row">
-        <ReportsNavigation projectId={projectId || ''} />
-        <div className="min-w-0 flex-1 p-4 md:p-6">
-          {children}
-        </div>
+    <div className="min-w-0 flex-1 bg-gray-50">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-6">
+        {header}
+        {children}
       </div>
     </div>
   )
@@ -24,11 +18,9 @@ export const Reports = () => {
 
   return (
     <ReportsLayout header={
-      <div className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-        <h1 className="text-2xl font-semibold text-gray-900">Reports</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Track project progress with comprehensive analytics and reports
-        </p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Reports</h1>
+        <p className="mt-1 text-sm text-gray-500">Pick a report to see how the work is going.</p>
       </div>
     }>
       <ReportsOverview projectId={parseInt(projectId || '0')} />
